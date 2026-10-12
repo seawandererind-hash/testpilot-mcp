@@ -65,7 +65,7 @@ You need Node.js 22.19 or newer. [docs/install.md](docs/install.md) has the step
 
 **Cursor**: click the button, then **Install** in Cursor.
 
-[![Add TestPilot to Cursor](https://cursor.com/deeplink/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=testpilot&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImh0dHBzOi8vZ2l0aHViLmNvbS9zZWF3YW5kZXJlcmluZC1oYXNoL3Rlc3RwaWxvdC1tY3AvcmVsZWFzZXMvZG93bmxvYWQvdjAuMS4xL3Rlc3RwaWxvdC1tY3AtMC4xLjEudGd6Il19)
+[![Add TestPilot to Cursor](https://cursor.com/deeplink/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=testpilot&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImh0dHBzOi8vZ2l0aHViLmNvbS9zZWF3YW5kZXJlcmluZC1oYXNoL3Rlc3RwaWxvdC1tY3AvcmVsZWFzZXMvZG93bmxvYWQvdjAuMS4yL3Rlc3RwaWxvdC1tY3AtMC4xLjIudGd6Il19)
 
 Teams on Cursor's Teams or Enterprise plans can also offer TestPilot as a plugin in their own marketplace: an admin opens **Dashboard → Plugins & MCPs → Team Marketplaces → Add Marketplace → Import from Repo** and pastes `https://github.com/seawandererind-hash/testpilot-mcp`. Everyone then finds **testpilot** under **Customize** and clicks **Install**.
 
@@ -83,7 +83,7 @@ claude plugin install testpilot@testpilot-mcp
   "mcpServers": {
     "testpilot": {
       "command": "npx",
-      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.1/testpilot-mcp-0.1.1.tgz"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.2/testpilot-mcp-0.1.2.tgz"]
     }
   }
 }
@@ -139,7 +139,7 @@ TestPilot speaks both MCP protocol generations (2025-era clients such as Cursor,
 ## For platform teams
 
 - **Releasing.** `npm version patch` (or `minor`/`major`) updates every install link and plugin manifest (`scripts/sync-version.mjs`). Push, then run **Actions → Release → Run workflow** (or push the tag with `git push --follow-tags`). The workflow tests, packs and attaches `testpilot-mcp-<version>.tgz` to a GitHub release, and that version's generated MCP configs point at it.
-- **Plugins.** `plugins/testpilot/` is the Cursor and Claude Code plugin (MCP server, skill and Cursor rule); `.cursor-plugin/marketplace.json` and `.claude-plugin/marketplace.json` make this repository a marketplace for both. To use a company npm registry instead, set the package name in `package.json` to your scope, remove `testpilot.install`, and `npm publish`.
+- **Plugins.** `plugins/testpilot/` is the Cursor and Claude Code plugin (the server bundled into `server/` by `scripts/build-plugin.mjs` at each `npm version`, a skill and a Cursor rule); `.cursor-plugin/marketplace.json` and `.claude-plugin/marketplace.json` make this repository a marketplace for both. To use a company npm registry instead, set the package name in `package.json` to your scope, remove `testpilot.install`, and `npm publish`.
 - **House style.** Templates live in `templates/` as Handlebars files: framework packs (`templates/playwright-ts`, `templates/appium-ts`), CI pipelines (`templates/ci`), and the AI instructions and skills (`templates/knowledge`). Change them once and every team gets the same structure.
 - **New AI tools.** `templates/knowledge/client-map.json` says where each tool reads MCP config, instructions and skills. When a vendor moves a folder, edit that file; no code change is needed.
 - **Hosted mode** for ChatGPT and claude.ai: [docs/hosting.md](docs/hosting.md).

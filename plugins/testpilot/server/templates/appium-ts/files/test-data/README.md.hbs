@@ -1,0 +1,7 @@
+<!-- {{header}} -->
+# Test data
+
+Keep test data here as JSON, never inside test code. Credentials do not belong here: they go in `.env`, which git ignores.
+
+- `users.json`: test accounts by role. Passwords are read from `.env` using the key named in `passwordEnv`.
+- Prefer creating fresh data through the API before a test over sharing data between tests.

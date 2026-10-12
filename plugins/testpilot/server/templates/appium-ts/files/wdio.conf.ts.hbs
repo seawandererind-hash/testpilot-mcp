@@ -1,0 +1,159 @@
+// {{header}}
+import { mkdirSync, rmSync } from 'node:fs';
+import path from 'node:path';
+
+{{#if reporting.junit}}
+import { addProperty } from '@wdio/junit-reporter';
+{{/if}}
+import dotenv from 'dotenv';
+import { SevereServiceError } from 'webdriverio';
+
+import { maskSecretsInReports } from './src/reporting/mask-secrets';
+import TestPilotReporter, { attach{{#if reporting.junit}}, testKeyOf{{/if}} } from './src/reporting/testpilot-reporter';
+
+// CI systems pass unset variables as empty strings; drop them so the defaults below still apply.
+for (const [key, value] of Object.entries(process.env)) if (value === '') delete process.env[key];
+// .env holds your secrets (git-ignored); .env.example holds shared, non-secret defaults such as APP_PATH.
+dotenv.config({ path: ['.env', '.env.example'], quiet: true });
+
+/**
+ * WebdriverIO configuration created by TestPilot for local runs against an Appium server.
+ * Start Appium first (`npm run appium`), then run `npm test`.
+ * Docs: https://webdriver.io/docs/configurationfile
+ */
+const appium = new URL(process.env.APPIUM_SERVER_URL ?? 'http://127.0.0.1:4723');
+
+/** The app under test: a build file (APP_PATH, relative to this folder or absolute) or an app already installed (APP_ID). */
+const appPath = process.env.APP_PATH ? path.resolve(process.env.APP_PATH) : undefined;
+const appId = process.env.APP_ID;
+
+{{#if isAndroid}}
+function androidCapabilities(): WebdriverIO.Capabilities {
+    return {
+        platformName: 'Android',
+        'appium:automationName': 'UiAutomator2',
+        'appium:deviceName': process.env.DEVICE_NAME ?? 'Android Emulator',
+        ...(process.env.PLATFORM_VERSION ? { 'appium:platformVersion': process.env.PLATFORM_VERSION } : {}),
+        ...(appPath ? { 'appium:app': appPath } : appId ? { 'appium:appPackage': appId } : {}),
+        'appium:autoGrantPermissions': true,
+        'appium:newCommandTimeout': 240
+    };
+}
+
+{{/if}}
+{{#if isIos}}
+function iosCapabilities(): WebdriverIO.Capabilities {
+    return {
+        platformName: 'iOS',
+        'appium:automationName': 'XCUITest',
+        'appium:deviceName': process.env.DEVICE_NAME ?? 'iPhone 16',
+        ...(process.env.PLATFORM_VERSION ? { 'appium:platformVersion': process.env.PLATFORM_VERSION } : {}),
+        ...(appPath ? { 'appium:app': appPath } : appId ? { 'appium:bundleId': appId } : {}),
+        'appium:newCommandTimeout': 240
+    };
+}
+
+{{/if}}
+{{#if isWindows}}
+function windowsCapabilities(): WebdriverIO.Capabilities {
+    return {
+        platformName: 'Windows',
+        'appium:automationName': '{{automationName}}',
+        // An .exe path, or a Store app's AUMID such as Microsoft.WindowsCalculator_8wekyb3d8bbwe!App.
+        ...((appPath ?? appId) ? { 'appium:app': appPath ?? appId } : {})
+    };
+}
+
+{{/if}}
+{{#if isMacos}}
+function macCapabilities(): WebdriverIO.Capabilities {
+    return {
+        platformName: 'mac',
+        'appium:automationName': 'Mac2',
+        ...(appId ? { 'appium:bundleId': appId } : appPath ? { 'appium:appPath': appPath } : {})
+    };
+}
+
+{{/if}}
+{{#if isAndroidIos}}
+/** One platform per run: MOBILE_PLATFORM=android (default) or ios, with APP_PATH pointing at that platform's build. */
+const platform = (process.env.MOBILE_PLATFORM ?? 'android').toLowerCase();
+const capabilities = [platform === 'ios' ? iosCapabilities() : androidCapabilities()];
+{{else if isAndroid}}
+const capabilities = [androidCapabilities()];
+{{else if isIos}}
+const capabilities = [iosCapabilities()];
+{{else if isWindows}}
+const capabilities = [windowsCapabilities()];
+{{else if isMacos}}
+const capabilities = [macCapabilities()];
+{{/if}}
+
+function fileSafe(text: string): string {
+    return text.replace(/[^A-Za-z0-9._-]+/g, '-').slice(0, 80);
+}
+
+export const config: WebdriverIO.Config = {
+    runner: 'local',
+    tsConfigPath: './tsconfig.json',
+    protocol: appium.protocol === 'https:' ? 'https' : 'http',
+    hostname: appium.hostname,
+    port: Number(appium.port || (appium.protocol === 'https:' ? 443 : 80)),
+    path: appium.pathname,
+
+    specs: ['./test/specs/**/*.spec.ts'],
+    // A device, emulator or simulator runs one session at a time.
+    maxInstances: 1,
+    capabilities,
+
+    logLevel: 'warn',
+    // How long element commands and waitFor* calls wait, in ms. Never add fixed sleeps (browser.pause).
+    waitforTimeout: 15_000,
+    // Installing the app and starting the driver can take minutes on the first run.
+    connectionRetryTimeout: 180_000,
+    connectionRetryCount: 1,
+
+    framework: 'mocha',
+    mochaOpts: { ui: 'bdd', timeout: 120_000 },
+    reporters: [
+        'spec',
+{{#if reporting.junit}}
+        // JUnit XML for CI and test-management imports; each test carries its test-case id as a test_key property.
+        ['junit', { outputDir: 'test-results', outputFileFormat: options => `junit-${options.cid}.xml`, suiteNameFormat: /[\r\n]+/, addFileAttribute: true }],
+{{/if}}
+{{#if reporting.allure}}
+        ['allure', { outputDir: 'allure-results' }],
+{{/if}}
+        // Machine-readable results that TestPilot's run_tests reads.
+        [TestPilotReporter, { outputDir: 'test-results/testpilot', outputFileFormat: options => `results-${options.cid}.json` }]
+    ],
+
+    onPrepare() {
+        // Results of earlier runs must never be mistaken for this one.
+        rmSync('test-results/testpilot', { recursive: true, force: true });
+        if (!appPath && !appId) {
+            throw new SevereServiceError('Missing APP_PATH (or APP_ID). Copy .env.example to .env and set it, or answer the app step of the TestPilot wizard.');
+        }
+    },
+
+{{#if reporting.junit}}
+    beforeTest(test) {
+        // Xray, Zephyr and TestRail match JUnit results to test cases by this property (and by the id at the start of the name).
+        const key = testKeyOf(test.title);
+        if (key) addProperty('test_key', key);
+    },
+
+{{/if}}
+    async afterTest(test, _context, { passed, skipped }) {
+        // Failure screenshots only: pending tests (pendingUntilDone) are skipped, not failed.
+        if (passed || skipped) return;
+        const file = path.join('test-results', 'screenshots', `${fileSafe(test.parent)}-${fileSafe(test.title)}.png`);
+        mkdirSync(path.dirname(file), { recursive: true });
+        await browser.saveScreenshot(file).then(() => attach('screenshot', file)).catch(() => undefined);
+    },
+
+    onComplete() {
+        // Reporters copy WebDriver commands (including text typed into password fields) into their files.
+        maskSecretsInReports(['test-results'{{#if reporting.allure}}, 'allure-results'{{/if}}]);
+    }
+};

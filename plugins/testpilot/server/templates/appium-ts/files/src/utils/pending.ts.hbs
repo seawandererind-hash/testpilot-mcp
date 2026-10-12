@@ -1,0 +1,11 @@
+// {{header}}
+
+/**
+ * Marks a generated test as pending until its TODO(testpilot) steps are written, so an
+ * unfinished test never passes by accident. Call it first in the test, then delete the
+ * call once every TODO(testpilot) line has real code.
+ */
+export function pendingUntilDone(test: Mocha.Context, reason: string): void {
+    console.warn(`Pending: ${test.test?.title ?? 'test'}: ${reason}`);
+    test.skip();
+}

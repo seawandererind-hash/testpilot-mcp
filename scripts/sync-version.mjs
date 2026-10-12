@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // Points every install link and plugin manifest at the release for the version in package.json.
+// (The plugin's own MCP config starts the bundled server; scripts/build-plugin.mjs rebuilds that.)
 // Runs automatically from `npm version`; `--check` only reports files that are out of step (used by the tests).
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -26,8 +27,6 @@ const files = [
     json('package.json', p => ({ ...p, testpilot: { ...p.testpilot, install: url } })),
     json('plugins/testpilot/.cursor-plugin/plugin.json', p => ({ ...p, version })),
     json('plugins/testpilot/.claude-plugin/plugin.json', p => ({ ...p, version })),
-    json('plugins/testpilot/mcp.json', () => ({ mcpServers: { testpilot: server } })),
-    json('plugins/testpilot/.mcp.json', () => ({ mcpServers: { testpilot: server } })),
     links('README.md'),
     links('docs/install.md'),
     links('plugins/testpilot/README.md')

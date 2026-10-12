@@ -1,0 +1,45 @@
+// {{header}}
+import { expect, type Locator, type Page } from '@playwright/test';
+
+/**
+ * Shared behaviour for every page object.
+ * Locator priority: getByRole → getByLabel → getByTestId → getByText → CSS (last resort).
+ * Never use fixed waits (page.waitForTimeout); Playwright waits for elements automatically.
+ */
+export abstract class BasePage {
+    /** Path of this page relative to baseURL, e.g. '/login'. */
+    protected abstract readonly path: string;
+
+    constructor(readonly page: Page) {}
+
+{{#if isElectron}}
+    /** The electronApp fixture opens the window; screens are reached through the app's own menus and buttons. */
+    async open(): Promise<void> {
+        await this.page.waitForLoadState('domcontentloaded');
+    }
+
+    async expectLoaded(): Promise<void> {
+        await expect(this.page.locator('body')).toBeVisible();
+    }
+{{else}}
+    async open(): Promise<void> {
+        await this.page.goto(this.path);
+    }
+
+    async expectLoaded(): Promise<void> {
+        await expect(this.page).toHaveURL(new RegExp(this.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    }
+{{/if}}
+
+    protected button(name: string | RegExp): Locator {
+        return this.page.getByRole('button', { name });
+    }
+
+    protected link(name: string | RegExp): Locator {
+        return this.page.getByRole('link', { name });
+    }
+
+    protected field(label: string | RegExp): Locator {
+        return this.page.getByLabel(label);
+    }
+}

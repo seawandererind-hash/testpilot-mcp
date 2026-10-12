@@ -1,0 +1,12 @@
+---
+name: add-test-data
+description: Add test data (users, products, orders) for automated tests without hard-coding it or leaking secrets. Use when a test needs input data or a precondition such as an existing account.
+---
+<!-- {{generatedHeader}} -->
+# Add test data
+
+1. Static, non-secret data goes in `test-data/*.json`. Give each record a clear name (`standardUser`, `lockedUser`).
+2. Secrets never go in test data. Store the **name** of the environment variable (`"passwordEnv": "TEST_USER_PASSWORD"`) and add the key to `.env.example` (TestPilot's `write_env_template` does this).
+3. Prefer creating fresh data per test through the API{{#if isPlaywright}} (Playwright's `request` fixture){{/if}} over sharing records between tests, so tests can run in parallel.
+4. Clean up data a test creates, or make it unique (timestamp or random suffix) so reruns don't collide.
+5. Never use production data or real customer details.

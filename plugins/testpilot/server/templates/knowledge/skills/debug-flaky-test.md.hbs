@@ -1,0 +1,21 @@
+---
+name: debug-flaky-test
+description: Find and fix the cause of a test that sometimes passes and sometimes fails. Use when a test fails intermittently, or when run_tests reports a timing or locator failure.
+---
+<!-- {{generatedHeader}} -->
+# Debug a flaky test
+
+1. Re-run just that test several times ({{repeatCommand}}). Note which step fails.
+{{#if isPlaywright}}
+2. Open the trace: `npx playwright show-trace test-results/<test>/trace.zip`. Check the action log, network and DOM snapshot at the failing step.
+{{else}}
+2. Read the screenshot, page source and Appium server log saved for the failed run.
+{{/if}}
+3. Classify it:
+   - **Locator:** the element changed or matches more than one thing. Use a more specific role/label/test id.
+   - **Timing:** an action ran before the app was ready. Wait for a visible condition (an element, a response), never a fixed sleep.
+   - **Data:** the test depends on data another test changed. Make the data unique per test.
+   - **Environment:** the site, device or network was down. Not a test bug; report it.
+   - **Real bug:** the app behaves differently sometimes. Report it with the trace.
+4. Fix the cause. Never add retries or loosen an assertion just to make it green.
+5. The fix is done when the test passes {{stableRuns}} runs in a row.

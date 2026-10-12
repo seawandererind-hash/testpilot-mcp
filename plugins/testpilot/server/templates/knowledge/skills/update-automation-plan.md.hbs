@@ -1,0 +1,11 @@
+---
+name: update-automation-plan
+description: Keep plans/automation-plan.md in sync when test cases, scope or priorities change. Use when cases are added or removed, a wave is finished, or someone asks what is automated.
+---
+<!-- {{generatedHeader}} -->
+# Update the automation plan
+
+1. Call TestPilot's `automation_plan` tool with action `generate` after importing or reviewing cases. It rebuilds the inventory, waves and status while keeping text between `<!-- keep -->` markers.
+2. A regenerated plan goes back to DRAFT. Ask the plan owner to approve it, then call `automation_plan` with action `approve` and their name.
+3. Record why scope changed in `.testpilot/decisions.md`.
+4. The inventory table's status column comes from test runs: planned → generated → passing/failing.

@@ -1,0 +1,75 @@
+# {{header}}
+# Runs the TestPilot-generated {{title}} tests and publishes JUnit results to Azure Test Plans.
+{{#if isAppium}}
+# Hosted agents have no phones, so the tests run on BrowserStack App Automate real devices.
+{{/if}}
+# Create a variable group named "testpilot" (Pipelines → Library) with:
+{{#each variables}}
+#   {{this}}
+{{/each}}
+{{#each secrets}}
+#   {{this}} (mark as secret)
+{{/each}}
+trigger:
+  branches:
+    include: [main]
+pr:
+  branches:
+    include: ['*']
+schedules:
+  - cron: '0 2 * * *'
+    displayName: Nightly
+    branches:
+      include: [main]
+    always: true
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: testpilot
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '22.x'
+    displayName: Use Node.js 22
+
+  - script: npm ci
+    displayName: Install dependencies
+    workingDirectory: {{testRoot}}
+
+{{#if isAppium}}
+  - script: {{setupCommand}}
+    displayName: {{setupName}}
+    workingDirectory: {{testRoot}}
+{{else}}
+  - script: npx playwright install --with-deps {{browserList}}
+    displayName: Install browsers
+    workingDirectory: {{testRoot}}
+{{/if}}
+
+  - script: {{runCommand}}
+    displayName: Run tests
+    workingDirectory: {{testRoot}}
+{{#if allKeys.length}}
+    env:
+{{#each allKeys}}
+      {{this}}: $({{this}})
+{{/each}}
+{{/if}}
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: '{{junitFiles}}'
+      testRunTitle: {{workflowName}}
+    displayName: Publish test results
+
+  - task: PublishPipelineArtifact@1
+    condition: succeededOrFailed()
+    inputs:
+      targetPath: '{{testRootPrefix}}{{reportName}}'
+      artifact: {{reportName}}
+    displayName: Publish the report

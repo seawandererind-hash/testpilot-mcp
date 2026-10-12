@@ -1,0 +1,74 @@
+# {{header}}
+# Runs the TestPilot-generated {{title}} tests on every push and pull request, nightly, and on demand.
+{{#if isAppium}}
+# Hosted runners have no phones, so the tests run on BrowserStack App Automate real devices.
+{{/if}}
+# Configure in GitHub: Settings → Secrets and variables → Actions.
+{{#if secrets.length}}
+#   Secrets:   {{#each secrets}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+{{#if variables.length}}
+#   Variables: {{#each variables}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+name: {{workflowName}}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-$\{{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+{{#if testRootIsSub}}
+    defaults:
+      run:
+        working-directory: {{testRoot}}
+{{/if}}
+{{#if githubEnv.length}}
+    env:
+{{#each githubEnv}}
+      {{this}}
+{{/each}}
+{{/if}}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+{{#if testRootIsSub}}
+          cache-dependency-path: {{testRoot}}/package-lock.json
+{{/if}}
+      - name: Install dependencies
+        run: npm ci
+{{#if isAppium}}
+      - name: {{setupName}}
+        run: {{setupCommand}}
+{{else}}
+      - name: Install browsers
+        run: npx playwright install --with-deps {{browserList}}
+{{/if}}
+      - name: Run tests
+        run: {{runCommand}}
+      - name: Upload report
+        if: $\{{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: {{reportName}}
+          path: |
+{{#each reportPaths}}
+            {{this}}
+{{/each}}
+          retention-days: 14

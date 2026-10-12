@@ -4,7 +4,7 @@ TestPilot guides test automation from the first question to tests running in CI,
 
 This plugin adds:
 
-- **The TestPilot MCP server**, started with `npx` from the matching [GitHub release](https://github.com/seawandererind-hash/testpilot-mcp/releases). It needs Node.js 22.19 or newer.
+- **The TestPilot MCP server**, bundled in `server/` and started with `node`, so nothing is downloaded when it starts. It is built from the repository's `src/` for each [release](https://github.com/seawandererind-hash/testpilot-mcp/releases) and needs Node.js 22.19 or newer.
 - **The `testpilot` skill**, which tells the agent how to use TestPilot's tools.
 - **A Cursor rule** that points test-automation requests at TestPilot.
 

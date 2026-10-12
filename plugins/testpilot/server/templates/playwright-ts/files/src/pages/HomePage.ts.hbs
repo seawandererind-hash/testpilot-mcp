@@ -1,0 +1,17 @@
+// {{header}}
+import { expect } from '@playwright/test';
+
+import { BasePage } from './BasePage';
+
+/** Example page object for the start page. Rename or extend it to match your app. */
+export class HomePage extends BasePage {
+    protected readonly path = '/';
+
+    // testpilot:locators
+
+    async expectVisible(): Promise<void> {
+        await expect(this.page.locator('body')).toBeVisible();
+        await expect(this.page).not.toHaveTitle('');
+    }
+    // testpilot:actions
+}

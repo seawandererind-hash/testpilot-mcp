@@ -1,0 +1,57 @@
+// {{header}}
+// Runs the TestPilot-generated {{title}} tests. Add these Jenkins credentials (Secret text):
+{{#each secrets}}
+//   {{this}}
+{{/each}}
+// and set these as environment values on the job or folder:
+{{#each variables}}
+//   {{this}}
+{{/each}}
+pipeline {
+    agent {
+        docker {
+            image '{{dockerImage}}'
+{{#if dockerArgs}}
+            args '{{dockerArgs}}'
+{{/if}}
+        }
+    }
+    triggers {
+        cron('H 2 * * *')
+    }
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+    }
+{{#if secrets.length}}
+    environment {
+{{#each secrets}}
+        {{this}} = credentials('{{this}}')
+{{/each}}
+    }
+{{/if}}
+    stages {
+        stage('Install') {
+            steps {
+                dir('{{testRoot}}') {
+                    sh 'npm ci'
+{{#if setupCommand}}
+                    sh '{{setupCommand}}'
+{{/if}}
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                dir('{{testRoot}}') {
+                    sh '{{runCommand}}'
+                }
+            }
+        }
+    }
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: '{{junitFiles}}'
+            archiveArtifacts artifacts: '{{testRootPrefix}}{{reportName}}/**', allowEmptyArchive: true
+        }
+    }
+}

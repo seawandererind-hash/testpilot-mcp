@@ -1,0 +1,42 @@
+---
+name: {{skillName}}
+description: Turn a test case from .testpilot/test-cases/normalized into a {{frameworkLabel}} test that uses this repo's page objects. Use when asked to automate a test case by its id or to implement steps marked TODO(testpilot).
+---
+<!-- {{generatedHeader}} -->
+# Write a {{frameworkLabel}} test
+
+1. Read `.testpilot/test-cases/normalized/<ID>.json` and `.testpilot/config.yaml`. Skip cases whose review verdict is MANUAL; ask before automating NEEDS-REWORK cases.
+2. For each step, reuse a method or locator from `{{pagesDir}}`. If none exists, add it with the `create-page-object` skill. Locator order: {{locatorOrder}}.
+3. Create or update `{{testsDir}}/<area>/<ID>.spec.{{ext}}`:
+{{#if isPlaywright}}
+   ```ts
+   import { test, expect } from '../../src/fixtures/test';
+
+   test('<ID> <title>', { tag: ['@<ID>', '@<priority>'], annotation: { type: 'test_key', description: '<ID>' } }, async ({ page }) => {
+       await test.step('<step 1 action>', async () => { /* page object calls */ });
+       await test.step('<step 1 expected>', async () => { await expect(/* locator */).toBeVisible(); });
+   });
+   ```
+{{else if isAppium}}
+   ```ts
+   import { expect } from '@wdio/globals';
+
+   import { loginScreen } from '../../../src/screens/LoginScreen';
+   import { productsScreen } from '../../../src/screens/ProductsScreen';
+
+   describe('<area>', () => {
+       it('<ID> <title> @<ID> @<priority>', async () => {
+           await loginScreen.loginAs('standard');
+           await productsScreen.waitForScreen();
+           await expect(productsScreen.cartButton).toBeDisplayed();
+       });
+   });
+   ```
+   Screen getters look elements up each time they are used; actions wait with `waitForDisplayed` (use `tap`, `type`, `choose` from `BaseScreen`). A test with TODO(testpilot) steps calls `pendingUntilDone(this, ...)` first; delete that line once the steps are written.
+{{else}}
+   Follow the existing tests' structure. Name the test `<ID> <title>` and tag it with the id so results trace back.
+{{/if}}
+4. Data comes from `test-data/` and secrets from environment variables via `src/utils/env`. Never hard-code either.
+5. One behaviour per test. Every expected result becomes an assertion. No fixed sleeps.
+6. Run only this test ({{runOneCommand}}) and make it pass twice in a row.
+7. Update the case's row in `plans/automation-plan.md` (status: automated) or call TestPilot's `generate_tests`/`run_tests` tools, which do it for you.

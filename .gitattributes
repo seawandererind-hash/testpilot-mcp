@@ -4,3 +4,4 @@
 *.xlsx binary
 *.docx binary
 *.zip binary
+plugins/testpilot/server/** linguist-generated=true

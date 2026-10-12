@@ -1,0 +1,18 @@
+---
+name: review-test-case
+description: Review a manual test case for clarity, completeness and automatability, and propose a better version. Use when asked to review, improve or rewrite test cases before automation.
+---
+<!-- {{generatedHeader}} -->
+# Review a test case
+
+Check each point and fix what fails:
+1. **Title** says what is verified ("Locked user sees an error on login"), not "Test 1".
+2. **Preconditions** are explicit: which user, which data, which environment.
+3. **One behaviour** per case. Split cases that test several things.
+4. **Every step has an expected result**, or at least the last step does, and it is observable (text, page, state). "Works correctly" is not observable.
+5. **Concrete data**, but no secrets: name the account role, not its password.
+6. **Deterministic**: no "sometimes", no dependence on time of day or on another test.
+7. **Automatable**: CAPTCHA, SMS/email codes, printed output and visual "looks right" checks need a test hook or stay manual.
+8. **Negative cases** exist for important flows (invalid input, no permission, empty state).
+
+TestPilot's `review_test_cases` tool scores these automatically; use this skill to explain or improve its suggestions.
