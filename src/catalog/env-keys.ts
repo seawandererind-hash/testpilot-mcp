@@ -66,6 +66,10 @@ export const INTEGRATION_KEYS: Record<string, EnvKey[]> = {
     mobile: [
         { name: 'APPIUM_SERVER_URL', description: 'Appium server address for local runs', whereToGet: 'Usually http://127.0.0.1:4723 after running `appium`.', format: 'url', required: false, secret: false }
     ],
+    electron: [
+        { name: 'ELECTRON_APP_PATH', description: 'Path to the Electron app executable on this machine', whereToGet: 'TestPilot fills this in .env.example from the app step. Put your own path in .env if the app is installed elsewhere.', format: 'nonempty', required: true, secret: false },
+        { name: 'ELECTRON_APP_ARGS', description: 'Extra command-line arguments for the app, space separated (optional)', whereToGet: 'Your developers, for example a flag that points the app at the test environment.', format: 'nonempty', required: false, secret: false }
+    ],
     api: [
         { name: 'API_BASE_URL', description: 'Base URL of the API under test', whereToGet: 'TestPilot fills this in .env.example when you give the API address in the app step. Put a different one in .env to override it.', format: 'url', required: false, secret: false },
         { name: 'API_TOKEN', description: 'Token for the API, if it needs one', whereToGet: 'Your developers or the API\'s developer portal. Use a test-environment token.', format: 'nonempty', required: false, secret: true }
@@ -77,6 +81,7 @@ export function integrationsFor(config: Config): string[] {
     const out = new Set<string>();
     if (config.appType === 'api') out.add('api');
     else out.add('app');
+    if (config.appType === 'electron') out.add('electron');
     if (config.appType && ['android', 'ios', 'android-ios', 'hybrid', 'windows', 'macos'].includes(config.appType)) out.add('mobile');
     const target = config.execution.target;
     if (target && target !== 'local' && target !== 'docker') out.add(target);

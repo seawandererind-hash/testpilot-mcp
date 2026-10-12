@@ -12,6 +12,16 @@ export abstract class BasePage {
 
     constructor(readonly page: Page) {}
 
+{{#if isElectron}}
+    /** The electronApp fixture opens the window; screens are reached through the app's own menus and buttons. */
+    async open(): Promise<void> {
+        await this.page.waitForLoadState('domcontentloaded');
+    }
+
+    async expectLoaded(): Promise<void> {
+        await expect(this.page.locator('body')).toBeVisible();
+    }
+{{else}}
     async open(): Promise<void> {
         await this.page.goto(this.path);
     }
@@ -19,6 +29,7 @@ export abstract class BasePage {
     async expectLoaded(): Promise<void> {
         await expect(this.page).toHaveURL(new RegExp(this.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
+{{/if}}
 
     protected button(name: string | RegExp): Locator {
         return this.page.getByRole('button', { name });

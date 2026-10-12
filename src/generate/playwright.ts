@@ -196,6 +196,12 @@ export class PlaywrightGenerator {
         const po = ctx.current;
         switch (intent.kind) {
             case 'open': {
+                const electron = this.config.appType === 'electron';
+                if (electron && (intent.path || !intent.target || HOME_WORDS.test(intent.target))) {
+                    if (!intent.path) return ['// The electronApp fixture has already opened the app window.'];
+                    ctx.todos.push(`reach ${intent.path} through the app's menus`);
+                    return [`// TODO(testpilot): reach ${comment(intent.path)} through the app's menus or buttons (Electron windows have no address bar).`];
+                }
                 if (intent.path) return [`await page.goto(${quote(intent.path.replace(/^https?:\/\/[^/]+/i, '') || '/')});`];
                 if (!intent.target || HOME_WORDS.test(intent.target)) return [`await page.goto('/');`];
                 const target = this.pageObject(intent.target);

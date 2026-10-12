@@ -244,6 +244,7 @@ export const STEPS: StepDef[] = [
         after: (store, config) => {
             if (config.app.kind === 'url' && config.app.ref) setEnvDefault(store, config.appType === 'api' ? 'API_BASE_URL' : 'APP_BASE_URL', config.app.ref);
             if (config.app.kind === 'openapi' && config.app.ref && /^https?:/i.test(config.app.ref)) setEnvDefault(store, 'API_BASE_URL', new URL(config.app.ref).origin);
+            if (config.appType === 'electron' && config.app.kind !== 'url' && config.app.ref) setEnvDefault(store, 'ELECTRON_APP_PATH', config.app.ref);
         }
     },
     {

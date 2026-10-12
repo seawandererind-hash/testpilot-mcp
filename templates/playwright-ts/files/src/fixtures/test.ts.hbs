@@ -1,5 +1,11 @@
 // {{header}}
+{{#if isElectron}}
+import { _electron as electron, type ElectronApplication, test as base } from '@playwright/test';
+
+import { optionalEnv, requireEnv } from '../utils/env';
+{{else}}
 import { test as base } from '@playwright/test';
+{{/if}}
 {{#if isWeb}}
 
 import { HomePage } from '../pages/HomePage';
@@ -10,6 +16,9 @@ import { HomePage } from '../pages/HomePage';
  * TestPilot adds new page objects here when it generates tests.
  */
 type Pages = {
+{{#if isElectron}}
+    electronApp: ElectronApplication;
+{{/if}}
 {{#if isWeb}}
     homePage: HomePage;
 {{/if}}
@@ -17,6 +26,18 @@ type Pages = {
 };
 
 export const test = base.extend<Pages>({
+{{#if isElectron}}
+    // Launches the Electron app for each test and hands its first window to tests as `page`,
+    // so page objects work the same as on the web. Playwright's Electron support is experimental.
+    electronApp: async ({}, use) => {
+        const app = await electron.launch({ executablePath: requireEnv('ELECTRON_APP_PATH'), args: optionalEnv('ELECTRON_APP_ARGS').split(' ').filter(Boolean) });
+        await use(app);
+        await app.close();
+    },
+    page: async ({ electronApp }, use) => {
+        await use(await electronApp.firstWindow());
+    },
+{{/if}}
 {{#if isWeb}}
     homePage: async ({ page }, use) => {
         await use(new HomePage(page));
