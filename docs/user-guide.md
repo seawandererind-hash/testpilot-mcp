@@ -87,7 +87,7 @@ The full Playwright report opens with `npx playwright show-report`; every failur
 
 ## 9. Report and CI
 
-TestPilot writes a one-page HTML report (`.testpilot/reports/latest.html`) that anyone can open, showing pass rate, progress against the plan, failures by cause, flaky tests and the trend. It can add the pipeline for your CI system and lists the secrets to add there. If your test cases live in Xray, Zephyr, TestRail, BrowserStack or Azure Test Plans, it can send the results back after you approve.
+TestPilot writes a one-page HTML report (`.testpilot/reports/latest.html`) that anyone can open, showing pass rate, progress against the plan, failures by cause, flaky tests and the trend. It can add the pipeline for your CI system and lists the secrets to add there. Mobile app pipelines run on BrowserStack real devices, because CI machines have no phones; desktop app tests need a self-hosted runner with the app installed. If your test cases live in Xray, Zephyr, TestRail, BrowserStack or Azure Test Plans, it can send the results back after you approve.
 
 ## Coming back later
 

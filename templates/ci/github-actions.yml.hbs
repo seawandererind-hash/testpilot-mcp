@@ -1,5 +1,8 @@
 # {{header}}
-# Runs the TestPilot-generated Playwright tests on every push and pull request, nightly, and on demand.
+# Runs the TestPilot-generated {{title}} tests on every push and pull request, nightly, and on demand.
+{{#if isAppium}}
+# Hosted runners have no phones, so the tests run on BrowserStack App Automate real devices.
+{{/if}}
 # Configure in GitHub: Settings → Secrets and variables → Actions.
 {{#if secrets.length}}
 #   Secrets:   {{#each secrets}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
@@ -7,7 +10,7 @@
 {{#if variables.length}}
 #   Variables: {{#each variables}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/if}}
-name: UI tests
+name: {{workflowName}}
 
 on:
   push:
@@ -50,16 +53,22 @@ jobs:
 {{/if}}
       - name: Install dependencies
         run: npm ci
+{{#if isAppium}}
+      - name: {{setupName}}
+        run: {{setupCommand}}
+{{else}}
       - name: Install browsers
         run: npx playwright install --with-deps {{browserList}}
+{{/if}}
       - name: Run tests
-        run: npx playwright test
+        run: {{runCommand}}
       - name: Upload report
         if: $\{{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: {{reportName}}
           path: |
-            {{testRootPrefix}}playwright-report/
-            {{testRootPrefix}}test-results/
+{{#each reportPaths}}
+            {{this}}
+{{/each}}
           retention-days: 14

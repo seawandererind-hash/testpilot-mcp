@@ -1,5 +1,5 @@
 // {{header}}
-// Runs the TestPilot-generated Playwright tests. Add these Jenkins credentials (Secret text):
+// Runs the TestPilot-generated {{title}} tests. Add these Jenkins credentials (Secret text):
 {{#each secrets}}
 //   {{this}}
 {{/each}}
@@ -10,8 +10,10 @@
 pipeline {
     agent {
         docker {
-            image 'mcr.microsoft.com/playwright:v{{playwrightVersion}}-noble'
-            args '--ipc=host'
+            image '{{dockerImage}}'
+{{#if dockerArgs}}
+            args '{{dockerArgs}}'
+{{/if}}
         }
     }
     triggers {
@@ -32,21 +34,24 @@ pipeline {
             steps {
                 dir('{{testRoot}}') {
                     sh 'npm ci'
+{{#if setupCommand}}
+                    sh '{{setupCommand}}'
+{{/if}}
                 }
             }
         }
         stage('Test') {
             steps {
                 dir('{{testRoot}}') {
-                    sh 'npx playwright test'
+                    sh '{{runCommand}}'
                 }
             }
         }
     }
     post {
         always {
-            junit allowEmptyResults: true, testResults: '{{testRootPrefix}}test-results/junit.xml'
-            archiveArtifacts artifacts: '{{testRootPrefix}}playwright-report/**', allowEmptyArchive: true
+            junit allowEmptyResults: true, testResults: '{{junitFiles}}'
+            archiveArtifacts artifacts: '{{testRootPrefix}}{{reportName}}/**', allowEmptyArchive: true
         }
     }
 }
