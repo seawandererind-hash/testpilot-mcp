@@ -113,3 +113,11 @@ export function setEnvDefault(store: ProjectStore, name: string, value: string):
     const next = line.test(current) ? current.replace(line, `${name}=${value}`) : `${current.replace(/\s*$/, '\n')}${name}=${value}\n`;
     if (next !== current) store.write(ENV_EXAMPLE_FILE, next);
 }
+
+/** The address tests will hit: .env, then the environment, then the committed default, then the wizard answer. */
+export function resolveBaseUrl(store: ProjectStore, config: { appType?: string; app: { kind?: string; ref?: string } }, processEnv: NodeJS.ProcessEnv = process.env): string | undefined {
+    const key = config.appType === 'api' ? 'API_BASE_URL' : 'APP_BASE_URL';
+    const fromEnv = store.read(ENV_FILE);
+    const example = store.read(ENV_EXAMPLE_FILE);
+    return (fromEnv ? parseDotenv(fromEnv).get(key) : undefined) || processEnv[key] || (example ? parseDotenv(example).get(key) : undefined) || (config.app.kind === 'url' ? config.app.ref : undefined);
+}

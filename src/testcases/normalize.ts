@@ -127,21 +127,33 @@ export function cellText(value: unknown): string {
     return String(value);
 }
 
+/** Inline numbering: "1) open 2) click". */
+function splitInline(text: string): string[] {
+    return text
+        .split(/\s+(?=\d{1,2}[.)]\s+\S)/)
+        .map(s => s.replace(/^\d{1,2}[.)]\s+/, '').trim())
+        .filter(Boolean);
+}
+
 /** Splits "1. Open the app\n2. Tap login" (or "Step 1:", "a)", bullets, or one action per line) into items. */
 export function splitNumbered(text: string): string[] {
     const trimmed = text.trim();
     if (!trimmed) return [];
-    const marker = /(?:^|\n)\s*(?:step\s*)?(?:\d{1,3}|[a-z])\s*[.):-]\s+|(?:^|\n)\s*[-*•●▪]\s+/gi;
+    const marker = /(?:^|\n)\s*(?:step\s*)?(?:\d{1,3}|[a-z])\s*[.):-]\s+|(?:^|\n)\s*[-*•●▪]\s+/i;
     if (marker.test(trimmed)) {
-        marker.lastIndex = 0;
         const parts = trimmed
             .split(/(?:^|\n)\s*(?:step\s*)?(?:\d{1,3}|[a-z])\s*[.):-]\s+|(?:^|\n)\s*[-*•●▪]\s+/i)
             .map(s => s.replace(/\s*\n\s*/g, ' ').trim())
             .filter(Boolean);
+        // A single numbered item ("1. Click Save") still loses its number.
+        const startsWithMarker = /^\s*(?:step\s*)?(?:\d{1,3}\s*[.):-]|[-*•●▪])\s+/i.test(trimmed);
         if (parts.length > 1) return parts;
+        if (parts.length === 1 && startsWithMarker) {
+            const inline = splitInline(trimmed);
+            return inline.length > 1 ? inline : parts;
+        }
     }
-    // Inline numbering: "1) open 2) click".
-    const inline = trimmed.split(/\s+(?=\d{1,2}[.)]\s+\S)/).map(s => s.replace(/^\d{1,2}[.)]\s+/, '').trim()).filter(Boolean);
+    const inline = splitInline(trimmed);
     if (inline.length > 1) return inline;
     const lines = trimmed.split(/\n+/).map(s => s.trim()).filter(Boolean);
     return lines.length ? lines : [trimmed];

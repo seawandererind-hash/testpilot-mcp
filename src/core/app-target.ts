@@ -32,8 +32,7 @@ export function classifyAppRef(input: string, appType: AppType | undefined): App
             if (url.username || url.password) {
                 return { kind: 'help', ref: '', guidance: 'Please give the address without a username or password in it. Logins go in .env (TEST_USER_EMAIL / TEST_USER_PASSWORD), never in chat.' };
             }
-            const host = url.hostname;
-            if (!/(test|stag|qa|uat|dev|sandbox|preprod|localhost|127\.0\.0\.1)/i.test(host)) {
+            if (isLikelyProduction(value)) {
                 note = 'This address does not look like a test environment. Make sure it is not production; TestPilot refuses to run against production without an explicit flag.';
             }
         } catch {
@@ -53,4 +52,14 @@ export function classifyAppRef(input: string, appType: AppType | undefined): App
         return { kind: appType === 'ios' || appType === 'macos' ? 'bundle-id' : 'package-id', ref: value, note: 'An installed app id. Tests will start the app already installed on the device.' };
     }
     return { kind: 'help', ref: value, guidance: (appType && NO_BUILD_GUIDANCE[appType]) ?? 'I could not recognise that. Give a full URL (https://…), a file path ending in .apk/.ipa/.app/.exe, or a cloud id such as bs://….' };
+}
+
+/** True when a URL's host does not look like a test environment (no test/staging/qa/dev/local marker). */
+export function isLikelyProduction(url: string): boolean {
+    try {
+        const host = new URL(url).hostname;
+        return !/(test|stag|qa|uat|dev|sandbox|preprod|perf|demo|local|127\.0\.0\.1|\[::1\]|^10\.|^192\.168\.|\.internal$|\.test$|\.example$)/i.test(host);
+    } catch {
+        return false;
+    }
 }

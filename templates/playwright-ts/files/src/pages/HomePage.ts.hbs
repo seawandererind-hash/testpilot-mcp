@@ -7,8 +7,11 @@ import { BasePage } from './BasePage';
 export class HomePage extends BasePage {
     protected readonly path = '/';
 
+    // testpilot:locators
+
     async expectVisible(): Promise<void> {
         await expect(this.page.locator('body')).toBeVisible();
         await expect(this.page).not.toHaveTitle('');
     }
+    // testpilot:actions
 }

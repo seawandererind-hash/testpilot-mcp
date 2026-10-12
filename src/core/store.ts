@@ -30,6 +30,11 @@ export class ProjectStore {
         return safeJoin(this.root, relative);
     }
 
+    /** Repository-relative POSIX path of an absolute path inside the root. */
+    relative(absolute: string): string {
+        return toPosix(path.relative(this.root, absolute));
+    }
+
     exists(relative: string): boolean {
         return existsSync(this.resolve(relative));
     }
