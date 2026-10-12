@@ -7,7 +7,7 @@ import { ImportError, type Importer } from './types.js';
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', '#39': "'" };
 
-function decode(text: string): string {
+export function decode(text: string): string {
     return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e: string) => {
         if (e.startsWith('#x')) return String.fromCodePoint(parseInt(e.slice(2), 16));
         if (e.startsWith('#')) return String.fromCodePoint(parseInt(e.slice(1), 10));

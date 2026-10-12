@@ -3,10 +3,17 @@ import path from 'node:path';
 import { digestOf } from '../core/confirm.js';
 import type { TestCase, TestCaseSource } from '../core/schema.js';
 import { CASES_RAW_DIR, type ProjectStore, safeFileName } from '../core/store.js';
+import { IntegrationError } from '../integrations/http.js';
 import { importCsv } from './importers/csv.js';
 import { importExcel } from './importers/excel.js';
 import { importGherkin } from './importers/gherkin.js';
 import { importMarkdown } from './importers/markdown.js';
+import { importAzureDevOps } from './importers/remote/azure-devops.js';
+import { importBrowserStack } from './importers/remote/browserstack.js';
+import { importJira } from './importers/remote/jira.js';
+import { importTestRail } from './importers/remote/testrail.js';
+import { importXray } from './importers/remote/xray.js';
+import { importZephyr } from './importers/remote/zephyr.js';
 import { ImportError, type Importer, type ImportRequest } from './importers/types.js';
 import { importWord } from './importers/word.js';
 import { finalise, type ImportWarning } from './normalize.js';
@@ -16,10 +23,17 @@ export const IMPORTERS: Partial<Record<TestCaseSource, Importer>> = {
     csv: importCsv,
     word: importWord,
     markdown: importMarkdown,
-    gherkin: importGherkin
+    gherkin: importGherkin,
+    // Remote tools (importers/remote/): credentials come from request.env, never from tool arguments.
+    jira: importJira,
+    xray: importXray,
+    zephyr: importZephyr,
+    testrail: importTestRail,
+    browserstack: importBrowserStack,
+    'azure-devops': importAzureDevOps
 };
 
-/** Remote sources register here (see importers/remote.ts) so the tool code stays the same. */
+/** Further sources (qTest, a team's in-house tool) can register here so the tool code stays the same. */
 export function registerImporter(source: TestCaseSource, importer: Importer): void {
     IMPORTERS[source] = importer;
 }
@@ -52,7 +66,14 @@ export interface ImportOutcome {
 export async function runImport(store: ProjectStore, source: TestCaseSource, request: Omit<ImportRequest, 'store'>, dryRun: boolean): Promise<ImportOutcome> {
     const importer = IMPORTERS[source];
     if (!importer) throw new ImportError(`Importing from ${source} is not available yet. Export the cases to Excel or CSV and import that file.`);
-    const batch = await importer({ ...request, store });
+    let batch;
+    try {
+        batch = await importer({ ...request, store });
+    } catch (error) {
+        // Integration helpers throw IntegrationError; the tool shows ImportError messages to the user.
+        if (error instanceof IntegrationError) throw new ImportError(error.message);
+        throw error;
+    }
     const drafts = batch.drafts.slice(0, request.limit);
     const warnings = [...batch.warnings];
     if (batch.drafts.length > request.limit) warnings.push({ ref: batch.ref, message: `Only the first ${request.limit} of ${batch.drafts.length} cases were imported. Raise limit to import more.` });
