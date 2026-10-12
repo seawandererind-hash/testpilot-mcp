@@ -1,0 +1,28 @@
+// {{header}}
+import { test as base } from '@playwright/test';
+{{#if isWeb}}
+
+import { HomePage } from '../pages/HomePage';
+{{/if}}
+
+/**
+ * Custom fixtures: tests receive ready-made page objects instead of creating them.
+ * TestPilot adds new page objects here when it generates tests.
+ */
+type Pages = {
+{{#if isWeb}}
+    homePage: HomePage;
+{{/if}}
+    // testpilot:fixture-types
+};
+
+export const test = base.extend<Pages>({
+{{#if isWeb}}
+    homePage: async ({ page }, use) => {
+        await use(new HomePage(page));
+    },
+{{/if}}
+    // testpilot:fixtures
+});
+
+export { expect } from '@playwright/test';

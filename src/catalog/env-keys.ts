@@ -14,7 +14,7 @@ export interface EnvKey {
 /** Keys each integration needs. Values never pass through the AI; only presence and format are reported. */
 export const INTEGRATION_KEYS: Record<string, EnvKey[]> = {
     app: [
-        { name: 'APP_BASE_URL', description: 'Address of the test environment, e.g. https://staging.example.com', whereToGet: 'Ask your developers which environment to test against. Never use production.', format: 'url', required: true, secret: false },
+        { name: 'APP_BASE_URL', description: 'Address of the test environment, e.g. https://staging.example.com', whereToGet: 'TestPilot fills this in .env.example when you give the test URL in the app step. Put a different address in .env to override it. Never use production.', format: 'url', required: false, secret: false },
         { name: 'TEST_USER_EMAIL', description: 'Login of a test account', whereToGet: 'A dedicated test user created for automation.', format: 'nonempty', required: false, secret: false },
         { name: 'TEST_USER_PASSWORD', description: 'Password of that test account', whereToGet: 'From your team password manager.', format: 'nonempty', required: false, secret: true }
     ],
@@ -61,7 +61,10 @@ export const INTEGRATION_KEYS: Record<string, EnvKey[]> = {
     mobile: [
         { name: 'APPIUM_SERVER_URL', description: 'Appium server address for local runs', whereToGet: 'Usually http://127.0.0.1:4723 after running `appium`.', format: 'url', required: false, secret: false }
     ],
-    api: [{ name: 'API_BASE_URL', description: 'Base URL of the API under test', whereToGet: 'Your developers.', format: 'url', required: true, secret: false }]
+    api: [
+        { name: 'API_BASE_URL', description: 'Base URL of the API under test', whereToGet: 'TestPilot fills this in .env.example when you give the API address in the app step. Put a different one in .env to override it.', format: 'url', required: false, secret: false },
+        { name: 'API_TOKEN', description: 'Token for the API, if it needs one', whereToGet: 'Your developers or the API\'s developer portal. Use a test-environment token.', format: 'nonempty', required: false, secret: true }
+    ]
 };
 
 /** Which integrations the current configuration needs keys for. */
@@ -86,6 +89,11 @@ export function integrationsFor(config: Config): string[] {
     if (source === 'testrail') out.add('testrail');
     if (source === 'azure-devops') out.add('azure-devops');
     return [...out];
+}
+
+/** True when the key is a non-secret setting whose default may live in the committed .env.example. */
+export function isSetting(name: string): boolean {
+    return Object.values(INTEGRATION_KEYS).some(keys => keys.some(k => k.name === name && !k.secret));
 }
 
 export function keysFor(integrations: string[]): EnvKey[] {

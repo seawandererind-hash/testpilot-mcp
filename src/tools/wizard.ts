@@ -1,9 +1,22 @@
 import { acceptedContent, type CallToolResult, inputRequired, type InputRequiredResult, inputResponse, type McpServer, type ServerContext } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 
+import type { RepoDetection } from '../core/detect.js';
 import { checkPrerequisites } from '../core/prereqs.js';
+import type { ProjectStore } from '../core/store.js';
 import { answerStep, currentStepId, resetToStep, STEP_IDS, type StepView, viewStep, type WizardContext } from '../core/wizard.js';
+import { regenerateKnowledge } from './scaffold.js';
 import { clientSupportsForms, guarded, openProject, projectRootArg, READ_ONLY, result, type ServerOptions, WRITES_STATE } from './common.js';
+
+/** Saves an answer; once the framework exists, also refreshes AGENTS.md and the skills so every AI tool sees the change. */
+function answerAndSync(store: ProjectStore, detection: RepoDetection, step: string, answer: string | string[]) {
+    const out = answerStep(store, detection, step, answer);
+    if (store.readState().completed.includes('SCAFFOLD')) {
+        const { written } = regenerateKnowledge(store);
+        if (written.length) return { ...out, saved: `${out.saved} (updated ${written.length} AI instruction file(s))` };
+    }
+    return out;
+}
 
 function describeStep(view: StepView): string {
     const lines = [`${view.progress}: ${view.title}`, '', view.question, `Why it matters: ${view.why}`];
@@ -143,7 +156,7 @@ export function registerWizardTools(server: McpServer, options: ServerOptions): 
                     const step = args.step ?? currentStepId(wctx());
                     if (!step) return result('The wizard is complete.', { done: true });
                     if (args.answer === undefined) throw new Error('Give the user\'s answer in "answer".');
-                    const { saved, next } = answerStep(store, detection(), step, args.answer);
+                    const { saved, next } = answerAndSync(store, detection(), step, args.answer);
                     return result(`Saved. ${saved}.${next ? `\n\nNext question:\n${describeStep(next)}` : '\n\nThe wizard is complete.'}`, { saved, next: next ?? null, done: !next });
                 }
 
@@ -165,7 +178,7 @@ export function registerWizardTools(server: McpServer, options: ServerOptions): 
                         return inputRequired({ inputRequests: { [key]: inputRequired.elicit({ message: `${view.progress}: ${view.question}`, requestedSchema: schema }) } });
                     }
                     const answer = accepted.other?.trim() ? accepted.other.trim() : accepted.answer;
-                    const { saved, next } = answerStep(store, detection(), view.step, answer);
+                    const { saved, next } = answerAndSync(store, detection(), view.step, answer);
                     return result(`The user answered in the form. ${saved}.${next ? `\n\nNext question:\n${describeStep(next)}` : '\n\nThe wizard is complete.'}`, { saved, next: next ?? null, done: !next });
                 }
                 return result(describeStep(view), { step: view });

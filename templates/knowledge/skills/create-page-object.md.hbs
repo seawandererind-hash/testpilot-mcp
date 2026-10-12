@@ -1,0 +1,18 @@
+---
+name: create-page-object
+description: Add or extend a page object (screen object) in {{pagesDir}} with stable locators and intention-revealing methods. Use when a test needs an element or action that no page object has yet.
+---
+<!-- {{generatedHeader}} -->
+# Create a page object
+
+1. Check `{{pagesDir}}` for an existing class for this screen; extend it rather than creating a duplicate.
+2. Look for recorded locators in `.testpilot/exploration/` (TestPilot's `explore_app` tool writes them).
+3. Locator order: {{locatorOrder}}. If an element has no stable handle, ask the developers to add a `{{testIdAttribute}}` attribute instead of using long CSS or XPath.
+4. Expose **actions** (`signIn(user)`, `addToCart(item)`) and **queries** (`errorMessage()`), not raw clicks. Tests should read like the test case.
+5. Keep assertions in tests, not in page objects, except for an `expectLoaded()` check.
+{{#if isPlaywright}}
+6. Extend `BasePage`, set `path`, and register the class as a fixture in `src/fixtures/test.ts` (look for the `testpilot:fixtures` marker).
+{{/if}}
+{{#if isAppium}}
+6. Extend `BaseScreen`. Use accessibility ids (`~id`) first; keep platform-specific selectors in one place per screen.
+{{/if}}

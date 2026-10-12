@@ -1,0 +1,19 @@
+---
+name: {{skillName}}
+description: Run the automated tests {{targetPhrase}} and read the results. Use when asked to run tests, a tag, a single test id, or the smoke suite.
+---
+<!-- {{generatedHeader}} -->
+# Run tests {{targetPhrase}}
+
+{{#if isBrowserStack}}
+1. Make sure `.env` has `BROWSERSTACK_USERNAME` and `BROWSERSTACK_ACCESS_KEY` (TestPilot's `check_env` confirms without showing values).
+2. BrowserStack supports Appium up to 3.5.2 and WebdriverIO up to 9; keep those versions pinned for cloud runs.
+{{else}}
+1. Make sure `.env` exists (copy `.env.example`) and the app under test is reachable.
+{{/if}}
+2. Commands:
+{{#each commands}}
+   - {{this.what}}: `{{this.cmd}}`
+{{/each}}
+3. Or call TestPilot's `run_tests` tool with a selection (an id such as `SHOP-123`, a tag such as `@smoke`, or a file). It returns a summary and sorts failures into locator, timing, data, environment and assertion.
+4. Results: {{resultsWhere}}.

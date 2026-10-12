@@ -1,0 +1,12 @@
+// {{header}}
+import { _electron as electron, expect, test } from '@playwright/test';
+
+import { requireEnv } from '../../src/utils/env';
+
+// Playwright's Electron support is experimental: https://playwright.dev/docs/api/class-electron
+test('SMOKE-1 app launches', { tag: ['@smoke'], annotation: { type: 'test_key', description: 'SMOKE-1' } }, async () => {
+    const app = await electron.launch({ executablePath: requireEnv('ELECTRON_APP_PATH') });
+    const window = await app.firstWindow();
+    await expect(window.locator('body')).toBeVisible();
+    await app.close();
+});

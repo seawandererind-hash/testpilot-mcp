@@ -4,6 +4,8 @@
  */
 
 const SECRET_KEY = /(pass(word|wd)?|secret|token|api[-_]?key|access[-_]?key|auth(orization)?|credential|private[-_]?key|cookie|session)/i;
+/** Keys that name a secret without holding one: TestPilot's own confirm tokens and env-variable names. */
+const SAFE_KEY = /^(confirmToken|[A-Za-z]*Env)$/;
 
 const SECRET_VALUE_PATTERNS: RegExp[] = [
     /\bBearer\s+[A-Za-z0-9._~+/=-]{8,}/g, // HTTP bearer tokens
@@ -36,7 +38,7 @@ export function redact<T>(value: T, depth = 0): T {
     if (value && typeof value === 'object') {
         const out: Record<string, unknown> = {};
         for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-            out[key] = SECRET_KEY.test(key) && item !== undefined && item !== null && typeof item !== 'boolean' ? REDACTED : redact(item, depth + 1);
+            out[key] = SECRET_KEY.test(key) && !SAFE_KEY.test(key) && item !== undefined && item !== null && typeof item !== 'boolean' ? REDACTED : redact(item, depth + 1);
         }
         return out as T;
     }

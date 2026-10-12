@@ -1,0 +1,7 @@
+// {{header}}
+import { expect, test } from '@playwright/test';
+
+test('SMOKE-1 API answers', { tag: ['@smoke'], annotation: { type: 'test_key', description: 'SMOKE-1' } }, async ({ request }) => {
+    const response = await request.get('/');
+    expect(response.status(), 'the API should not return a server error').toBeLessThan(500);
+});

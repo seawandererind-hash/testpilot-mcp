@@ -2,6 +2,7 @@ import { APP_TYPE_OPTIONS, BUILD_TOOLS, CI_OPTIONS, EXECUTION_OPTIONS, EXTRA_OPT
 import { classifyAppRef } from './app-target.js';
 import { type RepoDetection, uiFrameworksIn } from './detect.js';
 import { type AppType, type Config, type ExecutionTarget, type Pattern, type State, type TestCaseSource } from './schema.js';
+import { setEnvDefault } from './env.js';
 import type { ProjectStore } from './store.js';
 
 export type StepKind = 'choice' | 'multi' | 'text' | 'action';
@@ -41,6 +42,8 @@ interface StepDef {
     action?: (ctx: WizardContext) => { tools: string[]; instructions: string };
     /** Applies a validated answer to the config. Returns a human summary for decisions.md. */
     apply?: (config: Config, answer: string | string[], ctx: WizardContext) => string;
+    /** Side effects in the repository after the answer is saved. */
+    after?: (store: ProjectStore, config: Config) => void;
 }
 
 const mobileTypes: AppType[] = ['android', 'ios', 'android-ios', 'hybrid'];
@@ -237,6 +240,10 @@ export const STEPS: StepDef[] = [
                 if (!base) config.environments.push({ name: 'test', baseUrlEnv: config.appType === 'api' ? 'API_BASE_URL' : 'APP_BASE_URL', isProduction: false });
             }
             return `App under test: ${ref.kind} ${ref.ref}`;
+        },
+        after: (store, config) => {
+            if (config.app.kind === 'url' && config.app.ref) setEnvDefault(store, config.appType === 'api' ? 'API_BASE_URL' : 'APP_BASE_URL', config.app.ref);
+            if (config.app.kind === 'openapi' && config.app.ref && /^https?:/i.test(config.app.ref)) setEnvDefault(store, 'API_BASE_URL', new URL(config.app.ref).origin);
         }
     },
     {
@@ -335,11 +342,22 @@ function stepDef(id: string): StepDef {
     return def;
 }
 
+/** A skip decision is frozen once a later step is answered, so files TestPilot creates cannot re-open earlier questions. */
+function isSkipped(step: StepDef, ctx: WizardContext): boolean {
+    return ctx.state.skipped.includes(step.id) || Boolean(step.skip?.(ctx));
+}
+
+function freezeSkips(state: State, ctx: WizardContext, uptoId: string): void {
+    for (const step of STEPS) {
+        if (step.id === uptoId) break;
+        if (!state.skipped.includes(step.id) && !state.completed.includes(step.id) && step.skip?.(ctx)) state.skipped.push(step.id);
+    }
+}
+
 /** First step that is neither completed nor skipped, or undefined when the wizard is done. */
 export function currentStepId(ctx: WizardContext): string | undefined {
     for (const step of STEPS) {
-        if (ctx.state.completed.includes(step.id)) continue;
-        if (step.skip?.(ctx)) continue;
+        if (ctx.state.completed.includes(step.id) || isSkipped(step, ctx)) continue;
         return step.id;
     }
     return undefined;
@@ -347,7 +365,7 @@ export function currentStepId(ctx: WizardContext): string | undefined {
 
 export function viewStep(id: string, ctx: WizardContext): StepView {
     const def = stepDef(id);
-    const active = STEPS.filter(s => !s.skip?.(ctx));
+    const active = STEPS.filter(s => !isSkipped(s, ctx));
     const number = active.findIndex(s => s.id === id) + 1;
     return {
         step: def.id,
@@ -405,7 +423,9 @@ export function answerStep(store: ProjectStore, detection: RepoDetection, id: st
     const answer = normaliseAnswer(id, raw, ctx);
     const summary = def.apply ? def.apply(config, answer, ctx) : `${def.title}: ${String(answer)}`;
     store.writeConfig(config);
+    def.after?.(store, config);
     store.updateState(s => {
+        freezeSkips(s, ctx, id);
         s.answers[id] = answer;
         if (!s.completed.includes(id)) s.completed.push(id);
         s.step = currentStepId({ config, state: s, detection }) ?? 'DONE';
@@ -421,7 +441,7 @@ export function completeActionStep(store: ProjectStore, id: string, note: string
     store.updateState(s => {
         if (!s.completed.includes(id)) s.completed.push(id);
         const idx = STEP_IDS.indexOf(id);
-        const nextOpen = STEP_IDS.slice(idx + 1).find(stepId => !s.completed.includes(stepId));
+        const nextOpen = STEP_IDS.slice(idx + 1).find(stepId => !s.completed.includes(stepId) && !s.skipped.includes(stepId));
         s.step = nextOpen ?? 'DONE';
     });
     store.recordDecision(note, `Completed wizard step ${id}`, 'testpilot');
@@ -434,6 +454,7 @@ export function resetToStep(store: ProjectStore, id: string): void {
     const later = new Set(STEP_IDS.slice(idx));
     store.updateState(s => {
         s.completed = s.completed.filter(stepId => !later.has(stepId));
+        s.skipped = s.skipped.filter(stepId => STEP_IDS.indexOf(stepId) < idx);
         s.step = id;
     });
     store.recordDecision(`Went back to wizard step ${id}`, 'Requested by the user', 'user');

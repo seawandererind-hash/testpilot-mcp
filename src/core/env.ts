@@ -82,8 +82,10 @@ const FORMAT_CHECKS: Record<KeyFormat, (v: string) => boolean> = {
 export function checkEnv(store: ProjectStore, keys: EnvKey[], processEnv: NodeJS.ProcessEnv = process.env): { checks: EnvCheck[]; envFileExists: boolean; ok: boolean } {
     const raw = store.read(ENV_FILE);
     const values = raw ? parseDotenv(raw) : new Map<string, string>();
+    const example = store.read(ENV_EXAMPLE_FILE);
+    const defaults = example ? parseDotenv(example) : new Map<string, string>();
     const checks = keys.map(key => {
-        const value = values.get(key.name) ?? processEnv[key.name];
+        const value = values.get(key.name) || processEnv[key.name] || (key.secret ? undefined : defaults.get(key.name));
         if (value === undefined || value === '') return { key: key.name, required: key.required, status: 'missing' as const, hint: key.whereToGet };
         if (!FORMAT_CHECKS[key.format](value)) return { key: key.name, required: key.required, status: 'invalid-format' as const, hint: `Expected ${key.format === 'url' ? 'a full URL starting with https://' : key.format === 'email' ? 'an email address' : key.format === 'number' ? 'a number' : 'a value'}.` };
         return { key: key.name, required: key.required, status: 'present' as const };
@@ -98,4 +100,16 @@ export function loadEnvValues(store: ProjectStore, processEnv: NodeJS.ProcessEnv
     const merged: Record<string, string> = {};
     for (const [k, v] of Object.entries(processEnv)) if (typeof v === 'string') merged[k] = v;
     return { ...merged, ...fromFile };
+}
+
+/**
+ * Sets the committed default of a non-secret setting (such as APP_BASE_URL) in .env.example.
+ * Generated configs load .env first and .env.example second, so .env still overrides it.
+ */
+export function setEnvDefault(store: ProjectStore, name: string, value: string): void {
+    if (/[\r\n]/.test(value)) throw new Error('Setting values must be a single line.');
+    const current = store.read(ENV_EXAMPLE_FILE) ?? '# Copy this file to .env and fill in the values. Never commit .env.\n';
+    const line = new RegExp(`^(\\s*#?\\s*)?${name}=.*$`, 'm');
+    const next = line.test(current) ? current.replace(line, `${name}=${value}`) : `${current.replace(/\s*$/, '\n')}${name}=${value}\n`;
+    if (next !== current) store.write(ENV_EXAMPLE_FILE, next);
 }

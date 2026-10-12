@@ -1,4 +1,4 @@
-import type { CallToolResult, McpServer } from '@modelcontextprotocol/server';
+import { acceptedContent, type CallToolResult, inputRequired, type InputRequiredResult, inputResponse, type McpServer, type ServerContext } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 
 import { detectRepo, type RepoDetection } from '../core/detect.js';
@@ -106,3 +106,44 @@ export const READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempoten
 export const WRITES_STATE = { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false } as const;
 export const WRITES_FILES = { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false } as const;
 export const EXTERNAL = { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true } as const;
+
+export type ApprovalOutcome = { approved: true; by: string; via: 'form' | 'chat' } | { approved: false; reply: CallToolResult | InputRequiredResult };
+
+const ApprovalForm = z.object({
+    approve: z.boolean().meta({ title: 'Approve', description: 'Tick to go ahead. Leave unticked to cancel.' }),
+    name: z.string().optional().meta({ title: 'Your name (for the decision log)' })
+});
+
+/**
+ * The approval gate in front of every write the user should see first.
+ * When the AI tool supports forms, the user always approves in a form, which the
+ * model cannot fill in. Otherwise the model must ask in chat and pass userApproved: true.
+ */
+export function requireApproval(
+    server: McpServer,
+    rawCtx: unknown,
+    request: { key: string; question: string; userApproved?: boolean; approver?: string }
+): ApprovalOutcome {
+    const ctx = rawCtx as ServerContext | undefined;
+    if (ctx && clientSupportsForms(server, ctx as never)) {
+        const key = `approve_${request.key}`;
+        const view = inputResponse(ctx.mcpReq.inputResponses, key);
+        if (view.kind === 'elicit') {
+            const content = view.action === 'accept' ? acceptedContent(ctx.mcpReq.inputResponses, key, ApprovalForm) : undefined;
+            if (content?.approve) return { approved: true, by: content.name?.trim() || 'user (approved in form)', via: 'form' };
+            return { approved: false, reply: result('The user did not approve, so nothing was changed. Ask what they would like to adjust.', { approved: false }) };
+        }
+        return { approved: false, reply: inputRequired({ inputRequests: { [key]: inputRequired.elicit({ message: request.question, requestedSchema: ApprovalForm }) } }) };
+    }
+    if (request.userApproved === true) return { approved: true, by: request.approver?.trim() || 'user (confirmed in chat)', via: 'chat' };
+    return {
+        approved: false,
+        reply: failure(`Approval needed. Show the user the preview and ask: "${request.question}". Call this tool again with userApproved: true only after they clearly say yes.`)
+    };
+}
+
+export const userApprovedArg = z
+    .boolean()
+    .optional()
+    .describe('Set to true only after the user has seen the preview and explicitly said yes in this conversation. Never assume it.');
+export const approverArg = z.string().optional().describe('Name of the person who approved, for the decision log.');

@@ -28,7 +28,11 @@ export function classifyAppRef(input: string, appType: AppType | undefined): App
     if (/^https?:\/\//i.test(value)) {
         let note: string | undefined;
         try {
-            const host = new URL(value).hostname;
+            const url = new URL(value);
+            if (url.username || url.password) {
+                return { kind: 'help', ref: '', guidance: 'Please give the address without a username or password in it. Logins go in .env (TEST_USER_EMAIL / TEST_USER_PASSWORD), never in chat.' };
+            }
+            const host = url.hostname;
             if (!/(test|stag|qa|uat|dev|sandbox|preprod|localhost|127\.0\.0\.1)/i.test(host)) {
                 note = 'This address does not look like a test environment. Make sure it is not production; TestPilot refuses to run against production without an explicit flag.';
             }

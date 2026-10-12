@@ -1,0 +1,59 @@
+// {{header}}
+import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+
+// .env holds your secrets (git-ignored); .env.example holds shared, non-secret defaults such as APP_BASE_URL.
+dotenv.config({ path: ['.env', '.env.example'], quiet: true });
+
+/**
+ * Playwright configuration created by TestPilot.
+ * Docs: https://playwright.dev/docs/test-configuration
+ */
+export default defineConfig({
+    testDir: './tests',
+    fullyParallel: true,
+    forbidOnly: !!process.env.CI,
+    retries: process.env.CI ? 2 : 0,
+    workers: process.env.CI ? 2 : undefined,
+    timeout: 30_000,
+    expect: { timeout: 10_000 },
+    reporter: [
+        ['list'],
+        ['html', { open: 'never', outputFolder: 'playwright-report' }],
+{{#if reporting.junit}}
+        // JUnit XML: annotations are written as properties, which Xray and BrowserStack import.
+        ['junit', { outputFile: 'test-results/junit.xml' }],
+{{/if}}
+{{#if reporting.allure}}
+        ['allure-playwright', { resultsDir: 'allure-results' }],
+{{/if}}
+        ['json', { outputFile: 'test-results/results.json' }]
+    ],
+    use: {
+{{#if isApi}}
+        baseURL: process.env.API_BASE_URL,
+        extraHTTPHeaders: { Accept: 'application/json' },
+{{else}}
+        baseURL: process.env.APP_BASE_URL,
+        testIdAttribute: 'data-testid',
+        // Locked-down machine where browser downloads are blocked? Use the installed Chrome or Edge
+        // (BROWSER_CHANNEL=chrome or msedge) or point at a browser binary (BROWSER_EXECUTABLE_PATH).
+        ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}),
+        ...(process.env.BROWSER_EXECUTABLE_PATH ? { launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH } } : {}),
+        trace: 'on-first-retry',
+        screenshot: 'only-on-failure',
+        video: 'retain-on-failure',
+{{/if}}
+    },
+    projects: [
+{{#if isApi}}
+        { name: 'api' }
+{{else if isElectron}}
+        { name: 'electron' }
+{{else}}
+{{#each browsers}}
+        { name: '{{this.name}}', use: { ...devices['{{this.device}}'] } },
+{{/each}}
+{{/if}}
+    ]
+});

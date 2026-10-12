@@ -4,6 +4,7 @@ import { registerPrompts } from './prompts.js';
 import { registerResources } from './resources.js';
 import type { ServerOptions } from './tools/common.js';
 import { registerEnvTools } from './tools/env.js';
+import { registerScaffoldTools } from './tools/scaffold.js';
 import { registerWizardTools } from './tools/wizard.js';
 import { VERSION } from './version.js';
 
@@ -20,6 +21,7 @@ export function createServer(options: Partial<ServerOptions> = {}): McpServer {
     const server = new McpServer({ name: 'testpilot', title: 'TestPilot', version: opts.version }, { instructions: INSTRUCTIONS });
     registerWizardTools(server, opts);
     registerEnvTools(server, opts);
+    registerScaffoldTools(server, opts);
     registerPrompts(server);
     registerResources(server, opts);
     return server;

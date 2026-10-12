@@ -1,0 +1,24 @@
+<!-- {{generatedHeader}} -->
+# How our test automation works
+
+A plain-language guide for anyone new to this repository.
+
+## The chain every automated test follows
+1. **Test case.** A person writes the steps and expected results ({{sourceLabel}}).
+2. **Review.** TestPilot scores each case for clarity, test data and automatability, and suggests rewrites. Verdicts: AUTOMATE, MANUAL or NEEDS-REWORK.
+3. **Plan.** `plans/automation-plan.md` says which cases are automated first (waves), which stay manual, and the risks. A named person approves it.
+4. **Page objects.** One class per screen in `{{pagesDir}}` knows where the buttons and fields are. When the UI changes, only that class changes.
+5. **Tests.** Each test in `{{testsDir}}` is named after its test-case id (for example `SHOP-123 user can log in`) and tagged with it, so results trace back.
+6. **Run.** `{{runCommand}}` runs everything. Failures keep a screenshot, video and trace.
+7. **Report.** The HTML report opens with `{{reportCommand}}`.{{#if reporting.junit}} JUnit XML in `test-results/junit.xml` is what CI and test-management tools import.{{/if}}
+
+## Where things live
+- `.env`: your own credentials (never committed). Start from `.env.example`.
+- `.testpilot/`: TestPilot's memory of every choice, so any AI tool can pick up where the last one stopped.
+- `AGENTS.md`: the rules AI assistants follow in this repo.
+
+## When a test fails
+TestPilot sorts failures into kinds: **locator** (the element changed), **timing** (the app was slower than expected), **data** (the test data was wrong or used up), **environment** (the site or network was down) and **assertion** (the app did something different, possibly a real bug). Fix the cause, never the assertion, unless the expected result itself changed.
+
+<!-- keep -->
+<!-- /keep -->

@@ -49,3 +49,27 @@ export async function connect(root: string, era: Era, opts: { elicit?: (params: 
         }
     };
 }
+
+type Connected = Awaited<ReturnType<typeof connect>>;
+
+/** Answers the wizard for a web + Playwright + Excel setup up to (not including) SCAFFOLD. */
+export async function answerWebSetup(c: Connected, root: string, overrides: Record<string, string | string[]> = {}): Promise<void> {
+    const answers: Array<[string, string | string[]]> = [
+        ['APP_TYPE', 'web'],
+        ['FRAMEWORK', 'playwright'],
+        ['LANGUAGE', 'typescript'],
+        ['PATTERN', 'pom'],
+        ['EXECUTION_TARGET', 'local'],
+        ['TEST_CASE_SOURCE', 'excel'],
+        ['CI', 'github-actions'],
+        ['REPORTING', ['html', 'junit']]
+    ];
+    for (const [step, answer] of answers) {
+        const res = await c.call('wizard', { action: 'answer', step, answer: overrides[step] ?? answer });
+        if (res.isError) throw new Error(`${step}: ${res.content[0].text}`);
+    }
+    await c.call('write_env_template');
+    writeFileSync(path.join(root, '.env'), 'TEST_USER_EMAIL=qa@example.com\nTEST_USER_PASSWORD=not-a-real-password\n');
+    const env = await c.call('check_env');
+    if (env.isError || !env.structuredContent.ok) throw new Error(`check_env: ${env.content[0].text}`);
+}
