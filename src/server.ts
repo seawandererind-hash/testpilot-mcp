@@ -5,6 +5,7 @@ import { registerResources } from './resources.js';
 import type { ServerOptions } from './tools/common.js';
 import { registerEnvTools } from './tools/env.js';
 import { registerScaffoldTools } from './tools/scaffold.js';
+import { registerTestCaseTools } from './tools/testcases.js';
 import { registerWizardTools } from './tools/wizard.js';
 import { VERSION } from './version.js';
 
@@ -22,6 +23,7 @@ export function createServer(options: Partial<ServerOptions> = {}): McpServer {
     registerWizardTools(server, opts);
     registerEnvTools(server, opts);
     registerScaffoldTools(server, opts);
+    registerTestCaseTools(server, opts);
     registerPrompts(server);
     registerResources(server, opts);
     return server;

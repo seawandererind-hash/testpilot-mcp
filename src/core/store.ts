@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import YAML from 'yaml';
 
@@ -50,6 +50,10 @@ export class ProjectStore {
         const tmp = `${file}.${process.pid}.tmp`;
         writeFileSync(tmp, content);
         renameSync(tmp, file);
+    }
+
+    remove(relative: string): void {
+        rmSync(this.resolve(relative), { force: true });
     }
 
     append(relative: string, content: string): void {
