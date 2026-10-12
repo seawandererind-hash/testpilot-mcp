@@ -19,7 +19,7 @@ const LABELS: Array<[RegExp, CaseField | 'ignore']> = [
     [/^(link|url|requirement|story|user ?story)$/, 'link']
 ];
 
-function labelOf(raw: string): CaseField | 'ignore' | undefined {
+export function labelOf(raw: string): CaseField | 'ignore' | undefined {
     const norm = normaliseHeader(raw);
     return LABELS.find(([re]) => re.test(norm))?.[1];
 }

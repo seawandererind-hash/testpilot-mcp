@@ -31,26 +31,35 @@ export async function testConnection(integration: string, env: Record<string, st
         return m.length ? { integration, ok: false, detail: `Fill in ${m.join(', ')} in .env first.` } : undefined;
     };
     switch (integration) {
-        case 'jira':
-        case 'zephyr': {
+        case 'jira': {
             const gap = need(['JIRA_BASE_URL', 'JIRA_EMAIL', 'JIRA_API_TOKEN']);
             if (gap) return gap;
-            const jira = await probe('jira', doFetch, `${env.JIRA_BASE_URL.replace(/\/$/, '')}/rest/api/3/myself`, { headers: { Authorization: basic(env.JIRA_EMAIL, env.JIRA_API_TOKEN), Accept: 'application/json' } }, 'Jira accepted the API token. Note: Jira API tokens expire within 365 days.');
-            if (integration === 'jira' || !jira.ok) return jira;
-            const zgap = need(['ZEPHYR_API_TOKEN']);
-            if (zgap) return zgap;
-            return probe('zephyr', doFetch, 'https://api.zephyrscale.smartbear.com/v2/healthcheck', { headers: { Authorization: `Bearer ${env.ZEPHYR_API_TOKEN}` } }, 'Zephyr accepted the API token.');
+            return probe('jira', doFetch, `${env.JIRA_BASE_URL.replace(/\/$/, '')}/rest/api/3/myself`, { headers: { Authorization: basic(env.JIRA_EMAIL, env.JIRA_API_TOKEN), Accept: 'application/json' } }, 'Jira accepted the API token. Note: Jira API tokens expire within 365 days.');
+        }
+        case 'zephyr': {
+            // The same call and token the importer uses; Jira itself is checked as its own integration.
+            const gap = need(['ZEPHYR_API_TOKEN']);
+            if (gap) return gap;
+            const base = (env.ZEPHYR_BASE_URL || 'https://api.zephyrscale.smartbear.com/v2').replace(/\/+$/, '');
+            return probe('zephyr', doFetch, `${base}/testcases?maxResults=1`, { headers: { Authorization: `Bearer ${env.ZEPHYR_API_TOKEN}`, Accept: 'application/json' } }, 'Zephyr accepted the API token.');
         }
         case 'xray': {
             const gap = need(['XRAY_CLIENT_ID', 'XRAY_CLIENT_SECRET']);
             if (gap) return gap;
-            return probe('xray', doFetch, 'https://xray.cloud.getxray.app/api/v2/authenticate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: env.XRAY_CLIENT_ID, client_secret: env.XRAY_CLIENT_SECRET }) }, 'Xray accepted the client id and secret.');
+            const base = (env.XRAY_BASE_URL || 'https://xray.cloud.getxray.app').replace(/\/+$/, '');
+            return probe('xray', doFetch, `${base}/api/v2/authenticate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: env.XRAY_CLIENT_ID, client_secret: env.XRAY_CLIENT_SECRET }) }, 'Xray accepted the client id and secret.');
         }
-        case 'browserstack':
-        case 'browserstack-tm': {
+        case 'browserstack': {
             const gap = need(['BROWSERSTACK_USERNAME', 'BROWSERSTACK_ACCESS_KEY']);
             if (gap) return gap;
             return probe(integration, doFetch, 'https://api.browserstack.com/automate/plan.json', { headers: { Authorization: basic(env.BROWSERSTACK_USERNAME, env.BROWSERSTACK_ACCESS_KEY) } }, 'BrowserStack accepted the username and access key.');
+        }
+        case 'browserstack-tm': {
+            // Test Management has its own host (regional ones too); check the API the importer reads.
+            const gap = need(['BROWSERSTACK_USERNAME', 'BROWSERSTACK_ACCESS_KEY']);
+            if (gap) return gap;
+            const base = (env.BROWSERSTACK_TM_URL || 'https://test-management.browserstack.com').replace(/\/+$/, '');
+            return probe(integration, doFetch, `${base}/api/v2/projects`, { headers: { Authorization: basic(env.BROWSERSTACK_USERNAME, env.BROWSERSTACK_ACCESS_KEY), Accept: 'application/json' } }, 'BrowserStack Test Management accepted the username and access key.');
         }
         case 'testrail': {
             const gap = need(['TESTRAIL_URL', 'TESTRAIL_USER', 'TESTRAIL_API_KEY']);
@@ -60,7 +69,7 @@ export async function testConnection(integration: string, env: Record<string, st
         case 'azure-devops': {
             const gap = need(['AZDO_ORG_URL', 'AZDO_PROJECT', 'AZDO_PAT']);
             if (gap) return gap;
-            return probe('azure-devops', doFetch, `${env.AZDO_ORG_URL.replace(/\/$/, '')}/${encodeURIComponent(env.AZDO_PROJECT)}/_apis/test/plans?api-version=7.1`, { headers: { Authorization: basic('', env.AZDO_PAT) } }, 'Azure DevOps accepted the token.');
+            return probe('azure-devops', doFetch, `${env.AZDO_ORG_URL.replace(/\/$/, '')}/${encodeURIComponent(env.AZDO_PROJECT)}/_apis/testplan/plans?api-version=7.1`, { headers: { Authorization: basic('', env.AZDO_PAT), Accept: 'application/json' } }, 'Azure DevOps accepted the token.');
         }
         case 'app': {
             const gap = need(['APP_BASE_URL']);

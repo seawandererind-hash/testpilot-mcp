@@ -37,21 +37,51 @@ function explain(service: string, status: number, body: string): string {
     return `${service} answered ${status}: ${hint}.${detail ? ` Details: ${detail}` : ''}`;
 }
 
-export async function request<T = unknown>(service: string, doFetch: Fetch, url: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
-    let res: Response;
-    try {
-        res = await doFetch(url, { ...init, signal: AbortSignal.timeout(init.timeoutMs ?? 60_000) });
-    } catch (error) {
-        throw new IntegrationError(`Could not reach ${service}: ${(error as Error).message}. Check the URL, VPN or proxy (HTTPS_PROXY).`);
+/** Longest wait TestPilot accepts from a Retry-After header before giving up. */
+const MAX_RETRY_WAIT_MS = 10_000;
+
+/** Milliseconds to wait before retrying a 429, from Retry-After (seconds or an HTTP date), or undefined when it asks for too long. */
+export function retryDelay(header: string | null, now = Date.now()): number | undefined {
+    if (header === null || header.trim() === '') return 1000;
+    const seconds = Number(header);
+    const ms = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header) - now;
+    if (!Number.isFinite(ms)) return 1000;
+    const wait = Math.max(0, ms);
+    return wait <= MAX_RETRY_WAIT_MS ? wait : undefined;
+}
+
+export interface HttpResult<T> {
+    data: T;
+    headers: Headers;
+}
+
+/** Like `request`, but also returns the response headers (for continuation tokens). One retry on 429, honouring a short Retry-After. */
+export async function requestWithHeaders<T = unknown>(service: string, doFetch: Fetch, url: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<HttpResult<T>> {
+    let res: Response | undefined;
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            res = await doFetch(url, { ...init, signal: AbortSignal.timeout(init.timeoutMs ?? 60_000) });
+        } catch (error) {
+            throw new IntegrationError(`Could not reach ${service}: ${(error as Error).message}. Check the URL, VPN or proxy (HTTPS_PROXY).`);
+        }
+        if (res.status !== 429 || attempt > 0) break;
+        const wait = retryDelay(res.headers.get('retry-after'));
+        if (wait === undefined) break;
+        await res.text().catch(() => '');
+        await new Promise(resolve => setTimeout(resolve, wait));
     }
-    const text = await res.text();
-    if (!res.ok) throw new IntegrationError(explain(service, res.status, text), res.status);
-    if (!text) return undefined as T;
+    const text = await res!.text();
+    if (!res!.ok) throw new IntegrationError(explain(service, res!.status, text), res!.status);
+    if (!text) return { data: undefined as T, headers: res!.headers };
     try {
-        return JSON.parse(text) as T;
+        return { data: JSON.parse(text) as T, headers: res!.headers };
     } catch {
-        return text as T;
+        return { data: text as T, headers: res!.headers };
     }
+}
+
+export async function request<T = unknown>(service: string, doFetch: Fetch, url: string, init: RequestInit & { timeoutMs?: number } = {}): Promise<T> {
+    return (await requestWithHeaders<T>(service, doFetch, url, init)).data;
 }
 
 export function requireEnv(env: Record<string, string>, keys: string[]): void {

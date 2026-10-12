@@ -39,9 +39,13 @@ export const INTEGRATION_KEYS: Record<string, EnvKey[]> = {
     ],
     xray: [
         { name: 'XRAY_CLIENT_ID', description: 'Xray Cloud API client id', whereToGet: 'Jira → Apps → Xray → API Keys (needs Xray admin).', format: 'nonempty', required: true, secret: false },
-        { name: 'XRAY_CLIENT_SECRET', description: 'Xray Cloud API client secret', whereToGet: 'Same page as the client id.', format: 'nonempty', required: true, secret: true }
+        { name: 'XRAY_CLIENT_SECRET', description: 'Xray Cloud API client secret', whereToGet: 'Same page as the client id.', format: 'nonempty', required: true, secret: true },
+        { name: 'XRAY_BASE_URL', description: 'Xray Cloud API host, only if yours is not https://xray.cloud.getxray.app', whereToGet: 'Leave empty unless Xray support gave you a regional host.', format: 'url', required: false, secret: false }
     ],
-    zephyr: [{ name: 'ZEPHYR_API_TOKEN', description: 'Zephyr API access token', whereToGet: 'Jira → your profile → Zephyr API Access Tokens.', format: 'nonempty', required: true, secret: true }],
+    zephyr: [
+        { name: 'ZEPHYR_API_TOKEN', description: 'Zephyr API access token', whereToGet: 'Jira → your profile → Zephyr API Access Tokens.', format: 'nonempty', required: true, secret: true },
+        { name: 'ZEPHYR_BASE_URL', description: 'Zephyr API address, only if yours is not https://api.zephyrscale.smartbear.com/v2', whereToGet: 'Leave empty unless your Zephyr instance is hosted in another region.', format: 'url', required: false, secret: false }
+    ],
     testrail: [
         { name: 'TESTRAIL_URL', description: 'Your TestRail address', whereToGet: 'e.g. https://yourcompany.testrail.io', format: 'url', required: true, secret: false },
         { name: 'TESTRAIL_USER', description: 'TestRail login email', whereToGet: 'Your TestRail account.', format: 'email', required: true, secret: false },
@@ -56,7 +60,8 @@ export const INTEGRATION_KEYS: Record<string, EnvKey[]> = {
     'browserstack-tm': [
         { name: 'BROWSERSTACK_USERNAME', description: 'BrowserStack username', whereToGet: 'BrowserStack → Account → Settings.', format: 'nonempty', required: true, secret: false },
         { name: 'BROWSERSTACK_ACCESS_KEY', description: 'BrowserStack access key', whereToGet: 'Same page.', format: 'nonempty', required: true, secret: true },
-        { name: 'BROWSERSTACK_TM_PROJECT_ID', description: 'Test Management project id, e.g. PR-1', whereToGet: 'In the Test Management project URL.', format: 'nonempty', required: false, secret: false }
+        { name: 'BROWSERSTACK_TM_PROJECT_ID', description: 'Test Management project id, e.g. PR-1', whereToGet: 'In the Test Management project URL.', format: 'nonempty', required: false, secret: false },
+        { name: 'BROWSERSTACK_TM_URL', description: 'Test Management address, only for EU or India accounts', whereToGet: 'https://test-management-eu.browserstack.com or https://test-management-in.browserstack.com; leave empty otherwise.', format: 'url', required: false, secret: false }
     ],
     mobile: [
         { name: 'APPIUM_SERVER_URL', description: 'Appium server address for local runs', whereToGet: 'Usually http://127.0.0.1:4723 after running `appium`.', format: 'url', required: false, secret: false }

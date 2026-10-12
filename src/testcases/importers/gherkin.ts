@@ -37,6 +37,32 @@ function toSteps(steps: readonly Step[]): { preconditions: string[]; steps: Draf
     return { preconditions, steps: out, expected: outcomes.join('; ') || undefined };
 }
 
+/**
+ * Steps from a scenario body without its Feature/Scenario lines, as test-management tools store it
+ * (Xray Gherkin tests, Zephyr BDD scripts). Falls back to one step per line when it does not parse.
+ */
+export function scenarioBodySteps(body: string, outline = /^\s*Examples\s*:/m.test(body)): { preconditions: string[]; steps: Draft['steps']; expected?: string; examples?: string } {
+    const text = body.replace(/\r\n?/g, '\n');
+    const hasHeader = /^\s*(Feature|Scenario|Scenario Outline|Scenario Template|Example)\s*:/m.test(text);
+    const source = hasHeader ? text : `Feature: Imported\n  Scenario${outline ? ' Outline' : ''}: Imported\n${text.split('\n').map(l => `    ${l}`).join('\n')}`;
+    try {
+        const doc = new Parser(new AstBuilder(IdGenerator.incrementing()), new GherkinClassicTokenMatcher()).parse(source);
+        const background = doc.feature?.children.flatMap(c => c.background?.steps.map(stepText) ?? []) ?? [];
+        const scenario = doc.feature?.children.find(c => c.scenario)?.scenario;
+        if (scenario?.steps.length) {
+            const out = toSteps(scenario.steps);
+            const examples = scenario.examples
+                .map(ex => (ex.tableHeader ? [ex.tableHeader, ...ex.tableBody].map(r => `| ${r.cells.map(c => c.value).join(' | ')} |`).join('\n') : ''))
+                .filter(Boolean)
+                .join('\n');
+            return { ...out, preconditions: [...background, ...out.preconditions], examples: examples || undefined };
+        }
+    } catch {
+        // Not valid Gherkin: keep the lines as steps below.
+    }
+    return { preconditions: [], steps: text.split('\n').map(l => l.trim()).filter(Boolean).map(action => ({ action })) };
+}
+
 export const importGherkin: Importer = async ({ store, location, limit }) => {
     const files = store.exists(location) && !/\.feature$/i.test(location) ? store.list(location, n => n.endsWith('.feature')) : [location];
     if (!files.length) throw new ImportError(`No .feature files in ${location}.`);
