@@ -1,0 +1,8 @@
+<!doctype html><html><head><title>Demo Shop</title></head><body>
+<h1>Demo Shop</h1>
+<form id="login"><label for="email">Email</label><input id="email" type="email">
+<label for="password">Password</label><input id="password" type="password">
+<button type="submit">Sign in</button></form>
+<a href="/products.html">Products</a>
+<script>document.getElementById('login').addEventListener('submit', e => { e.preventDefault(); location.href = '/products.html'; });</script>
+</body></html>

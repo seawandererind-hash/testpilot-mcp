@@ -58,6 +58,7 @@ describe('triage', () => {
         ['page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:1/', 'environment'],
         ['Missing APP_BASE_URL. Copy .env.example to .env and fill it in', 'environment'],
         ['Test timeout of 30000ms exceeded.', 'timing'],
+        ["Test timeout of 30000ms exceeded.\nError: locator.click: Test timeout of 30000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: 'Sign in' })", 'locator'],
         ['TypeError: loginPage.nope is not a function', 'script'],
         ['No user with role "admin" in test-data/users.json.', 'data']
     ])('%s → %s', (message, category) => {

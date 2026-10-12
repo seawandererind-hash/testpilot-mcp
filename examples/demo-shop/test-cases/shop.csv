@@ -1,0 +1,9 @@
+ID,Title,Module,Priority,Preconditions,Steps,Expected Result
+SHOP-1,Login with valid credentials,Login,High,,"1. Open the application
+2. Enter the email of the standard user
+3. Enter the password
+4. Click Sign in",Products page is displayed
+SHOP-2,Add a product to the cart,Cart,High,User is logged in,"1. Click Add to cart on Red shoes","Cart count shows 1"
+SHOP-3,Products page lists products,Products,Medium,,"1. Open the products page","""Red shoes"" is shown and ""Blue hat"" is shown"
+SHOP-4,Home page look and feel,Home,Low,,"1. Open the application","Colour scheme matches the brand guide"
+SHOP-5,Test 5,Cart,Low,,"Checkout",

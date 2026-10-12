@@ -1,0 +1,5 @@
+<!doctype html><html><head><title>Products</title></head><body>
+<h1>Products</h1><ul><li data-testid="product">Red shoes <button>Add to cart</button></li><li data-testid="product">Blue hat <button>Add to cart</button></li></ul>
+<p data-testid="cart-count">0</p>
+<script>document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { const c = document.querySelector('[data-testid=cart-count]'); c.textContent = String(Number(c.textContent) + 1); }));</script>
+</body></html>

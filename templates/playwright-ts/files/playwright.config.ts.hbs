@@ -39,6 +39,9 @@ export default defineConfig({
 {{else}}
         baseURL: process.env.APP_BASE_URL,
         testIdAttribute: 'data-testid',
+        // A missing button fails after 15 s with the locator it waited for, instead of at the test timeout.
+        actionTimeout: 15_000,
+        navigationTimeout: 30_000,
         // Locked-down machine where browser downloads are blocked? Use the installed Chrome or Edge
         // (BROWSER_CHANNEL=chrome or msedge) or point at a browser binary (BROWSER_EXECUTABLE_PATH).
         ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}),

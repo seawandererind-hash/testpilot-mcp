@@ -58,7 +58,7 @@ const RULES: Array<{ category: FailureCategory; test: RegExp; advice: string }> 
     },
     {
         category: 'locator',
-        test: /strict mode violation|resolved to \d+ elements|waiting for (getBy|locator\()[^\n]*\n[^\n]*(Timeout|exceeded)|locator\.\w+: Timeout|Element is not (visible|attached|enabled|editable)|intercepts pointer events|element is outside of the viewport|not an <input>|Element is not a <select>/,
+        test: /strict mode violation|resolved to \d+ elements|waiting for (getBy|locator\()[^\n]*\n[^\n]*(Timeout|exceeded)|locator\.\w+: (Test )?[Tt]imeout[\s\S]*waiting for (getBy|locator\(|frameLocator)|locator\.\w+: Timeout|Element is not (visible|attached|enabled|editable)|intercepts pointer events|element is outside of the viewport|not an <input>|Element is not a <select>/,
         advice: 'A locator did not match exactly one usable element. Compare it with .testpilot/exploration/README.md or the trace, prefer getByRole with the accessible name, and scope list items with filter({ hasText }).'
     },
     {
@@ -164,7 +164,9 @@ function readOutcomes(json: { config?: { rootDir?: string }; suites?: PwSuite[] 
             const passes = ran.filter(r => r.status === 'passed').length;
             const failed = ran.find(r => r.status !== 'passed');
             const status: TestOutcome['status'] = t.status === 'skipped' || !ran.length ? 'skipped' : passes === ran.length ? 'passed' : passes === 0 ? 'failed' : 'flaky';
-            const rawError = failed ? (failed.error?.message ?? failed.errors?.map(e => e.message).join('\n') ?? `Test ${failed.status}`) : undefined;
+            // A test timeout reports "Test timeout exceeded" first and the action that was waiting second; keep both.
+            const messages = failed ? [failed.error?.message, ...(failed.errors ?? []).map(e => e.message)].filter((m, i, all): m is string => Boolean(m) && all.indexOf(m) === i) : [];
+            const rawError = failed ? (messages.length ? messages.join('\n') : `Test ${failed.status}`) : undefined;
             const error = rawError ? scrub(rawError.replace(ANSI, '')).split('\n').slice(0, 12).join('\n').slice(0, 1500) : undefined;
             const triage = error ? categorise(error) : undefined;
             const attachments = (failed?.attachments ?? [])
