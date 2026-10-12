@@ -1,13 +1,15 @@
 name: Release
 
-# Publishes a ready-to-run package on the GitHub Releases page when a version tag is pushed:
+# Publishes a ready-to-run package on the GitHub Releases page, either when a version tag is pushed:
 #   npm version patch   # or minor / major
 #   git push --follow-tags
+# or from Actions → Release → Run workflow, which releases the version in package.json on the chosen branch.
 # Anyone can then start that version with `npx -y <release .tgz URL>`, with no npm account or registry.
 
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -24,17 +26,25 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - name: Check the tag matches package.json
+      - name: Work out the version
         id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           version=$(node -p "require('./package.json').version")
-          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+          tag="v$version"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "$tag" ]; then
             echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version. Use npm version to create tags."
             exit 1
           fi
+          if [ "$GITHUB_REF_TYPE" != "tag" ] && gh release view "$tag" >/dev/null 2>&1; then
+            echo "::error::Release $tag already exists. Raise the version with npm version first."
+            exit 1
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - name: Point generated MCP configs at this release
-        run: npm pkg set "testpilot.install=https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/testpilot-mcp-${{ steps.version.outputs.version }}.tgz"
+        run: npm pkg set "testpilot.install=https://github.com/${GITHUB_REPOSITORY}/releases/download/${{ steps.version.outputs.tag }}/testpilot-mcp-${{ steps.version.outputs.version }}.tgz"
       - run: npm run build
       - name: Pack
         run: |
@@ -48,5 +58,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "testpilot-mcp-${{ steps.version.outputs.version }}.tgz" \
-            --title "TestPilot ${{ steps.version.outputs.version }}" --generate-notes
+          gh release create "${{ steps.version.outputs.tag }}" "testpilot-mcp-${{ steps.version.outputs.version }}.tgz" \
+            --target "$GITHUB_SHA" --title "TestPilot ${{ steps.version.outputs.version }}" --generate-notes
