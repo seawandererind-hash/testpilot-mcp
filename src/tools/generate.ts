@@ -7,7 +7,9 @@ import { digestOf } from '../core/confirm.js';
 import type { Config, TestCase } from '../core/schema.js';
 import type { ProjectStore } from '../core/store.js';
 import { completeActionStep } from '../core/wizard.js';
+import { readMobileExploration } from '../explore/mobile.js';
 import { readExploration } from '../explore/web.js';
+import { planAppiumTests } from '../generate/appium.js';
 import { type GenerationPlan, planPlaywrightTests } from '../generate/playwright.js';
 import { isApproved, readPlanMeta } from '../plan/plan.js';
 import { writePlanned } from '../scaffold/engine.js';
@@ -39,13 +41,13 @@ function select(store: ProjectStore, wave: number | undefined, ids: string[] | u
 
 function buildGeneration(store: ProjectStore, config: Config, cases: TestCase[]): { plan?: GenerationPlan; error?: string; token: string } {
     const pack = config.stack.templatePack;
-    if (pack !== 'playwright-ts') {
+    if (pack !== 'playwright-ts' && pack !== 'appium-ts') {
         return {
-            error: `TestPilot generates code for Playwright + TypeScript today${pack === 'appium-ts' ? '; the Appium generator is next on the roadmap' : ''}. For ${config.stack.framework ?? 'this framework'}, write the tests with the write-*-test skill in .agents/skills, one per case, using the plan and the normalized cases in .testpilot/test-cases/.`,
+            error: `TestPilot generates code for Playwright + TypeScript (web, API, Electron) and Appium + WebdriverIO + TypeScript (mobile and desktop) today. For ${config.stack.framework ?? 'this framework'}, write the tests with the write-*-test skill in .agents/skills, one per case, using the plan and the normalized cases in .testpilot/test-cases/.`,
             token: ''
         };
     }
-    const plan = planPlaywrightTests(store, config, cases, readExploration(store));
+    const plan = pack === 'appium-ts' ? planAppiumTests(store, config, cases, readMobileExploration(store)) : planPlaywrightTests(store, config, cases, readExploration(store));
     const fingerprint = plan.files.map(f => [f.path, f.status, createHash('sha256').update(f.content).digest('hex').slice(0, 16)]);
     return { plan, token: `tests-${digestOf(fingerprint).slice(0, 20)}` };
 }
@@ -83,7 +85,7 @@ export function registerGenerateTools(server: McpServer, options: ServerOptions)
         {
             title: 'Preview generated tests',
             description:
-                'Shows the test files, page objects and fixture changes TestPilot would write for a wave of the approved plan (Playwright + TypeScript, Page Object Model, locators from exploration), without writing anything. Show the list to the user, then call generate_tests with the confirmToken after they agree.',
+                'Shows the test files, page or screen objects and fixture changes TestPilot would write for a wave of the approved plan (Playwright + TypeScript for web; Appium + WebdriverIO + TypeScript screen objects for mobile and desktop; locators from exploration), without writing anything. Show the list to the user, then call generate_tests with the confirmToken after they agree.',
             inputSchema: z.object(selectionArgs),
             annotations: READ_ONLY
         },
@@ -161,7 +163,9 @@ export function registerGenerateTools(server: McpServer, options: ServerOptions)
                 const summary = [
                     `Wrote ${written.length} file(s)${kept.length ? `; kept ${kept.length} existing file(s)` : ''}.`,
                     partial.length
-                        ? `${partial.length} test(s) have TODO(testpilot) steps and are marked fixme: ${partial.map(c => `${c.id} (${c.todos})`).join(', ')}. Finish each TODO using the page objects and the locators in .testpilot/exploration/README.md (follow the write-playwright-test skill), then change test.fixme to test.`
+                        ? config.stack.templatePack === 'appium-ts'
+                            ? `${partial.length} test(s) have TODO(testpilot) steps and stay pending: ${partial.map(c => `${c.id} (${c.todos})`).join(', ')}. Finish each TODO using the screen objects and the selectors in .testpilot/exploration/README.md (follow the write-appium-test skill), then delete the pendingUntilDone line. Getters marked "Not seen during exploration" are guesses to confirm with explore_app or Appium Inspector.`
+                            : `${partial.length} test(s) have TODO(testpilot) steps and are marked fixme: ${partial.map(c => `${c.id} (${c.todos})`).join(', ')}. Finish each TODO using the page objects and the locators in .testpilot/exploration/README.md (follow the write-playwright-test skill), then change test.fixme to test.`
                         : 'Every test was translated completely.',
                     'Then run them with run_tests (stabilityRuns: 2 to confirm they pass twice).',
                     built.plan.notes.length ? `\n${built.plan.notes.join('\n')}` : ''

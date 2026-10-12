@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XCUIElementTypeApplication type="XCUIElementTypeApplication" name="Shop" label="Shop" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0">
+  <XCUIElementTypeWindow type="XCUIElementTypeWindow" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0">
+    <XCUIElementTypeOther type="XCUIElementTypeOther" enabled="true" visible="true" accessible="false" x="0" y="0" width="393" height="852" index="0">
+      <XCUIElementTypeNavigationBar type="XCUIElementTypeNavigationBar" name="Products" enabled="true" visible="true" accessible="false" x="0" y="59" width="393" height="96" index="0">
+        <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Products" name="Products" label="Products" enabled="true" visible="true" accessible="true" x="16" y="103" width="152" height="41" index="0"/>
+        <XCUIElementTypeButton type="XCUIElementTypeButton" name="menu-button" label="Menu" enabled="true" visible="true" accessible="true" x="337" y="59" width="44" height="44" index="1"/>
+      </XCUIElementTypeNavigationBar>
+      <XCUIElementTypeSearchField type="XCUIElementTypeSearchField" value="Search products" name="search-field" label="" placeholderValue="Search products" enabled="true" visible="true" accessible="true" x="16" y="163" width="361" height="36" index="1"/>
+      <XCUIElementTypeTable type="XCUIElementTypeTable" name="product-list" enabled="true" visible="true" accessible="false" x="0" y="207" width="393" height="562" index="2">
+        <XCUIElementTypeCell type="XCUIElementTypeCell" enabled="true" visible="true" accessible="false" x="0" y="207" width="393" height="88" index="0">
+          <XCUIElementTypeImage type="XCUIElementTypeImage" enabled="true" visible="true" accessible="false" x="16" y="219" width="64" height="64" index="0"/>
+          <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Red shoes" name="Red shoes" label="Red shoes" enabled="true" visible="true" accessible="true" x="92" y="223" width="120" height="22" index="1"/>
+          <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="$49.99" name="$49.99" label="$49.99" enabled="true" visible="true" accessible="true" x="92" y="251" width="60" height="20" index="2"/>
+          <XCUIElementTypeButton type="XCUIElementTypeButton" name="add-to-cart" label="Add to cart" enabled="true" visible="true" accessible="true" x="269" y="229" width="108" height="44" index="3"/>
+        </XCUIElementTypeCell>
+        <XCUIElementTypeCell type="XCUIElementTypeCell" enabled="true" visible="true" accessible="false" x="0" y="295" width="393" height="88" index="1">
+          <XCUIElementTypeImage type="XCUIElementTypeImage" enabled="true" visible="true" accessible="false" x="16" y="307" width="64" height="64" index="0"/>
+          <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="Blue &quot;Runner&quot; jacket" name="Blue &quot;Runner&quot; jacket" label="Blue &quot;Runner&quot; jacket" enabled="true" visible="true" accessible="true" x="92" y="311" width="180" height="22" index="1"/>
+          <XCUIElementTypeStaticText type="XCUIElementTypeStaticText" value="$89.00" name="$89.00" label="$89.00" enabled="true" visible="true" accessible="true" x="92" y="339" width="60" height="20" index="2"/>
+          <XCUIElementTypeButton type="XCUIElementTypeButton" name="add-to-cart" label="Add to cart" enabled="true" visible="true" accessible="true" x="269" y="317" width="108" height="44" index="3"/>
+        </XCUIElementTypeCell>
+      </XCUIElementTypeTable>
+      <XCUIElementTypeSwitch type="XCUIElementTypeSwitch" value="0" name="in-stock-only" label="In stock only" enabled="true" visible="true" accessible="true" x="16" y="777" width="361" height="31" index="3"/>
+      <XCUIElementTypeTabBar type="XCUIElementTypeTabBar" name="Tab Bar" enabled="true" visible="true" accessible="false" x="0" y="769" width="393" height="83" index="4">
+        <XCUIElementTypeButton type="XCUIElementTypeButton" value="1" name="Products" label="Products" enabled="true" visible="true" accessible="true" x="2" y="770" width="194" height="48" index="0"/>
+        <XCUIElementTypeButton type="XCUIElementTypeButton" name="Cart" label="Cart, 2 items" enabled="true" visible="true" accessible="true" x="198" y="770" width="194" height="48" index="1"/>
+      </XCUIElementTypeTabBar>
+    </XCUIElementTypeOther>
+  </XCUIElementTypeWindow>
+</XCUIElementTypeApplication>

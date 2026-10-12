@@ -244,6 +244,11 @@ export const STEPS: StepDef[] = [
         after: (store, config) => {
             if (config.app.kind === 'url' && config.app.ref) setEnvDefault(store, config.appType === 'api' ? 'API_BASE_URL' : 'APP_BASE_URL', config.app.ref);
             if (config.app.kind === 'openapi' && config.app.ref && /^https?:/i.test(config.app.ref)) setEnvDefault(store, 'API_BASE_URL', new URL(config.app.ref).origin);
+            // Mobile and desktop builds: the generated wdio configs read these settings (.env still overrides them).
+            const ref = config.app.ref;
+            if (ref && config.app.kind && ['apk', 'aab', 'ipa', 'app', 'exe'].includes(config.app.kind)) setEnvDefault(store, 'APP_PATH', ref);
+            if (ref && config.app.kind === 'cloud-id' && /^bs:\/\//i.test(ref)) setEnvDefault(store, 'BROWSERSTACK_APP_ID', ref);
+            if (ref && (config.app.kind === 'package-id' || config.app.kind === 'bundle-id')) setEnvDefault(store, 'APP_ID', ref);
         }
     },
     {

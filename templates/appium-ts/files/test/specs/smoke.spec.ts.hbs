@@ -1,0 +1,8 @@
+// {{header}}
+import { homeScreen } from '../../src/screens/HomeScreen';
+
+describe('Smoke', () => {
+    it('SMOKE-1 app launches @SMOKE-1 @smoke', async () => {
+        await homeScreen.expectLaunched();
+    });
+});

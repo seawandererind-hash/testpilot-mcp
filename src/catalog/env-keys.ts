@@ -59,7 +59,12 @@ export const INTEGRATION_KEYS: Record<string, EnvKey[]> = {
         { name: 'BROWSERSTACK_TM_PROJECT_ID', description: 'Test Management project id, e.g. PR-1', whereToGet: 'In the Test Management project URL.', format: 'nonempty', required: false, secret: false }
     ],
     mobile: [
-        { name: 'APPIUM_SERVER_URL', description: 'Appium server address for local runs', whereToGet: 'Usually http://127.0.0.1:4723 after running `appium`.', format: 'url', required: false, secret: false }
+        { name: 'APPIUM_SERVER_URL', description: 'Appium server address for local runs', whereToGet: 'Usually http://127.0.0.1:4723 after running `appium`.', format: 'url', required: false, secret: false },
+        { name: 'APP_PATH', description: 'Path to the app build for local runs (.apk/.aab, iOS .app/.ipa, Windows .exe, macOS .app), relative to the test folder or absolute', whereToGet: 'TestPilot fills this in .env.example when you give the app file in the app step. Keep builds in the git-ignored apps/ folder.', format: 'nonempty', required: false, secret: false },
+        { name: 'APP_ID', description: 'Package name (Android), bundle id (iOS/macOS) or AUMID (Windows) of an app already installed, used when APP_PATH is empty', whereToGet: 'Your developers, or `adb shell pm list packages` on Android.', format: 'nonempty', required: false, secret: false },
+        { name: 'BROWSERSTACK_APP_ID', description: 'BrowserStack app id (bs://…) for cloud runs', whereToGet: 'Upload the build to BrowserStack App Automate (the upload returns a bs:// id). Uploaded apps are deleted after 30 days.', format: 'nonempty', required: false, secret: false },
+        { name: 'DEVICE_NAME', description: 'Device, emulator or simulator to run on, e.g. "Pixel 8" or "iPhone 16"', whereToGet: '`adb devices` (Android), `xcrun simctl list devices` (iOS), or the BrowserStack device list.', format: 'nonempty', required: false, secret: false },
+        { name: 'PLATFORM_VERSION', description: 'OS version of that device, e.g. 14.0 or 18.2', whereToGet: 'The device settings, or the BrowserStack device list.', format: 'nonempty', required: false, secret: false }
     ],
     api: [
         { name: 'API_BASE_URL', description: 'Base URL of the API under test', whereToGet: 'TestPilot fills this in .env.example when you give the API address in the app step. Put a different one in .env to override it.', format: 'url', required: false, secret: false },

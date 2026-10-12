@@ -1,0 +1,57 @@
+// {{header}}
+import { rmSync } from 'node:fs';
+
+import { SevereServiceError } from 'webdriverio';
+
+import { config as local } from './wdio.conf';
+
+/**
+ * Runs the same tests on BrowserStack App Automate real devices: `npm run test:browserstack`.
+ * Needs BROWSERSTACK_USERNAME and BROWSERSTACK_ACCESS_KEY in .env, the bs:// id of an uploaded build in
+ * BROWSERSTACK_APP_ID, and the @wdio/browserstack-service package (npm i -D @wdio/browserstack-service@9.39.4).
+ * BrowserStack supports WebdriverIO 7 to 9 and Appium up to 3.5.2, so keep these versions pinned.
+ * Docs: https://www.browserstack.com/docs/app-automate/appium/getting-started/nodejs/webdriverio
+ */
+const APPIUM_VERSION = '3.5.2';
+const PROJECT = {{projectNameJson}};
+
+{{#if isAndroidIos}}
+const platform = (process.env.MOBILE_PLATFORM ?? 'android').toLowerCase();
+const ios = platform === 'ios';
+{{else if isIos}}
+const ios = true;
+{{else}}
+const ios = false;
+{{/if}}
+
+export const config: WebdriverIO.Config = {
+    ...local,
+    user: process.env.BROWSERSTACK_USERNAME,
+    key: process.env.BROWSERSTACK_ACCESS_KEY,
+    protocol: 'https',
+    hostname: 'hub.browserstack.com',
+    port: 443,
+    path: '/wd/hub',
+    // Raise this to the number of parallel sessions your BrowserStack plan allows.
+    maxInstances: Number(process.env.BROWSERSTACK_PARALLELS ?? 1),
+    services: [['browserstack', { app: process.env.BROWSERSTACK_APP_ID, browserstackLocal: false }]],
+    capabilities: [
+        {
+            platformName: ios ? 'iOS' : 'Android',
+            'appium:automationName': ios ? 'XCUITest' : 'UiAutomator2',
+            'appium:deviceName': process.env.DEVICE_NAME ?? (ios ? 'iPhone 15' : 'Google Pixel 8'),
+            'appium:platformVersion': process.env.PLATFORM_VERSION ?? (ios ? '17' : '14.0'),
+            'bstack:options': {
+                projectName: PROJECT,
+                buildName: process.env.BROWSERSTACK_BUILD_NAME ?? `${PROJECT} ${new Date().toISOString().slice(0, 10)}`,
+                appiumVersion: APPIUM_VERSION,
+                debug: true
+            }
+        }
+    ],
+    onPrepare() {
+        rmSync('test-results/testpilot', { recursive: true, force: true });
+        const missing = ['BROWSERSTACK_USERNAME', 'BROWSERSTACK_ACCESS_KEY', 'BROWSERSTACK_APP_ID'].filter(name => !process.env[name]);
+        if (missing.length) throw new SevereServiceError(`Missing ${missing.join(', ')}. Copy .env.example to .env and fill it in (CI: add them as secrets).`);
+    }
+};

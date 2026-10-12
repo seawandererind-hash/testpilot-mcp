@@ -1,0 +1,117 @@
+// {{header}}
+import { fileURLToPath } from 'node:url';
+
+import WDIOReporter, { type HookStats, type RunnerStats, type SuiteStats, type TestStats } from '@wdio/reporter';
+
+/** Event the afterTest hook emits so the reporter can link a screenshot to the failed test. */
+const ATTACHMENT_EVENT = 'testpilot:attachment';
+
+interface Attachment {
+    name: string;
+    path: string;
+}
+
+/** Links a file (e.g. a failure screenshot) to the test that is running. */
+export function attach(name: string, file: string): void {
+    (process.emit as unknown as (event: string, payload: Attachment) => boolean)(ATTACHMENT_EVENT, { name, path: file });
+}
+
+/** The test-case id at the start of a test title ("SHOP-12 Login works @SHOP-12"), if there is one. */
+export function testKeyOf(title: string): string | undefined {
+    return title.match(/^([A-Za-z][\w.]*-\d+|C\d+)(?=\s|$)/)?.[1] ?? title.match(/(?:^|\s)@([A-Za-z][\w.]*-\d+)(?=\s|$)/)?.[1];
+}
+
+interface ResultEntry {
+    title: string;
+    fullTitle: string;
+    suite: string;
+    file?: string;
+    state: 'passed' | 'failed' | 'skipped' | 'pending';
+    durationMs: number;
+    retries: number;
+    error?: { message: string; stack?: string };
+    attachments: Attachment[];
+}
+
+function specPath(spec: string | undefined): string | undefined {
+    if (!spec) return undefined;
+    return spec.startsWith('file:') ? fileURLToPath(spec) : spec;
+}
+
+/**
+ * Writes one JSON file per worker (test-results/testpilot/results-<cid>.json) with every
+ * test's outcome. TestPilot's run_tests reads these files; nothing here is sent anywhere.
+ */
+export default class TestPilotReporter extends WDIOReporter {
+    private readonly attachments = new Map<string, Attachment[]>();
+    private currentUid?: string;
+
+    constructor(options: ConstructorParameters<typeof WDIOReporter>[0]) {
+        super(options);
+        (process.on as unknown as (event: string, listener: (payload: Attachment) => void) => void)(ATTACHMENT_EVENT, payload => {
+            if (!this.currentUid) return;
+            this.attachments.set(this.currentUid, [...(this.attachments.get(this.currentUid) ?? []), payload]);
+        });
+    }
+
+    onTestStart(test: TestStats): void {
+        this.currentUid = test.uid;
+    }
+
+    private entry(test: TestStats, suite: SuiteStats, file: string | undefined): ResultEntry {
+        const error = test.error ?? test.errors?.[0];
+        return {
+            title: test.title,
+            fullTitle: test.fullTitle,
+            suite: suite.title,
+            file,
+            state: test.state,
+            durationMs: test._duration,
+            retries: test.retries ?? 0,
+            error: error && test.state === 'failed' ? { message: String(error.message ?? error), stack: error.stack } : undefined,
+            attachments: this.attachments.get(test.uid) ?? []
+        };
+    }
+
+    private hookEntry(hook: HookStats, suite: SuiteStats, file: string | undefined): ResultEntry {
+        return {
+            title: `${hook.title} (${suite.title})`,
+            fullTitle: `${suite.fullTitle} ${hook.title}`,
+            suite: suite.title,
+            file,
+            state: 'failed',
+            durationMs: hook._duration,
+            retries: 0,
+            error: hook.error ? { message: String(hook.error.message ?? hook.error), stack: hook.error.stack } : undefined,
+            attachments: []
+        };
+    }
+
+    onRunnerEnd(runner: RunnerStats): void {
+        const file = specPath(runner.specs[0]);
+        const tests: ResultEntry[] = [];
+        for (const suite of Object.values(this.suites)) {
+            for (const test of suite.tests) tests.push(this.entry(test, suite, specPath(suite.file) ?? file));
+            for (const hook of suite.hooks) if (hook.error) tests.push(this.hookEntry(hook, suite, specPath(suite.file) ?? file));
+        }
+        const caps = (runner.capabilities ?? {}) as Record<string, unknown>;
+        this.write(
+            JSON.stringify(
+                {
+                    format: 'testpilot-wdio-results',
+                    version: 1,
+                    cid: runner.cid,
+                    specs: runner.specs.map(specPath),
+                    platform: caps.platformName ?? null,
+                    device: caps['appium:deviceName'] ?? caps.deviceName ?? null,
+                    startedAt: runner.start,
+                    finishedAt: runner.end ?? new Date(),
+                    failures: runner.failures,
+                    tests
+                },
+                null,
+                2
+            )
+        );
+    }
+}

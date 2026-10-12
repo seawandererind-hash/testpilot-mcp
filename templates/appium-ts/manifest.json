@@ -1,0 +1,213 @@
+{
+  "id": "appium-ts",
+  "title": "Appium 3 + WebdriverIO 9 + Mocha (TypeScript)",
+  "appTypes": [
+    "android",
+    "ios",
+    "android-ios",
+    "hybrid",
+    "windows",
+    "macos"
+  ],
+  "patterns": [
+    "pom",
+    "hybrid",
+    "keyword"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "@wdio/cli": "9.32.0",
+    "@wdio/globals": "9.31.3",
+    "@wdio/junit-reporter": "9.32.0",
+    "@wdio/local-runner": "9.32.0",
+    "@wdio/mocha-framework": "9.32.0",
+    "@wdio/reporter": "9.32.0",
+    "@wdio/spec-reporter": "9.32.0",
+    "@wdio/types": "9.32.0",
+    "appium": "3.8.0",
+    "dotenv": "^17.2.0",
+    "expect-webdriverio": "6.1.0",
+    "typescript": "^5.9.0",
+    "webdriverio": "9.32.0"
+  },
+  "optionalDevDependencies": {
+    "allure": {
+      "@wdio/allure-reporter": "9.32.0"
+    },
+    "browserstack": {
+      "@wdio/browserstack-service": "9.39.4"
+    }
+  },
+  "scripts": {
+    "test": "wdio run wdio.conf.ts",
+    "test:smoke": "wdio run wdio.conf.ts --mochaOpts.grep @smoke",
+    "test:browserstack": {
+      "run": "wdio run wdio.browserstack.conf.ts",
+      "when": "mobile"
+    },
+    "appium": "appium",
+    "typecheck": "tsc --noEmit"
+  },
+  "install": [
+    [
+      "npm",
+      "install"
+    ],
+    {
+      "argv": [
+        "npx",
+        "appium",
+        "driver",
+        "install",
+        "uiautomator2@8.7.0"
+      ],
+      "when": [
+        "android",
+        "local"
+      ]
+    },
+    {
+      "argv": [
+        "npx",
+        "appium",
+        "driver",
+        "install",
+        "xcuitest@12.17.1"
+      ],
+      "when": [
+        "ios",
+        "local"
+      ]
+    },
+    {
+      "argv": [
+        "npx",
+        "appium",
+        "driver",
+        "install",
+        "mac2@4.4.0"
+      ],
+      "when": "macos"
+    },
+    {
+      "argv": [
+        "npx",
+        "appium",
+        "driver",
+        "install",
+        "--source=npm",
+        "appium-wincore-driver@3.1.2"
+      ],
+      "when": "wincore"
+    },
+    {
+      "argv": [
+        "npx",
+        "appium",
+        "driver",
+        "install",
+        "--source=npm",
+        "appium-novawindows-driver@1.4.5"
+      ],
+      "when": "novawindows"
+    }
+  ],
+  "manualSetup": [
+    {
+      "when": [
+        "android",
+        "local"
+      ],
+      "text": "Android: install a JDK 17 or 21 and set JAVA_HOME; install Android Studio with the SDK platform-tools and an emulator image, set ANDROID_HOME and add <sdk>/platform-tools to PATH. Start an emulator (or connect a phone with USB debugging on); `adb devices` must list it."
+    },
+    {
+      "when": [
+        "ios",
+        "local"
+      ],
+      "text": "iOS: needs a Mac with Xcode (one of the latest two versions). Run `xcode-select --install`, open Xcode once to accept the licence, and boot a simulator (`xcrun simctl list devices`). Put its name and version in DEVICE_NAME and PLATFORM_VERSION. Simulators need a simulator build (.app); real devices need a signed .ipa. Without a Mac, run on BrowserStack instead."
+    },
+    {
+      "when": "windows",
+      "text": "Windows: Windows 10 or 11. Appium, the driver and the app run on the same Windows machine. Set APP_PATH to the installed .exe (or APP_ID to a Store app's AUMID)."
+    },
+    {
+      "when": "macos",
+      "text": "macOS: macOS 11.3+ with Xcode 13+. Give Xcode Helper Accessibility permission (System Settings → Privacy & Security → Accessibility). Set APP_ID to the app's bundle id, or APP_PATH to the .app."
+    },
+    {
+      "when": "local",
+      "text": "Check the driver with `npx appium driver doctor <driver>` (uiautomator2, xcuitest, mac2, …), then start Appium with `npm run appium` and leave it running while tests run (it listens on APPIUM_SERVER_URL, default http://127.0.0.1:4723)."
+    },
+    {
+      "when": [
+        "mobile",
+        "local"
+      ],
+      "text": "Put the app build in the git-ignored apps/ folder and set APP_PATH (TestPilot fills it in when you answer the app step), or set APP_ID to run an app already installed on the device."
+    },
+    {
+      "when": [
+        "mobile",
+        "cloud"
+      ],
+      "text": "BrowserStack: upload the build with `curl -u \"$BROWSERSTACK_USERNAME:$BROWSERSTACK_ACCESS_KEY\" -X POST https://api-cloud.browserstack.com/app-automate/upload -F file=@apps/<your-build>` and put the returned bs:// id in BROWSERSTACK_APP_ID (uploads expire after 30 days). Then run `npm run test:browserstack`. BrowserStack supports WebdriverIO up to 9 and Appium up to 3.5.2, so keep these versions pinned."
+    }
+  ],
+  "files": [
+    {
+      "from": "wdio.conf.ts.hbs",
+      "to": "wdio.conf.ts"
+    },
+    {
+      "from": "wdio.browserstack.conf.ts.hbs",
+      "to": "wdio.browserstack.conf.ts",
+      "when": "mobile"
+    },
+    {
+      "from": "tsconfig.json.hbs",
+      "to": "tsconfig.json",
+      "ifMissing": true
+    },
+    {
+      "from": "src/utils/env.ts.hbs",
+      "to": "src/utils/env.ts"
+    },
+    {
+      "from": "src/utils/users.ts.hbs",
+      "to": "src/utils/users.ts"
+    },
+    {
+      "from": "src/utils/pending.ts.hbs",
+      "to": "src/utils/pending.ts"
+    },
+    {
+      "from": "src/reporting/testpilot-reporter.ts.hbs",
+      "to": "src/reporting/testpilot-reporter.ts"
+    },
+    {
+      "from": "src/reporting/mask-secrets.ts.hbs",
+      "to": "src/reporting/mask-secrets.ts"
+    },
+    {
+      "from": "src/screens/BaseScreen.ts.hbs",
+      "to": "src/screens/BaseScreen.ts"
+    },
+    {
+      "from": "src/screens/HomeScreen.ts.hbs",
+      "to": "src/screens/HomeScreen.ts"
+    },
+    {
+      "from": "test/specs/smoke.spec.ts.hbs",
+      "to": "test/specs/smoke.spec.ts"
+    },
+    {
+      "from": "test-data/README.md.hbs",
+      "to": "test-data/README.md"
+    },
+    {
+      "from": "test-data/users.json.hbs",
+      "to": "test-data/users.json"
+    }
+  ]
+}
