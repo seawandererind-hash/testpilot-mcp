@@ -1,0 +1,20 @@
+// {{header}}
+import { BaseScreen } from './BaseScreen';
+
+/**
+ * The first screen the app shows. Rename or extend it to match your app.
+ * Give it an anchor (an element only this screen has, ideally an accessibility id), e.g.
+ *     protected get anchor() { return $('~home_title'); }
+ * Until then, waitForScreen() only waits for the app window.
+ */
+export class HomeScreen extends BaseScreen {
+    // testpilot:locators
+
+    /** The app started and drew its first screen. */
+    async expectLaunched(): Promise<void> {
+        await this.waitForScreen(30_000);
+    }
+    // testpilot:actions
+}
+
+export const homeScreen = new HomeScreen();

@@ -20,16 +20,19 @@ description: Turn a test case from .testpilot/test-cases/normalized into a {{fra
 {{else if isAppium}}
    ```ts
    import { expect } from '@wdio/globals';
-   import { LoginScreen } from '../../src/screens/LoginScreen';
+
+   import { loginScreen } from '../../../src/screens/LoginScreen';
+   import { productsScreen } from '../../../src/screens/ProductsScreen';
 
    describe('<area>', () => {
        it('<ID> <title> @<ID> @<priority>', async () => {
-           const login = new LoginScreen();
-           await login.signIn(user.email, user.password);
-           await expect(await login.errorBanner()).not.toBeDisplayed();
+           await loginScreen.loginAs('standard');
+           await productsScreen.waitForScreen();
+           await expect(productsScreen.cartButton).toBeDisplayed();
        });
    });
    ```
+   Screen getters look elements up each time they are used; actions wait with `waitForDisplayed` (use `tap`, `type`, `choose` from `BaseScreen`). A test with TODO(testpilot) steps calls `pendingUntilDone(this, ...)` first; delete that line once the steps are written.
 {{else}}
    Follow the existing tests' structure. Name the test `<ID> <title>` and tag it with the id so results trace back.
 {{/if}}

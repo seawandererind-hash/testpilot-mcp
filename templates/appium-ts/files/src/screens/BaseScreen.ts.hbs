@@ -1,0 +1,152 @@
+// {{header}}
+import { ${{#if isAndroidIos}}, driver{{/if}} } from '@wdio/globals';
+import type { ChainablePromiseElement } from 'webdriverio';
+
+/** A quoted string literal for UiAutomator and iOS predicates. */
+function literal(text: string): string {
+    return JSON.stringify(text);
+}
+
+/** A quoted XPath 1.0 literal (XPath has no escapes, so mixed quotes use concat()). */
+function xpathLiteral(text: string): string {
+    if (!text.includes('"')) return `"${text}"`;
+    if (!text.includes("'")) return `'${text}'`;
+    return `concat(${text.split('"').map(part => `"${part}"`).join(`, '"', `)})`;
+}
+
+/**
+ * Shared behaviour for every screen object.
+ * Locator priority: accessibility id (`~id`) → resource-id / name → visible text → XPath by attribute
+ * (last resort, never by position). Never use fixed sleeps (browser.pause): wait for a condition with
+ * waitForDisplayed or browser.waitUntil. TestPilot adds getters and methods above the markers in each screen.
+ */
+export abstract class BaseScreen {
+    /** An element only this screen shows; waitForScreen() waits for it. Override it in each screen. */
+    protected get anchor(): ChainablePromiseElement | undefined {
+        return undefined;
+    }
+
+    /** Waits until this screen is showing (its anchor is displayed). */
+    async waitForScreen(timeout = 20_000): Promise<void> {
+        const anchor = this.anchor ?? this.appWindow;
+        await anchor.waitForDisplayed({ timeout, timeoutMsg: `${this.constructor.name} did not appear within ${timeout} ms` });
+    }
+
+    /** Taps (clicks) an element once it is displayed. */
+    async tap(element: ChainablePromiseElement): Promise<void> {
+        await element.waitForDisplayed();
+        await element.click();
+    }
+
+    /** Replaces the text of a field once it is displayed. */
+    async type(element: ChainablePromiseElement, value: string): Promise<void> {
+        await element.waitForDisplayed();
+        await element.setValue(value);
+    }
+
+    /** Empties a field once it is displayed. */
+    async clear(element: ChainablePromiseElement): Promise<void> {
+        await element.waitForDisplayed();
+        await element.clearValue();
+    }
+
+    /** Opens a dropdown or picker and taps the option with that text. */
+    async choose(element: ChainablePromiseElement, option: string): Promise<void> {
+        await this.tap(element);
+        await this.tap(this.byText(option));
+    }
+
+    /** Turns a checkbox or switch on or off, tapping only when it is not already in that state. */
+    async setChecked(element: ChainablePromiseElement, on: boolean): Promise<void> {
+        await element.waitForDisplayed();
+        if ((await this.isChecked(element)) !== on) await element.click();
+    }
+
+    /** Whether a checkbox or switch is on. */
+    async isChecked(element: ChainablePromiseElement): Promise<boolean> {
+{{#if isIos}}
+        {{#if isAndroidIos}}if (driver.isIOS) {{/if}}return ['1', 'true'].includes(String(await element.getAttribute('value')));
+{{/if}}
+{{#if isAndroid}}
+        return (await element.getAttribute('checked')) === 'true';
+{{/if}}
+{{#if isWindows}}
+        return element.isSelected();
+{{/if}}
+{{#if isMacos}}
+        return String(await element.getAttribute('value')) === '1';
+{{/if}}
+    }
+
+    /** An element by its visible text. Prefer named getters in screens; use this for one-off checks. */
+    byText(text: string): ChainablePromiseElement {
+{{#if isIos}}
+        {{#if isAndroidIos}}if (driver.isIOS) {{/if}}return $(`-ios predicate string:label == ${literal(text)} OR name == ${literal(text)} OR value == ${literal(text)}`);
+{{/if}}
+{{#if isAndroid}}
+        return $(`android=new UiSelector().text(${literal(text)})`);
+{{/if}}
+{{#if isWindows}}
+        return $(`name:${text}`);
+{{/if}}
+{{#if isMacos}}
+        return $(`-ios predicate string:title == ${literal(text)} OR label == ${literal(text)} OR value == ${literal(text)}`);
+{{/if}}
+    }
+
+    /** A text field by its label, hint or placeholder. */
+    byField(label: string): ChainablePromiseElement {
+{{#if isIos}}
+        {{#if isAndroidIos}}if (driver.isIOS) {{/if}}return $(
+            `-ios predicate string:type IN {"XCUIElementTypeTextField", "XCUIElementTypeSecureTextField", "XCUIElementTypeSearchField", "XCUIElementTypeTextView"} AND (name == ${literal(label)} OR label == ${literal(label)} OR placeholderValue == ${literal(label)} OR value == ${literal(label)})`
+        );
+{{/if}}
+{{#if isAndroid}}
+        const x = xpathLiteral(label);
+        return $(`//android.widget.EditText[@hint=${x} or @text=${x} or @content-desc=${x}]`);
+{{/if}}
+{{#if isWindows}}
+        return $(`name:${label}`);
+{{/if}}
+{{#if isMacos}}
+        return $(`-ios predicate string:placeholderValue == ${literal(label)} OR label == ${literal(label)} OR title == ${literal(label)}`);
+{{/if}}
+    }
+
+    /** The element labelled `label` inside the list row or card that shows `text`, e.g. the "Add to cart" button of "Red shoes". */
+    inItem(text: string, label: string): ChainablePromiseElement {
+{{#if isIos}}
+        {{#if isAndroidIos}}if (driver.isIOS) {{/if}}return $(`-ios class chain:**/XCUIElementTypeCell[$label == ${literal(text)} OR name == ${literal(text)}$]/**/XCUIElementTypeAny[\`label == ${literal(label)} OR name == ${literal(label)}\`]`);
+{{/if}}
+{{#if isAndroid}}
+        const t = xpathLiteral(text);
+        const l = xpathLiteral(label);
+        // The nearest ancestor of the text that also holds the target, then the target inside it.
+        return $(`//*[@text=${t}]/ancestor::*[.//*[@text=${l} or @content-desc=${l}]][1]//*[@text=${l} or @content-desc=${l}]`);
+{{/if}}
+{{#if isWindows}}
+        const t = xpathLiteral(text);
+        const l = xpathLiteral(label);
+        return $(`//*[@Name=${t}]/ancestor::*[.//*[@Name=${l}]][1]//*[@Name=${l}]`);
+{{/if}}
+{{#if isMacos}}
+        return $(`-ios class chain:**/XCUIElementTypeCell[$value == ${literal(text)} OR title == ${literal(text)}$]/**/XCUIElementTypeAny[\`title == ${literal(label)} OR label == ${literal(label)}\`]`);
+{{/if}}
+    }
+
+    /** The app's top-level window: there as soon as the app has drawn its first screen. */
+    protected get appWindow(): ChainablePromiseElement {
+{{#if isIos}}
+        {{#if isAndroidIos}}if (driver.isIOS) {{/if}}return $('-ios class chain:**/XCUIElementTypeWindow');
+{{/if}}
+{{#if isAndroid}}
+        return $('android=new UiSelector().className("android.widget.FrameLayout")');
+{{/if}}
+{{#if isWindows}}
+        return $('/*');
+{{/if}}
+{{#if isMacos}}
+        return $('-ios class chain:**/XCUIElementTypeWindow');
+{{/if}}
+    }
+}

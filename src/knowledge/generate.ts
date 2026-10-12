@@ -61,7 +61,9 @@ export function knowledgeContext(config: Config, packageName: string): Record<st
           ? [
                 { what: 'Start Appium (local runs)', cmd: 'npx appium' },
                 { what: 'Everything', cmd: 'npx wdio run wdio.conf.ts' },
-                { what: 'One test case', cmd: 'npx wdio run wdio.conf.ts --mochaOpts.grep SHOP-123' }
+                { what: 'Smoke tests', cmd: 'npx wdio run wdio.conf.ts --mochaOpts.grep @smoke' },
+                { what: 'One test case', cmd: 'npx wdio run wdio.conf.ts --mochaOpts.grep SHOP-123' },
+                ...(config.execution.target === 'browserstack' ? [{ what: 'On BrowserStack', cmd: 'npx wdio run wdio.browserstack.conf.ts' }] : [])
             ]
           : [{ what: 'Run tests', cmd: 'see the framework documentation' }];
     const folders = [
@@ -158,7 +160,11 @@ function skillsFor(config: Config, ctx: Record<string, unknown>): Array<{ name: 
             extra: {
                 targetPhrase: target === 'local' ? 'on this computer' : `on ${target}`,
                 isBrowserStack: target === 'browserstack',
-                resultsWhere: ctx.isPlaywright ? 'HTML report in playwright-report/, JSON in test-results/results.json, JUnit in test-results/junit.xml' : 'the reporter output configured in the runner'
+                resultsWhere: ctx.isPlaywright
+                    ? 'HTML report in playwright-report/, JSON in test-results/results.json, JUnit in test-results/junit.xml'
+                    : ctx.isAppium
+                      ? 'JSON in test-results/testpilot/, JUnit in test-results/junit-*.xml, failure screenshots in test-results/screenshots/'
+                      : 'the reporter output configured in the runner'
             }
         },
         { name: 'review-test-case', file: 'review-test-case.md.hbs' },

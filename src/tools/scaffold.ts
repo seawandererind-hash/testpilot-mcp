@@ -9,7 +9,7 @@ import type { Config } from '../core/schema.js';
 import type { ProjectStore } from '../core/store.js';
 import { completeActionStep } from '../core/wizard.js';
 import { loadClientMap, planKnowledge } from '../knowledge/generate.js';
-import { inTestRoot, MANUAL_SETUP, planGitignore, planPack, type PlannedFile, runCommand, writePlanned } from '../scaffold/engine.js';
+import { inTestRoot, installCommandsFor, MANUAL_SETUP, manualSetupFor, planGitignore, planPack, type PlannedFile, runCommand, writePlanned } from '../scaffold/engine.js';
 import { PACKAGE_NAME } from '../version.js';
 import { approverArg, EXTERNAL, failure, guarded, openProject, projectRootArg, READ_ONLY, requireApproval, result, type ServerOptions, userApprovedArg, WRITES_STATE } from './common.js';
 
@@ -35,7 +35,8 @@ export function buildScaffoldPlan(store: ProjectStore, config: Config): Scaffold
         if (packId) {
             const { pack, files: packFiles } = planPack(store, config, packId);
             packTitle = pack.title;
-            install = pack.install;
+            install = installCommandsFor(pack, config);
+            manual = manualSetupFor(pack, config);
             files.push(...packFiles);
         } else {
             manual = MANUAL_SETUP[config.stack.framework ?? ''] ?? 'TestPilot has no template for this framework yet. Follow the framework\'s getting-started guide; TestPilot still writes the plan, AI instructions and skills.';
@@ -88,6 +89,7 @@ export function registerScaffoldTools(server: McpServer, options: ServerOptions)
                 '',
                 changes.length ? describePlan(plan) : 'Everything is already in place.',
                 installText,
+                plan.packTitle && plan.manual ? `\nThe user also needs to do these steps themselves (TestPilot cannot install SDKs or devices):\n${plan.manual}` : '',
                 '',
                 'Ask the user: "Can I create the project framework?" Then call scaffold_project with this confirmToken.'
             ].join('\n');
@@ -163,7 +165,7 @@ export function registerScaffoldTools(server: McpServer, options: ServerOptions)
                 const next = options.mode === 'remote' && plan.install.length ? `After delivery (hosted_workspace), install the tools with ${plan.install.map(c => `\`${c.join(' ')}\``).join(' then ')}.` : !args.install && plan.install.length ? `Next: install the tools with ${plan.install.map(c => `\`${c.join(' ')}\``).join(' then ')} (or call scaffold_project again with install: true after a fresh preview).` : '';
                 const summary = [
                     `Wrote ${written.length} file(s).${kept.length ? ` Kept ${kept.length} existing file(s) unchanged.` : ''}`,
-                    plan.manual ? `Framework setup: ${plan.manual}` : '',
+                    plan.manual ? `Framework setup${plan.packTitle ? ' (steps for the user)' : ''}:${plan.manual.includes('\n') ? '\n' : ' '}${plan.manual}` : '',
                     failed ? `Install failed at \`${failed.command}\`:\n${failed.tail}\nRun check_prerequisites for fixes.` : installs.length ? 'Dependencies installed.' : next,
                     'Then continue the wizard (action "next").'
                 ]

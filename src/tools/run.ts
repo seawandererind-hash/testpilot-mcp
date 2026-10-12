@@ -5,7 +5,9 @@ import { isLikelyProduction } from '../core/app-target.js';
 import { resolveBaseUrl } from '../core/env.js';
 import { completeActionStep } from '../core/wizard.js';
 import { readPlanMeta } from '../plan/plan.js';
+import { usesAppium } from '../explore/mobile.js';
 import { type RunSummary, runPlaywright, saveRun } from '../run/playwright.js';
+import { categoriseAppium, runWdio } from '../run/wdio.js';
 import { inTestRoot } from '../scaffold/engine.js';
 import { approverArg, failure, guarded, openProject, projectRootArg, requireApproval, result, type ServerOptions, userApprovedArg } from './common.js';
 
@@ -13,10 +15,15 @@ function escapeRegExp(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function describeRun(run: RunSummary, saved: string): string {
+function describeRun(run: RunSummary, saved: string, runner: 'playwright' | 'wdio' = 'playwright'): string {
     const s = run.stats;
     if (!s.total) {
-        return `No test results were produced (exit code ${run.exitCode}).${run.consoleTail ? `\n\nLast output:\n${run.consoleTail}` : ''}\n\nIf no tests matched, check the ids or wave. If the report is missing, make sure playwright.config.ts still has the json reporter writing test-results/results.json.`;
+        const triage = runner === 'wdio' && run.consoleTail ? categoriseAppium(run.consoleTail) : undefined;
+        const reporterHint =
+            runner === 'wdio'
+                ? 'If the results are missing, make sure the wdio config still lists TestPilotReporter (writing test-results/testpilot/).'
+                : 'If the report is missing, make sure playwright.config.ts still has the json reporter writing test-results/results.json.';
+        return `No test results were produced (exit code ${run.exitCode}).${triage && triage.category !== 'unknown' ? `\nLikely cause: ${triage.category}. ${triage.advice}` : ''}${run.consoleTail ? `\n\nLast output:\n${run.consoleTail}` : ''}\n\nIf no tests matched, check the ids or wave. ${reporterHint}`;
     }
     const lines = [`${s.passed} passed, ${s.failed} failed, ${s.flaky} flaky, ${s.skipped} skipped${run.repeat > 1 ? ` (each test ran ${run.repeat} times)` : ''} in ${Math.round(s.durationMs / 1000)}s.`];
     const bad = run.tests.filter(t => t.status === 'failed' || t.status === 'flaky');
@@ -30,6 +37,7 @@ function describeRun(run: RunSummary, saved: string): string {
         else if (shot) lines.push(`Screenshot: ${shot.path}`);
     }
     if (bad.length > 15) lines.push('', `…and ${bad.length - 15} more in ${saved}.`);
+    if (run.consoleTail && runner === 'wdio' && run.exitCode !== 0) lines.push('', `Some specs produced no results. Last output:\n${run.consoleTail}`);
     lines.push('', `Saved to ${saved}.`);
     if (!bad.length && run.repeat < 2) lines.push('All passed. Run again with stabilityRuns: 2 to confirm they are stable before calling them done.');
     if (bad.length) lines.push('Propose fixes as diffs for the user to review. Never delete or weaken an assertion to make a test pass without their agreement; if the app is wrong, it is a bug to report.');
@@ -42,14 +50,14 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
         {
             title: 'Run tests',
             description:
-                'Runs the Playwright tests (all, a plan wave, specific test-case ids, files or @tags), then reports each failure with its likely cause (environment, locator, assertion, timing, data, script), advice, and the trace to open. stabilityRuns: 2 runs each test twice without retries to prove it is stable; flaky tests are flagged. Results go to .testpilot/runs/ and update each case\'s status. Refuses production-looking addresses unless the user explicitly allows it.',
+                'Runs the tests (Playwright for web, WebdriverIO + Appium for mobile and desktop apps): all, a plan wave, specific test-case ids, files or @tags. Reports each failure with its likely cause (environment, locator, assertion, timing, data, script), advice, and the trace or screenshot to open. stabilityRuns: 2 runs each test twice without retries to prove it is stable; flaky tests are flagged. Results go to .testpilot/runs/ and update each case\'s status. Refuses production-looking addresses unless the user explicitly allows it. Appium runs need the Appium server running (npm run appium) or, for BrowserStack, the bs:// app id in .env.',
             inputSchema: z.object({
                 projectRoot: projectRootArg,
                 ids: z.array(z.string()).optional().describe('Test-case ids to run'),
                 wave: z.number().int().min(1).optional().describe('Run the tests of this plan wave'),
                 files: z.array(z.string()).optional().describe('Spec files, relative to the test root'),
                 tag: z.string().regex(/^@[\w-]+$/).optional().describe('Only tests with this tag, e.g. @smoke'),
-                project: z.string().optional().describe('Playwright project (browser) to run, e.g. chromium'),
+                project: z.string().optional().describe('Playwright project (browser) to run, e.g. chromium. Ignored for Appium runs.'),
                 stabilityRuns: z.number().int().min(1).max(10).default(1),
                 workers: z.number().int().min(1).max(16).optional(),
                 timeoutMinutes: z.number().min(1).max(120).default(20),
@@ -81,14 +89,23 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
             ) => {
                 const { store } = openProject(options, args.projectRoot);
                 const config = store.readConfig();
-                if (!config.stack.framework?.startsWith('playwright')) {
-                    return failure(`run_tests drives Playwright today. For ${config.stack.framework ?? 'this framework'}, run the command from AGENTS.md ("How to run tests") in a terminal and share the output.`);
+                const wdio = usesAppium(config) && config.stack.language === 'typescript';
+                if (!config.stack.framework?.startsWith('playwright') && !wdio) {
+                    return failure(`run_tests drives Playwright and the TypeScript Appium template today. For ${config.stack.framework ?? 'this framework'}, run the command from AGENTS.md ("How to run tests") in a terminal and share the output.`);
                 }
                 const testRoot = inTestRoot(config, '.') || '.';
-                if (!store.exists(`${testRoot}/node_modules/@playwright/test`) && !store.exists('node_modules/@playwright/test')) {
+                let wdioConfig = 'wdio.conf.ts';
+                if (wdio) {
+                    if (!store.exists(`${testRoot}/node_modules/@wdio/cli`) && !store.exists('node_modules/@wdio/cli')) {
+                        return failure('WebdriverIO is not installed yet. Run npm install in the test folder (check_prerequisites lists anything else missing).');
+                    }
+                    if (config.execution.target === 'browserstack') wdioConfig = 'wdio.browserstack.conf.ts';
+                    if (!store.exists(inTestRoot(config, wdioConfig))) return failure(`${inTestRoot(config, wdioConfig)} is missing. Run preview_scaffold and scaffold_project to create it.`);
+                } else if (!store.exists(`${testRoot}/node_modules/@playwright/test`) && !store.exists('node_modules/@playwright/test')) {
                     return failure('Playwright is not installed yet. Run npm install, then npx playwright install chromium (check_prerequisites lists anything missing).');
                 }
-                const baseUrl = resolveBaseUrl(store, config);
+                // Mobile and desktop apps have no address to protect; web and API runs do.
+                const baseUrl = wdio && config.app.kind !== 'url' ? undefined : resolveBaseUrl(store, config);
                 if (baseUrl && isLikelyProduction(baseUrl)) {
                     if (!args.allowProduction) return failure(`Tests would run against ${baseUrl}, which does not look like a test environment. Point APP_BASE_URL at a test or staging address. If the user really wants this, ask them and call again with allowProduction: true.`);
                     const approval = requireApproval(server, ctx, { key: 'run-production', question: `Run tests against ${baseUrl}? It looks like production, and tests may create or change data there.`, userApproved: args.userApproved, approver: args.approver });
@@ -112,16 +129,19 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
                     store.resolve(inTestRoot(config, f));
                     return f;
                 });
-                const run = await runPlaywright(store, {
-                    cwd: store.resolve(testRoot),
-                    files,
-                    grep: grepParts.length ? grepParts.join('|') : undefined,
-                    repeat: args.stabilityRuns,
-                    project: args.project,
-                    workers: args.workers,
-                    timeoutMs: args.timeoutMinutes * 60_000,
-                    reportFile: 'test-results/results.json'
-                });
+                const grep = grepParts.length ? grepParts.join('|') : undefined;
+                const run = wdio
+                    ? await runWdio(store, { cwd: store.resolve(testRoot), configFile: wdioConfig, specs: files, grep, repeat: args.stabilityRuns, timeoutMs: args.timeoutMinutes * 60_000, resultsDir: 'test-results/testpilot' })
+                    : await runPlaywright(store, {
+                          cwd: store.resolve(testRoot),
+                          files,
+                          grep,
+                          repeat: args.stabilityRuns,
+                          project: args.project,
+                          workers: args.workers,
+                          timeoutMs: args.timeoutMinutes * 60_000,
+                          reportFile: 'test-results/results.json'
+                      });
                 run.baseUrl = baseUrl;
                 const saved = saveRun(store, run);
 
@@ -144,7 +164,7 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
                 });
                 const allGood = run.stats.total > 0 && run.stats.failed === 0 && run.stats.flaky === 0;
                 if (allGood && run.repeat >= 2 && store.hasConfig()) completeActionStep(store, 'RUN', `${run.stats.passed} test(s) passed ${run.repeat} times in a row`);
-                return result(describeRun(run, saved), { run: { ...run, tests: run.tests.slice(0, 100) }, saved });
+                return result(describeRun(run, saved, wdio ? 'wdio' : 'playwright'), { run: { ...run, tests: run.tests.slice(0, 100) }, saved });
             }
         )
     );

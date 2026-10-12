@@ -17,10 +17,13 @@ export const CREATED_HEADER = 'Created by TestPilot. This file is yours: edit it
 /** Folder holding template packs, next to dist/ or src/ in the installed package. */
 export const TEMPLATES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'templates');
 
+/** Conditions a pack entry can depend on; a list means all of them must hold. */
+export type When = 'ui' | 'web' | 'api' | 'electron' | 'mobile' | 'android' | 'ios' | 'desktop' | 'windows' | 'macos' | 'wincore' | 'novawindows' | 'local' | 'cloud';
+
 interface PackFile {
     from: string;
     to: string;
-    when?: 'ui' | 'web' | 'api' | 'electron' | 'mobile' | 'android' | 'ios' | 'desktop';
+    when?: When | When[];
     ifMissing?: boolean;
 }
 
@@ -30,9 +33,12 @@ export interface PackManifest {
     appTypes: string[];
     patterns: string[];
     devDependencies: Record<string, string>;
+    /** Extra packages keyed by a reporting choice, an extra, or the execution target (e.g. "browserstack"). */
     optionalDevDependencies?: Record<string, Record<string, string>>;
-    scripts: Record<string, string>;
-    install: string[][];
+    scripts: Record<string, string | { run: string; when: When | When[] }>;
+    install: Array<string[] | { argv: string[]; when?: When | When[] }>;
+    /** Steps TestPilot cannot do for the user (SDKs, drivers, devices), shown in the scaffold preview. */
+    manualSetup?: Array<{ text: string; when?: When | When[] }>;
     files: PackFile[];
 }
 
@@ -71,11 +77,14 @@ export function renderContext(config: Config): Record<string, unknown> {
         isDesktop: ['windows', 'macos'].includes(appType),
         isWindows: appType === 'windows',
         isMacos: appType === 'macos',
+        isAndroidIos: appType === 'android-ios',
+        isNovaWindows: appType === 'windows' && config.stack.framework === 'appium-novawindows',
         automationName: automationNameFor(config),
         browsers,
         reporting: { html: reporting.has('html'), junit: reporting.has('junit'), allure: reporting.has('allure') },
         cloud: config.execution.target === 'browserstack',
-        projectName: config.project.name ?? 'app'
+        projectName: config.project.name ?? 'app',
+        projectNameJson: JSON.stringify(config.project.name ?? 'app')
     };
 }
 
@@ -92,7 +101,8 @@ function automationNameFor(config: Config): string {
     }
 }
 
-function applies(when: PackFile['when'], ctx: Record<string, unknown>): boolean {
+function applies(when: When | When[] | undefined, ctx: Record<string, unknown>): boolean {
+    if (Array.isArray(when)) return when.every(w => applies(w, ctx));
     switch (when) {
         case undefined:
             return true;
@@ -112,7 +122,32 @@ function applies(when: PackFile['when'], ctx: Record<string, unknown>): boolean 
             return Boolean(ctx.isIos);
         case 'desktop':
             return Boolean(ctx.isDesktop);
+        case 'windows':
+            return Boolean(ctx.isWindows);
+        case 'macos':
+            return Boolean(ctx.isMacos);
+        case 'wincore':
+            return Boolean(ctx.isWindows) && !ctx.isNovaWindows;
+        case 'novawindows':
+            return Boolean(ctx.isNovaWindows);
+        case 'local':
+            return !ctx.cloud;
+        case 'cloud':
+            return Boolean(ctx.cloud);
     }
+}
+
+/** The install commands of a pack that apply to this setup. */
+export function installCommandsFor(pack: PackManifest, config: Config): string[][] {
+    const ctx = renderContext(config);
+    return pack.install.map(entry => (Array.isArray(entry) ? { argv: entry } : entry)).filter(entry => applies(entry.when, ctx)).map(entry => entry.argv);
+}
+
+/** Manual setup steps of a pack that apply to this setup, as one numbered text (undefined when there are none). */
+export function manualSetupFor(pack: PackManifest, config: Config): string | undefined {
+    const ctx = renderContext(config);
+    const steps = (pack.manualSetup ?? []).filter(step => applies(step.when, ctx)).map(step => step.text);
+    return steps.length ? steps.map((text, i) => `${i + 1}. ${text}`).join('\n') : undefined;
 }
 
 const templateCache = new Map<string, HandlebarsTemplateDelegate>();
@@ -144,7 +179,7 @@ export function planPack(store: ProjectStore, config: Config, packId: string): {
         const content = renderTemplate(packId, f.from, ctx);
         files.push(compareWithDisk(store, target, content, f.ifMissing));
     }
-    files.push(planPackageJson(store, config, pack));
+    files.push(planPackageJson(store, config, pack, ctx));
     return { pack, files };
 }
 
@@ -157,7 +192,7 @@ export function compareWithDisk(store: ProjectStore, target: string, content: st
 }
 
 /** Adds dependencies and scripts to package.json without changing anything already there. */
-export function planPackageJson(store: ProjectStore, config: Config, pack: PackManifest): PlannedFile {
+export function planPackageJson(store: ProjectStore, config: Config, pack: PackManifest, ctx: Record<string, unknown> = renderContext(config)): PlannedFile {
     const target = inTestRoot(config, 'package.json');
     const current = store.read(target);
     const pkg = current ? JSON.parse(current) : { name: `${(config.project.name ?? 'app').toLowerCase().replace(/[^a-z0-9-]+/g, '-')}-tests`, version: '1.0.0', private: true };
@@ -166,7 +201,7 @@ export function planPackageJson(store: ProjectStore, config: Config, pack: PackM
     const added: string[] = [];
     const deps = { ...pack.devDependencies };
     for (const [feature, extra] of Object.entries(pack.optionalDevDependencies ?? {})) {
-        if (config.integrations.reporting?.includes(feature) || config.extras.includes(feature)) Object.assign(deps, extra);
+        if (config.integrations.reporting?.includes(feature) || config.extras.includes(feature) || config.execution.target === feature) Object.assign(deps, extra);
     }
     for (const [name, version] of Object.entries(deps)) {
         if (!pkg.devDependencies[name] && !pkg.dependencies?.[name]) {
@@ -174,7 +209,9 @@ export function planPackageJson(store: ProjectStore, config: Config, pack: PackM
             added.push(name);
         }
     }
-    for (const [name, script] of Object.entries(pack.scripts)) {
+    for (const [name, entry] of Object.entries(pack.scripts)) {
+        if (typeof entry !== 'string' && !applies(entry.when, ctx)) continue;
+        const script = typeof entry === 'string' ? entry : entry.run;
         const key = pkg.scripts[name] && pkg.scripts[name] !== script ? `tp:${name}` : name;
         if (!pkg.scripts[key]) {
             pkg.scripts[key] = script;

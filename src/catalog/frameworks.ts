@@ -72,7 +72,7 @@ export const FRAMEWORKS: Record<AppType, FrameworkOption[]> = {
             pros: ['Same API for Android and iOS', 'Works on emulators, devices and BrowserStack'],
             cons: ['Needs Java and the Android SDK installed locally']
         },
-        { value: 'webdriverio-appium', label: 'WebdriverIO + Appium', description: 'Appium driven from the WebdriverIO runner.', languages: ['typescript', 'javascript'], pros: ['Good TypeScript support'], cons: ['Two tools to learn'] },
+        { value: 'webdriverio-appium', label: 'WebdriverIO + Appium', description: 'Appium driven from the WebdriverIO runner.', languages: ['typescript', 'javascript'], packs: { typescript: 'appium-ts' }, pros: ['Good TypeScript support'], cons: ['Two tools to learn'] },
         { value: 'maestro', label: 'Maestro', description: 'Simple YAML flows for mobile.', languages: ['yaml'], pros: ['Very quick to start'], cons: ['Less flexible for complex logic'] },
         { value: 'espresso', label: 'Espresso', description: 'Google\'s in-app Android test framework.', languages: ['kotlin', 'java'], pros: ['Fastest and most stable on Android'], cons: ['Needs the app source code'] }
     ],
@@ -99,7 +99,7 @@ export const FRAMEWORKS: Record<AppType, FrameworkOption[]> = {
             pros: ['Shares test logic across platforms'],
             cons: ['iOS runs need a Mac or a device cloud']
         },
-        { value: 'webdriverio-appium', label: 'WebdriverIO + Appium', description: 'Appium driven from WebdriverIO.', languages: ['typescript'], pros: ['Good TypeScript support'], cons: ['Two tools to learn'] },
+        { value: 'webdriverio-appium', label: 'WebdriverIO + Appium', description: 'Appium driven from WebdriverIO.', languages: ['typescript'], packs: { typescript: 'appium-ts' }, pros: ['Good TypeScript support'], cons: ['Two tools to learn'] },
         { value: 'maestro', label: 'Maestro', description: 'YAML flows for both platforms.', languages: ['yaml'], pros: ['Quick to start'], cons: ['Less flexible'] }
     ],
     windows: [
