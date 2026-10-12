@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+.git
+.env
+testpilot-workspaces
+test
+*.log

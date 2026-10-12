@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  protocol:
+    name: Inspector checks (both protocol eras)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: List tools over the 2025 protocol
+        run: npm run inspect:legacy
+      - name: List tools over the 2026-07-28 protocol
+        run: npm run inspect:modern
+      - name: Hosted mode starts and answers health checks
+        env:
+          TESTPILOT_HTTP_TOKEN: ci-only-shared-token-0123456789
+        run: |
+          node dist/index.js --remote --public-url http://localhost:3333/mcp --workspaces "$RUNNER_TEMP/ws" &
+          for i in $(seq 1 20); do curl -fsS http://localhost:3333/healthz && break; sleep 1; done
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3333/mcp -H 'content-type: application/json' -d '{}')" = 401
+
+  package:
+    name: Package and SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm sbom --omit=dev --sbom-format cyclonedx > sbom.cdx.json
+      - run: npm pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: testpilot-mcp-package
+          path: |
+            *.tgz
+            sbom.cdx.json
+          retention-days: 30

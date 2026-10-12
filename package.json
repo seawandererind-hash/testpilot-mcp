@@ -9,8 +9,9 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "inspect:legacy": "npx -y @modelcontextprotocol/inspector@2.10.1 --cli --protocol-era legacy node dist/index.js --method tools/list",
-    "inspect:modern": "npx -y @modelcontextprotocol/inspector@2.10.1 --cli --protocol-era modern node dist/index.js --method tools/list"
+    "inspect:legacy": "MCP_INSPECTOR_SECRET_STORE=memory npx -y @modelcontextprotocol/inspector@2.10.1 --cli node dist/index.js --protocol-era legacy --method tools/list --strict",
+    "inspect:modern": "MCP_INSPECTOR_SECRET_STORE=memory npx -y @modelcontextprotocol/inspector@2.10.1 --cli node dist/index.js --protocol-era modern --method tools/list --strict",
+    "start:hosted": "node dist/index.js --remote"
   },
   "keywords": [
     "mcp",
@@ -47,7 +48,8 @@
   "files": [
     "dist",
     "templates",
-    "README.md"
+    "README.md",
+    "docs"
   ],
   "engines": {
     "node": ">=22.19"

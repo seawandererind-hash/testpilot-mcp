@@ -1,0 +1,140 @@
+# TestPilot MCP
+
+TestPilot is an MCP server that walks a team from "we have test cases somewhere" to "automated tests run in CI and report back", inside the AI tool they already use: Cursor, Claude Code, Claude Desktop, claude.ai, ChatGPT, VS Code with Copilot, Antigravity, Codex, Gemini CLI and any other MCP client.
+
+It asks one question at a time, explains every choice in plain language, previews every file before writing it, and saves everything in the repository so the next person, or the next AI tool, carries on where the last one stopped.
+
+- **Web** with Playwright, **Android and iOS** with Appium, **Windows and macOS desktop** with Appium, **Electron** and **API** with Playwright.
+- **Test cases from** Jira, Xray, Zephyr Scale, TestRail, BrowserStack Test Management, Azure Test Plans, Excel, CSV, Word, Gherkin and Markdown.
+- **Results back to** Xray, Zephyr Scale, TestRail, BrowserStack Test Management and Azure Test Plans, plus HTML and Markdown reports and CI pipelines for GitHub Actions, Azure DevOps, GitLab and Jenkins.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[1 App type] --> B[2 Framework, language, pattern]
+    B --> C[3 Credentials in .env]
+    C --> D[4 Create the framework]
+    D --> E[5 URL, APK or app path]
+    E --> F[6 Import test cases]
+    F --> G[7 Review and plan]
+    G --> H[Generate tests]
+    H --> I[Run and triage]
+    I --> J[Report, CI, sync results]
+```
+
+| Step | What you are asked | What TestPilot does |
+|---|---|---|
+| 1. App type | Web, Android, iOS, both, Windows, macOS, Electron, API or hybrid | Detects what the repository already has and suggests the best fit |
+| 2. Framework | Framework, language, design pattern (Page Object Model by default), where tests run, CI, reports | Explains the pros and cons of each option and records the choice in `.testpilot/decisions.md` |
+| 3. Credentials | Nothing in chat | Writes `.env.example`, adds `.env` to `.gitignore`, and checks which keys are filled in without ever reading their values back |
+| 4. Framework | "Can I create the project framework?" | Shows every file it will write, waits for your yes, then scaffolds the project and the AI instructions |
+| 5. App | The test environment URL, APK, IPA or app path, and extras (exploration, accessibility, visual, API layer, test data, parallel runs) | Refuses production-looking URLs unless you confirm, and can explore the app to record stable locators |
+| 6. Test cases | "Do you have the test cases in Jira, BrowserStack, Excel, Word…?" | Imports them into one common format, keeping links back to the source |
+| 7. Review and plan | Which suggestions to accept | Scores each case (clarity, completeness, atomicity, determinism, automatability), marks AUTOMATE / MANUAL / NEEDS-REWORK, finds duplicates and gaps, and writes `plans/automation-plan.md` in waves for a named person to approve |
+| Generate | "Shall I write the tests for the first wave?" | Writes page objects and tests named and tagged with the test-case id, with no fixed waits and no secrets in code |
+| Run | "Shall I run them?" | Runs them, repeats them to catch flaky tests, and sorts each failure into locator, timing, data, environment, assertion or script, with advice |
+| Report | CI system and where results go | Writes the HTML report and the pipeline, and sends results to your test-management tool after you approve |
+
+You can stop at any point. `testpilot_status` (or `/qa-status`) tells anyone where the repository is and what comes next.
+
+## What it saves in your repository
+
+```
+.testpilot/
+  config.yaml          every non-secret choice
+  state.json           where the wizard is, and approvals
+  decisions.md         what was decided, why, by whom and when
+  audit.log.jsonl      every tool call (secrets redacted)
+  test-cases/          imported cases in one format, plus raw copies of the source
+  reviews/             review reports
+  exploration/         screens, elements and suggested locators
+  runs/ reports/       run history and readable reports
+plans/automation-plan.md
+AGENTS.md  CLAUDE.md  .cursor/rules/  .agents/rules/  .github/copilot-instructions.md
+.agents/skills/  .claude/skills/      skills every AI tool can use
+.mcp.json  .cursor/mcp.json  .agents/mcp_config.json
+.env.example                          (your .env stays on your machine)
+```
+
+The AI instructions and skills are regenerated from your choices whenever they change. Anything you write between `<!-- keep -->` and `<!-- /keep -->` in those files is preserved.
+
+## Install
+
+You need Node.js 22.19 or newer. Then add TestPilot to your AI tool; [docs/install.md](docs/install.md) has the exact steps for each one, including Windows.
+
+For tools that start local servers (Cursor, Claude Code, VS Code, Antigravity, Codex, Gemini CLI, Claude Desktop) the server entry is:
+
+```json
+{
+  "mcpServers": {
+    "testpilot": { "command": "npx", "args": ["-y", "@yourorg/testpilot-mcp"] }
+  }
+}
+```
+
+ChatGPT and claude.ai only reach servers on the internet, so they use a hosted TestPilot that your platform team runs once for everyone: see [docs/hosting.md](docs/hosting.md).
+
+Then say **"Set up test automation for this repo"**, or use the `/qa-setup` prompt.
+
+> Replace `@yourorg` with your organisation's npm scope once the package is published (see [Publishing](#for-platform-teams)). Until then, use the from-source setup in [docs/install.md](docs/install.md).
+
+## Safety rules it follows
+
+- **Secrets never pass through the AI.** No tool accepts or returns a secret value. Credentials go in `.env`, which only you edit; TestPilot only reports whether each key is present and well-formed.
+- **Nothing destructive or external happens without your yes.** Writing the framework, overwriting files, sending results to a tracker, writing CI pipelines, running against a non-test environment and opening pull requests all show a preview first. Where the AI tool supports forms, you approve in a form the AI cannot fill in.
+- **Imported content is data, not instructions.** Test cases, web pages and app screens are never treated as commands; text that looks like an injected instruction is flagged.
+- **It never writes outside the repository.** Paths are sandboxed against `..`, absolute paths and symbolic links.
+- **Generated tests stay honest.** No fixed sleeps, no hard-coded secrets, and assertions are never weakened without the team agreeing.
+
+More in [docs/security.md](docs/security.md).
+
+## Tools, prompts and resources
+
+| Tool | Purpose |
+|---|---|
+| `testpilot_status` | Where this repository is in the workflow, and the next step |
+| `wizard` | Asks the next question, records answers, goes back to any step |
+| `detect_repo`, `check_prerequisites` | What the repository already has; what to install on this machine |
+| `write_env_template`, `check_env` | `.env.example` for the chosen integrations; presence-only checks |
+| `preview_scaffold`, `scaffold_project` | Preview, then create the framework after approval |
+| `regenerate_docs` | Rebuild AGENTS.md, rules and skills from the saved choices |
+| `import_test_cases`, `list_test_cases`, `save_test_case` | Bring test cases in, browse them, edit one |
+| `review_test_cases` | Score, verdict, duplicates, gaps and rewrite suggestions |
+| `automation_plan` | Build, show and approve the wave plan |
+| `explore_app` | Record screens, elements and stable locators |
+| `preview_tests`, `generate_tests` | Show, then write page objects and tests for planned cases |
+| `run_tests` | Run with stability repeats and failure triage |
+| `publish_results` | Reports, CI pipelines and result sync |
+| `hosted_workspace` | Hosted mode only: add shared files, download a zip, open a pull request |
+
+Prompts: `/qa-setup`, `/qa-import`, `/qa-plan`, `/qa-generate`, `/qa-run`, `/qa-status`. Resources: `testpilot://state`, `testpilot://config`, `testpilot://plan`, `testpilot://reports/latest`.
+
+TestPilot speaks both MCP protocol generations (2025-era clients such as Cursor, and 2026-07-28 clients) from one server.
+
+## Documentation
+
+- [docs/user-guide.md](docs/user-guide.md): a first session from start to finish, for people new to test automation
+- [docs/install.md](docs/install.md): setup for every AI tool, Windows included
+- [docs/hosting.md](docs/hosting.md): running the hosted TestPilot for ChatGPT and claude.ai
+- [docs/security.md](docs/security.md): what TestPilot can and cannot do, for security reviews
+- [docs/decisions.md](docs/decisions.md) and [docs/research.md](docs/research.md): design decisions and the research behind them
+
+## For platform teams
+
+- **Publishing.** Set the package name in `package.json` to your scope, then `npm run build && npm publish` to your private registry. Everyone's `npx -y @yourorg/testpilot-mcp` then picks up new versions.
+- **House style.** Templates live in `templates/` as Handlebars files: framework packs (`templates/playwright-ts`, `templates/appium-ts`), CI pipelines (`templates/ci`), and the AI instructions and skills (`templates/knowledge`). Change them once and every team gets the same structure.
+- **New AI tools.** `templates/knowledge/client-map.json` says where each tool reads MCP config, instructions and skills. When a vendor moves a folder, edit that file; no code change is needed.
+- **Hosted mode** for ChatGPT and claude.ai: [docs/hosting.md](docs/hosting.md).
+
+## Development
+
+```bash
+npm ci
+npm run build        # compile to dist/
+npm test             # unit, protocol and end-to-end tests
+npm run typecheck
+npm run inspect:modern   # list tools with the MCP Inspector (also inspect:legacy)
+```
+
+The code is in `src/`: `core/` (store, wizard, paths, redaction), `catalog/` (frameworks and keys), `scaffold/`, `knowledge/` (AI files), `testcases/` (importers, review), `plan/`, `explore/`, `generate/`, `run/`, `report/`, `integrations/`, `remote/` (hosted mode) and `tools/` (the MCP tools).
