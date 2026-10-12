@@ -1,0 +1,21 @@
+{
+  "name": "testpilot",
+  "displayName": "TestPilot",
+  "version": "0.1.0",
+  "description": "Guided test automation for web, API, mobile and desktop apps: sets up Playwright or Appium, imports test cases from Jira, Xray, TestRail, BrowserStack, Azure DevOps, Excel or Word, reviews them, plans, writes and runs the tests.",
+  "author": {
+    "name": "Surya Bhise"
+  },
+  "homepage": "https://github.com/seawandererind-hash/testpilot-mcp",
+  "repository": "https://github.com/seawandererind-hash/testpilot-mcp",
+  "keywords": [
+    "testing",
+    "test-automation",
+    "playwright",
+    "appium",
+    "qa",
+    "jira",
+    "testrail",
+    "browserstack"
+  ]
+}

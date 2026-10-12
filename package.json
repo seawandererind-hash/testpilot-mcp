@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "inspect:legacy": "MCP_INSPECTOR_SECRET_STORE=memory npx -y @modelcontextprotocol/inspector@2.10.1 --cli node dist/index.js --protocol-era legacy --method tools/list --strict",
     "inspect:modern": "MCP_INSPECTOR_SECRET_STORE=memory npx -y @modelcontextprotocol/inspector@2.10.1 --cli node dist/index.js --protocol-era modern --method tools/list --strict",
-    "start:hosted": "node dist/index.js --remote"
+    "start:hosted": "node dist/index.js --remote",
+    "version": "node scripts/sync-version.mjs && git add package.json plugins README.md docs/install.md"
   },
   "keywords": [
     "mcp",

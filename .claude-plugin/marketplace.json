@@ -1,0 +1,6 @@
+{
+  "name": "testpilot-mcp",
+  "description": "TestPilot: guided test automation for Claude Code",
+  "owner": { "name": "Surya Bhise" },
+  "plugins": [{ "name": "testpilot", "source": "./plugins/testpilot", "description": "Guided test automation for web, API, mobile and desktop apps: sets up Playwright or Appium, imports test cases from Jira, Xray, TestRail, BrowserStack, Azure DevOps, Excel or Word, reviews them, plans, writes and runs the tests." }]
+}

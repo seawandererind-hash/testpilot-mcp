@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "testpilot": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz"
+      ]
+    }
+  }
+}

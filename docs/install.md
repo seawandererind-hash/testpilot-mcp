@@ -21,7 +21,11 @@ After setup, ask: **"Set up test automation for this repo"**, or pick the `/qa-s
 
 ## Cursor
 
-Create `.cursor/mcp.json` in the repository (or `~/.cursor/mcp.json` for all projects):
+Pick one of three ways:
+
+- **One click**: open the [Add TestPilot to Cursor](https://cursor.com/en/install-mcp?name=testpilot&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImh0dHBzOi8vZ2l0aHViLmNvbS9zZWF3YW5kZXJlcmluZC1oYXNoL3Rlc3RwaWxvdC1tY3AvcmVsZWFzZXMvZG93bmxvYWQvdjAuMS4wL3Rlc3RwaWxvdC1tY3AtMC4xLjAudGd6Il19) link and click **Install** in Cursor.
+- **From the marketplace**: open **Customize** in Cursor's sidebar, search for **testpilot** and click **Install**. This works once TestPilot is listed in the Cursor Marketplace, or in your company's team marketplace (Teams and Enterprise plans: an admin opens **Dashboard → Plugins & MCPs → Team Marketplaces → Add Marketplace → Import from Repo** and pastes `https://github.com/seawandererind-hash/testpilot-mcp`). The plugin also brings the TestPilot skill and rule.
+- **By hand**: create `.cursor/mcp.json` in the repository (or `~/.cursor/mcp.json` for all projects):
 
 ```json
 {
@@ -38,7 +42,16 @@ Open **Cursor Settings → MCP** and check that `testpilot` shows a green dot an
 
 ## Claude Code
 
-From the repository folder:
+The easiest way is the plugin, which brings the server and the TestPilot skill:
+
+```bash
+claude plugin marketplace add seawandererind-hash/testpilot-mcp
+claude plugin install testpilot@testpilot-mcp
+```
+
+Or, inside Claude Code: `/plugin install testpilot --marketplace seawandererind-hash/testpilot-mcp`. Get later versions with `claude plugin update testpilot@testpilot-mcp`.
+
+To add only the server for one repository instead, run this from the repository folder:
 
 ```bash
 claude mcp add --scope project testpilot -- npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz

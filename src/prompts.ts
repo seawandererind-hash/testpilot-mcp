@@ -30,7 +30,7 @@ export function registerPrompts(server: McpServer): void {
         user(`Call automation_plan with action "generate". Summarise scope, waves, page objects, risks and open questions. Ask me who approves the plan; call automation_plan with action "approve" only after I explicitly approve. ${RULES}`)
     );
     server.registerPrompt('qa-generate', { title: 'Generate tests', description: 'Write tests for the next wave of the approved plan.', argsSchema: z.object({ wave: z.string().optional() }) }, ({ wave }) =>
-        user(`Call generate_tests with action "preview"${wave ? ` for wave ${wave}` : ''}, show me the files, and after I agree call it with action "apply" and the confirmToken. Then implement every step marked TODO(testpilot) using the page objects and the write-*-test skill, keeping one behaviour per test and no fixed sleeps. ${RULES}`)
+        user(`Call preview_tests${wave ? ` with wave ${wave}` : ''}, show me the files, and after I agree call generate_tests with the confirmToken. Then implement every step marked TODO(testpilot) using the page objects and the write-*-test skill, keeping one behaviour per test and no fixed sleeps. ${RULES}`)
     );
     server.registerPrompt('qa-run', { title: 'Run and triage tests', description: 'Run tests, triage failures and propose fixes.', argsSchema: z.object({ selection: z.string().optional().describe('A test id, tag or file') }) }, ({ selection }) =>
         user(`Call run_tests${selection ? ` with selection "${selection}"` : ''}. For each failure explain the triage category and propose a fix as a diff. Never weaken or delete an assertion without asking me. When tests pass, run them again with stabilityRuns: 2. ${RULES}`)
