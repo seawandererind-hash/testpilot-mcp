@@ -171,4 +171,30 @@ describe('plan and generate tools', () => {
         const listed = await c.call('list_test_cases', { status: 'generated' });
         expect(listed.structuredContent.cases.map((x: { id: string }) => x.id)).toEqual(['SHOP-1', 'SHOP-2']);
     });
+
+    it('writes Playwright API tests for an API project', async () => {
+        const root = tempRepo({
+            'api.csv': [
+                'ID,Title,Module,Priority,Steps,Test Data,Expected Result',
+                'API-1,Create an order,Orders,High,Send POST /orders,"{""sku"":""RED-1""}",Status code is 201',
+                'API-2,Reject anonymous calls,Orders,High,GET /orders without a token,,Returns 401'
+            ].join('\n')
+        });
+        const c = await connect(root, 'legacy');
+        close = c.close;
+        await answerWebSetup(c, root, { APP_TYPE: 'api', FRAMEWORK: 'playwright-api', TEST_CASE_SOURCE: 'csv' });
+        const scaffold = await c.call('preview_scaffold');
+        await c.call('scaffold_project', { confirmToken: scaffold.structuredContent.confirmToken, userApproved: true });
+        await c.call('import_test_cases', { location: 'api.csv' });
+        await c.call('review_test_cases');
+        await c.call('automation_plan', { action: 'generate' });
+        await c.call('automation_plan', { action: 'approve', userApproved: true, approver: 'Surya' });
+        const preview = await c.call('preview_tests');
+        expect(preview.isError).toBeFalsy();
+        await c.call('generate_tests', { confirmToken: preview.structuredContent.confirmToken, userApproved: true });
+        const spec = readFileSync(path.join(root, 'tests/api/orders/API-1.spec.ts'), 'utf8');
+        expect(spec).toContain("await request.post('/orders'");
+        expect(spec).toContain('expect(response1.status()).toBe(201);');
+        expect(spec).not.toContain('page.goto');
+    });
 });

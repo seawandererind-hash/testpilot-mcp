@@ -8,6 +8,7 @@ import type { Config, TestCase } from '../core/schema.js';
 import type { ProjectStore } from '../core/store.js';
 import { completeActionStep } from '../core/wizard.js';
 import { readExploration } from '../explore/web.js';
+import { planApiTests } from '../generate/api.js';
 import { type GenerationPlan, planPlaywrightTests } from '../generate/playwright.js';
 import { isApproved, readPlanMeta } from '../plan/plan.js';
 import { writePlanned } from '../scaffold/engine.js';
@@ -45,7 +46,7 @@ function buildGeneration(store: ProjectStore, config: Config, cases: TestCase[])
             token: ''
         };
     }
-    const plan = planPlaywrightTests(store, config, cases, readExploration(store));
+    const plan = config.appType === 'api' ? planApiTests(store, config, cases) : planPlaywrightTests(store, config, cases, readExploration(store));
     const fingerprint = plan.files.map(f => [f.path, f.status, createHash('sha256').update(f.content).digest('hex').slice(0, 16)]);
     return { plan, token: `tests-${digestOf(fingerprint).slice(0, 20)}` };
 }
