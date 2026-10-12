@@ -1,12 +1,11 @@
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 
-import { resolveProjectRoot } from './core/paths.js';
 import { CONFIG_FILE, PLAN_FILE, ProjectStore, RUNS_DIR, STATE_FILE } from './core/store.js';
-import type { ServerOptions } from './tools/common.js';
+import { projectRootFor, type ServerOptions } from './tools/common.js';
 
-/** Read-only views of the repository state. They use the server's default project root. */
+/** Read-only views of the repository state. They use the server's default project root (the default workspace when hosted). */
 export function registerResources(server: McpServer, options: ServerOptions): void {
-    const store = () => new ProjectStore(resolveProjectRoot(options.root));
+    const store = () => new ProjectStore(projectRootFor(options));
     const text = (uri: URL, body: string | undefined, mimeType: string) => ({ contents: [{ uri: uri.href, mimeType, text: body ?? 'Not created yet.' }] });
 
     server.registerResource('state', 'testpilot://state', { title: 'Wizard state', description: 'Current step, completed steps and approvals (.testpilot/state.json).', mimeType: 'application/json' }, async uri =>

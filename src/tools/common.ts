@@ -6,19 +6,51 @@ import { PathSandboxError, ProjectRootError, resolveProjectRoot } from '../core/
 import { redact } from '../core/redact.js';
 import { ProjectStore } from '../core/store.js';
 import { WizardInputError } from '../core/wizard.js';
+import type { DownloadSigner, GitHubSettings } from '../remote/delivery.js';
+import { resolveWorkspace } from '../remote/workspaces.js';
+
+export interface HostedOptions {
+    /** Folder holding every person's workspaces. */
+    workspacesDir: string;
+    /** This person's own folder (one per signed-in user). */
+    userBase: string;
+    /** Who is signed in, for the decision log. */
+    user: string;
+    /** Public origin of the server, e.g. https://testpilot.example.com, for download links. */
+    publicOrigin: string;
+    signer: DownloadSigner;
+    github?: GitHubSettings;
+}
 
 export interface ServerOptions {
     /** Default project root (from --root or TESTPILOT_ROOT). */
     root?: string;
-    /** 'local' writes to disk; 'remote' is the hosted mode used by ChatGPT / claude.ai. */
+    /** 'local' writes to the repository on this machine; 'remote' is the hosted mode used by ChatGPT and claude.ai. */
     mode: 'local' | 'remote';
     version: string;
+    hosted?: HostedOptions;
 }
 
 export const projectRootArg = z
     .string()
     .optional()
-    .describe('Absolute path of the project repository. Omit to use the folder TestPilot was started in.');
+    .describe('Absolute path of the project repository. Omit to use the folder TestPilot was started in. On a hosted TestPilot (ChatGPT, claude.ai) this is a workspace name such as "shop-web" instead.');
+
+/** The folder a tool call works in: a repository on this machine, or a hosted workspace. */
+export function projectRootFor(options: ServerOptions, explicit?: string, create = true): string {
+    if (options.mode === 'remote') {
+        if (!options.hosted) throw new ProjectRootError('Hosted mode is not configured.');
+        return resolveWorkspace(options.hosted.userBase, explicit, create);
+    }
+    return resolveProjectRoot(explicit ?? options.root);
+}
+
+/** Tools that run programs on the machine. A hosted server never runs them; the team runs tests locally or in CI. */
+const HOSTED_UNAVAILABLE: Record<string, string> = {
+    run_tests: 'A hosted TestPilot does not run tests. Deliver the project (hosted_workspace, action "zip" or "pull-request"), then run the tests on your machine or in CI with the pipeline from publish_results.',
+    explore_app: 'A hosted TestPilot does not open browsers or apps. Exploration runs in a local TestPilot (Cursor, Claude Code, VS Code, Antigravity) against your test environment.',
+    check_prerequisites: 'A hosted TestPilot cannot see your machine. Once the project is delivered, run a local TestPilot and call check_prerequisites there.'
+};
 
 export interface ProjectContext {
     store: ProjectStore;
@@ -26,7 +58,7 @@ export interface ProjectContext {
 }
 
 export function openProject(options: ServerOptions, explicit?: string): ProjectContext {
-    const root = resolveProjectRoot(explicit ?? options.root);
+    const root = projectRootFor(options, explicit);
     const store = new ProjectStore(root);
     let cached: RepoDetection | undefined;
     return { store, detection: () => (cached ??= detectRepo(root)) };
@@ -55,6 +87,7 @@ const USER_ERRORS = [ProjectRootError, PathSandboxError, WizardInputError];
 /** Wraps a handler: audits the call and turns expected errors into readable tool errors. */
 export function guarded<A extends Record<string, unknown>, R>(toolName: string, options: ServerOptions, handler: (args: A, ctx: unknown) => Promise<R>): (args: A, ctx: unknown) => Promise<R | CallToolResult> {
     return async (args, ctx) => {
+        if (options.mode === 'remote' && HOSTED_UNAVAILABLE[toolName]) return failure(HOSTED_UNAVAILABLE[toolName]);
         let store: ProjectStore | undefined;
         try {
             store = tryOpen(options, args.projectRoot as string | undefined);
@@ -78,7 +111,7 @@ export function guarded<A extends Record<string, unknown>, R>(toolName: string, 
 
 function tryOpen(options: ServerOptions, explicit?: string): ProjectStore | undefined {
     try {
-        const store = new ProjectStore(resolveProjectRoot(explicit ?? options.root));
+        const store = new ProjectStore(projectRootFor(options, explicit, false));
         return store.hasConfig() || store.exists('.testpilot') ? store : undefined;
     } catch {
         return undefined;

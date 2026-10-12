@@ -150,7 +150,8 @@ export function registerScaffoldTools(server: McpServer, options: ServerOptions)
                 completeActionStep(store, 'SCAFFOLD', `Scaffolded ${plan.packId ?? 'TestPilot files'}`);
 
                 const installs = [];
-                if (args.install && plan.install.length) {
+                // A hosted server never runs installs; the team installs after delivery.
+                if (args.install && plan.install.length && options.mode !== 'remote') {
                     const cwd = store.resolve(inTestRoot(config, '.') || '.');
                     for (const command of plan.install) {
                         const outcome = await runCommand(cwd, command);
@@ -159,7 +160,7 @@ export function registerScaffoldTools(server: McpServer, options: ServerOptions)
                     }
                 }
                 const failed = installs.find(i => !i.ok);
-                const next = !args.install && plan.install.length ? `Next: install the tools with ${plan.install.map(c => `\`${c.join(' ')}\``).join(' then ')} (or call scaffold_project again with install: true after a fresh preview).` : '';
+                const next = options.mode === 'remote' && plan.install.length ? `After delivery (hosted_workspace), install the tools with ${plan.install.map(c => `\`${c.join(' ')}\``).join(' then ')}.` : !args.install && plan.install.length ? `Next: install the tools with ${plan.install.map(c => `\`${c.join(' ')}\``).join(' then ')} (or call scaffold_project again with install: true after a fresh preview).` : '';
                 const summary = [
                     `Wrote ${written.length} file(s).${kept.length ? ` Kept ${kept.length} existing file(s) unchanged.` : ''}`,
                     plan.manual ? `Framework setup: ${plan.manual}` : '',
