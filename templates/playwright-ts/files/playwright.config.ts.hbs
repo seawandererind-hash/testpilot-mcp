@@ -34,7 +34,8 @@ export default defineConfig({
     use: {
 {{#if isApi}}
         baseURL: process.env.API_BASE_URL,
-        extraHTTPHeaders: { Accept: 'application/json' },
+        // API_TOKEN (in .env, never in code) is sent with every request when it is set.
+        extraHTTPHeaders: { Accept: 'application/json', ...(process.env.API_TOKEN ? { Authorization: `Bearer ${process.env.API_TOKEN}` } : {}) },
 {{else}}
         baseURL: process.env.APP_BASE_URL,
         testIdAttribute: 'data-testid',
