@@ -1,0 +1,66 @@
+# {{header}}
+# Runs the TestPilot-generated Playwright tests and publishes JUnit results to Azure Test Plans.
+# Create a variable group named "testpilot" (Pipelines → Library) with:
+{{#each variables}}
+#   {{this}}
+{{/each}}
+{{#each secrets}}
+#   {{this}} (mark as secret)
+{{/each}}
+trigger:
+  branches:
+    include: [main]
+pr:
+  branches:
+    include: ['*']
+schedules:
+  - cron: '0 2 * * *'
+    displayName: Nightly
+    branches:
+      include: [main]
+    always: true
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: testpilot
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '22.x'
+    displayName: Use Node.js 22
+
+  - script: npm ci
+    displayName: Install dependencies
+    workingDirectory: {{testRoot}}
+
+  - script: npx playwright install --with-deps {{browserList}}
+    displayName: Install browsers
+    workingDirectory: {{testRoot}}
+
+  - script: npx playwright test
+    displayName: Run tests
+    workingDirectory: {{testRoot}}
+{{#if allKeys.length}}
+    env:
+{{#each allKeys}}
+      {{this}}: $({{this}})
+{{/each}}
+{{/if}}
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: '{{testRootPrefix}}test-results/junit.xml'
+      testRunTitle: UI tests
+    displayName: Publish test results
+
+  - task: PublishPipelineArtifact@1
+    condition: succeededOrFailed()
+    inputs:
+      targetPath: '{{testRootPrefix}}playwright-report'
+      artifact: playwright-report
+    displayName: Publish HTML report

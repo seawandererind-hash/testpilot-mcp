@@ -2,6 +2,8 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 
+// CI systems pass unset variables as empty strings; drop them so the defaults below still apply.
+for (const [key, value] of Object.entries(process.env)) if (value === '') delete process.env[key];
 // .env holds your secrets (git-ignored); .env.example holds shared, non-secret defaults such as APP_BASE_URL.
 dotenv.config({ path: ['.env', '.env.example'], quiet: true });
 

@@ -4,8 +4,11 @@
  */
 
 const SECRET_KEY = /(pass(word|wd)?|secret|token|api[-_]?key|access[-_]?key|auth(orization)?|credential|private[-_]?key|cookie|session)/i;
-/** Keys that name a secret without holding one: TestPilot's own confirm tokens and env-variable names. */
-const SAFE_KEY = /^(confirmToken|[A-Za-z]*Env)$/;
+/** Keys that name a secret without holding one: TestPilot's own confirm tokens and lists of env-variable names. */
+const SAFE_KEY = /^(confirmToken|[A-Za-z]*Env|[A-Za-z]*Names)$/;
+const SECRET_PAIR = /\b([A-Za-z0-9_.-]*(?:password|passwd|secret|token|api[_-]?key|access[_-]?key)[A-Za-z0-9_.-]*)\s*([=:])\s*("?)([^\s",;]+)\3/gi;
+/** Values that point at a secret instead of holding it: ${{ secrets.X }}, $(X), $X, process.env.X, credentials('X'). */
+const REFERENCE = /^(\$\{\{|\$\(|\$\{?[A-Z_][A-Z0-9_]*$|\$\{?[A-Z_][A-Z0-9_]*\}|process\.env\.|credentials\(|secrets\.|vars\.)/;
 
 const SECRET_VALUE_PATTERNS: RegExp[] = [
     /\bBearer\s+[A-Za-z0-9._~+/=-]{8,}/g, // HTTP bearer tokens
@@ -26,7 +29,7 @@ export function redactString(value: string): string {
     let out = value;
     for (const pattern of SECRET_VALUE_PATTERNS) out = out.replace(pattern, REDACTED);
     // key=value or "key": "value" pairs whose key looks secret
-    out = out.replace(/\b([A-Za-z0-9_.-]*(?:password|passwd|secret|token|api[_-]?key|access[_-]?key)[A-Za-z0-9_.-]*)\s*([=:])\s*("?)([^\s",;]+)\3/gi, (_m, key, sep, quote) => `${key}${sep}${quote}${REDACTED}${quote}`);
+    out = out.replace(SECRET_PAIR, (match, key, sep, quote, value) => (REFERENCE.test(value) ? match : `${key}${sep}${quote}${REDACTED}${quote}`));
     return out;
 }
 

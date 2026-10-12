@@ -1,0 +1,30 @@
+# {{header}}
+# Runs the TestPilot-generated Playwright tests. Add these under Settings → CI/CD → Variables:
+{{#each variables}}
+#   {{this}}
+{{/each}}
+{{#each secrets}}
+#   {{this}} (masked and protected)
+{{/each}}
+ui-tests:
+  image: mcr.microsoft.com/playwright:v{{playwrightVersion}}-noble
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  script:
+{{#if testRootIsSub}}
+    - cd {{testRoot}}
+{{/if}}
+    - npm ci
+    - npx playwright test
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - {{testRootPrefix}}playwright-report/
+      - {{testRootPrefix}}test-results/
+    reports:
+      junit: {{testRootPrefix}}test-results/junit.xml

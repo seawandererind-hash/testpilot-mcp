@@ -1,4 +1,4 @@
-import type { EnvKey, KeyFormat } from '../catalog/env-keys.js';
+import { type EnvKey, isSetting, type KeyFormat } from '../catalog/env-keys.js';
 import type { ProjectStore } from './store.js';
 
 export const ENV_FILE = '.env';
@@ -96,10 +96,13 @@ export function checkEnv(store: ProjectStore, keys: EnvKey[], processEnv: NodeJS
 /** Loads .env values for the server's own use (connection tests, runs). Never return these. */
 export function loadEnvValues(store: ProjectStore, processEnv: NodeJS.ProcessEnv = process.env): Record<string, string> {
     const raw = store.read(ENV_FILE);
-    const fromFile = raw ? Object.fromEntries(parseDotenv(raw)) : {};
+    const fromFile = raw ? Object.fromEntries([...parseDotenv(raw)].filter(([, v]) => v !== '')) : {};
+    // Committed defaults in .env.example count only for settings, never for secrets.
+    const example = store.read(ENV_EXAMPLE_FILE);
+    const defaults = example ? Object.fromEntries([...parseDotenv(example)].filter(([k, v]) => v !== '' && isSetting(k))) : {};
     const merged: Record<string, string> = {};
-    for (const [k, v] of Object.entries(processEnv)) if (typeof v === 'string') merged[k] = v;
-    return { ...merged, ...fromFile };
+    for (const [k, v] of Object.entries(processEnv)) if (typeof v === 'string' && v !== '') merged[k] = v;
+    return { ...defaults, ...merged, ...fromFile };
 }
 
 /**

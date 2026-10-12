@@ -1,0 +1,65 @@
+# {{header}}
+# Runs the TestPilot-generated Playwright tests on every push and pull request, nightly, and on demand.
+# Configure in GitHub: Settings → Secrets and variables → Actions.
+{{#if secrets.length}}
+#   Secrets:   {{#each secrets}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+{{#if variables.length}}
+#   Variables: {{#each variables}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/if}}
+name: UI tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-$\{{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+{{#if testRootIsSub}}
+    defaults:
+      run:
+        working-directory: {{testRoot}}
+{{/if}}
+{{#if githubEnv.length}}
+    env:
+{{#each githubEnv}}
+      {{this}}
+{{/each}}
+{{/if}}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+{{#if testRootIsSub}}
+          cache-dependency-path: {{testRoot}}/package-lock.json
+{{/if}}
+      - name: Install dependencies
+        run: npm ci
+      - name: Install browsers
+        run: npx playwright install --with-deps {{browserList}}
+      - name: Run tests
+        run: npx playwright test
+      - name: Upload report
+        if: $\{{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            {{testRootPrefix}}playwright-report/
+            {{testRootPrefix}}test-results/
+          retention-days: 14
