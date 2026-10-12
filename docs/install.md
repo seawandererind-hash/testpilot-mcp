@@ -13,7 +13,7 @@ TestPilot runs in one of two ways:
    - **Published package** (once your platform team has published it): `@yourorg/testpilot-mcp`. Replace `@yourorg` with your organisation's npm scope in every snippet below.
    - **From source** (until then):
      ```bash
-     git clone https://github.com/SuryaBhise/testpilot-mcp.git
+     git clone https://github.com/seawandererind-hash/testpilot-mcp.git
      cd testpilot-mcp
      npm ci
      npm run build
