@@ -1,0 +1,52 @@
+name: Release
+
+# Publishes a ready-to-run package on the GitHub Releases page when a version tag is pushed:
+#   npm version patch   # or minor / major
+#   git push --follow-tags
+# Anyone can then start that version with `npx -y <release .tgz URL>`, with no npm account or registry.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Check the tag matches package.json
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version. Use npm version to create tags."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Point generated MCP configs at this release
+        run: npm pkg set "testpilot.install=https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/testpilot-mcp-${{ steps.version.outputs.version }}.tgz"
+      - run: npm run build
+      - name: Pack
+        run: |
+          file=$(npm pack --silent | tail -n 1)
+          mv "$file" "testpilot-mcp-${{ steps.version.outputs.version }}.tgz"
+      - name: Check the package starts
+        run: |
+          mkdir -p "$RUNNER_TEMP/try" && cd "$RUNNER_TEMP/try"
+          npx -y "file:$GITHUB_WORKSPACE/testpilot-mcp-${{ steps.version.outputs.version }}.tgz" --version
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "testpilot-mcp-${{ steps.version.outputs.version }}.tgz" \
+            --title "TestPilot ${{ steps.version.outputs.version }}" --generate-notes

@@ -62,6 +62,8 @@ describe('scaffold', () => {
         expect(skill).toMatch(/^---\nname: write-playwright-test\ndescription: .+\n---/);
         const mcp = JSON.parse(readFileSync(path.join(root, '.cursor/mcp.json'), 'utf8'));
         expect(mcp.mcpServers.testpilot.command).toBe('npx');
+        // Teammates who clone the repo start the same released version, never an unrelated npm package.
+        expect(mcp.mcpServers.testpilot.args).toEqual(['-y', expect.stringMatching(/^https:\/\/github\.com\/[^/]+\/testpilot-mcp\/releases\/download\/v[\d.]+\/testpilot-mcp-[\d.]+\.tgz$/)]);
         expect(readFileSync(path.join(root, '.gitignore'), 'utf8')).toContain('.env');
         expect(readFileSync(path.join(root, '.testpilot/decisions.md'), 'utf8')).toContain('| Surya |');
 

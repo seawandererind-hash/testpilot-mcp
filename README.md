@@ -68,7 +68,10 @@ For tools that start local servers (Cursor, Claude Code, VS Code, Antigravity, C
 ```json
 {
   "mcpServers": {
-    "testpilot": { "command": "npx", "args": ["-y", "@yourorg/testpilot-mcp"] }
+    "testpilot": {
+      "command": "npx",
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz"]
+    }
   }
 }
 ```
@@ -77,7 +80,7 @@ ChatGPT and claude.ai only reach servers on the internet, so they use a hosted T
 
 Then say **"Set up test automation for this repo"**, or use the `/qa-setup` prompt.
 
-> Replace `@yourorg` with your organisation's npm scope once the package is published (see [Publishing](#for-platform-teams)). Until then, use the from-source setup in [docs/install.md](docs/install.md).
+> `npx` downloads the released package from GitHub the first time and reuses it after that; nothing else needs installing. Newer versions are on the [Releases page](https://github.com/seawandererind-hash/testpilot-mcp/releases).
 
 ## Safety rules it follows
 
@@ -122,7 +125,7 @@ TestPilot speaks both MCP protocol generations (2025-era clients such as Cursor,
 
 ## For platform teams
 
-- **Publishing.** Set the package name in `package.json` to your scope, then `npm run build && npm publish` to your private registry. Everyone's `npx -y @yourorg/testpilot-mcp` then picks up new versions.
+- **Releasing.** `npm version patch` (or `minor`/`major`) then `git push --follow-tags`. The Release workflow tests, packs and attaches `testpilot-mcp-<version>.tgz` to a GitHub release, and that version's generated MCP configs point at it. To use a company npm registry instead, set the package name in `package.json` to your scope, remove `testpilot.install`, and `npm publish`.
 - **House style.** Templates live in `templates/` as Handlebars files: framework packs (`templates/playwright-ts`, `templates/appium-ts`), CI pipelines (`templates/ci`), and the AI instructions and skills (`templates/knowledge`). Change them once and every team gets the same structure.
 - **New AI tools.** `templates/knowledge/client-map.json` says where each tool reads MCP config, instructions and skills. When a vendor moves a folder, edit that file; no code change is needed.
 - **Hosted mode** for ChatGPT and claude.ai: [docs/hosting.md](docs/hosting.md).

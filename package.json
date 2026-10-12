@@ -53,5 +53,12 @@
   ],
   "engines": {
     "node": ">=22.19"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seawandererind-hash/testpilot-mcp.git"
+  },
+  "testpilot": {
+    "install": "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz"
   }
 }

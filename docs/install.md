@@ -9,16 +9,11 @@ TestPilot runs in one of two ways:
 
 1. Install **Node.js 22.19 or newer** from https://nodejs.org (the LTS installer is fine). Check with `node --version`.
 2. Open the repository you want to automate tests for in your AI tool.
-3. Pick the package source:
-   - **Published package** (once your platform team has published it): `@yourorg/testpilot-mcp`. Replace `@yourorg` with your organisation's npm scope in every snippet below.
-   - **From source** (until then):
-     ```bash
-     git clone https://github.com/seawandererind-hash/testpilot-mcp.git
-     cd testpilot-mcp
-     npm ci
-     npm run build
-     ```
-     Then use `"command": "node"` and `"args": ["/full/path/to/testpilot-mcp/dist/index.js"]` instead of `npx` in the snippets.
+3. That's it: there is nothing to install by hand. Every snippet below starts TestPilot with `npx`, which downloads the released package from GitHub the first time (a few seconds) and reuses it after that:
+   ```
+   https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz
+   ```
+   New versions are listed on the [Releases page](https://github.com/seawandererind-hash/testpilot-mcp/releases); to upgrade, change the version number in the link (both places). If your platform team publishes TestPilot to a company npm registry instead, use the package name they give you in place of the link.
 
 TestPilot needs to know which repository to work in. Most tools start it inside the open project, and the AI passes the project folder on every call. If a tool starts it somewhere else, add `"--root", "/path/to/your/repo"` to `args`, or set `TESTPILOT_ROOT`.
 
@@ -33,7 +28,7 @@ Create `.cursor/mcp.json` in the repository (or `~/.cursor/mcp.json` for all pro
   "mcpServers": {
     "testpilot": {
       "command": "npx",
-      "args": ["-y", "@yourorg/testpilot-mcp", "--root", "${workspaceFolder}"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz", "--root", "${workspaceFolder}"]
     }
   }
 }
@@ -46,7 +41,7 @@ Open **Cursor Settings → MCP** and check that `testpilot` shows a green dot an
 From the repository folder:
 
 ```bash
-claude mcp add --scope project testpilot -- npx -y @yourorg/testpilot-mcp
+claude mcp add --scope project testpilot -- npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz
 ```
 
 This writes `.mcp.json`, which teammates get with the repository (Claude Code asks each person once before starting a project server). Check with `claude mcp list`, or `/mcp` inside Claude Code. Claude Code reads `CLAUDE.md` (which imports `AGENTS.md`) and `.claude/skills/`; TestPilot writes both.
@@ -63,7 +58,7 @@ Open **Settings → Developer → Edit Config** and add TestPilot to `claude_des
   "mcpServers": {
     "testpilot": {
       "command": "npx",
-      "args": ["-y", "@yourorg/testpilot-mcp", "--root", "/Users/you/code/shop-web"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz", "--root", "/Users/you/code/shop-web"]
     }
   }
 }
@@ -81,7 +76,7 @@ Create `.mcp.json` in the repository (the portable format that also works for Cl
     "testpilot": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@yourorg/testpilot-mcp", "--root", "${workspaceFolder}"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz", "--root", "${workspaceFolder}"]
     }
   }
 }
@@ -98,7 +93,7 @@ Create `.agents/mcp_config.json` in the repository (or `~/.gemini/config/mcp_con
   "mcpServers": {
     "testpilot": {
       "command": "npx",
-      "args": ["-y", "@yourorg/testpilot-mcp"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz"]
     }
   }
 }
@@ -113,7 +108,7 @@ Antigravity reads `AGENTS.md`, `.agents/rules/testpilot.md` and `.agents/skills/
 ## OpenAI Codex CLI
 
 ```bash
-codex mcp add testpilot -- npx -y @yourorg/testpilot-mcp
+codex mcp add testpilot -- npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz
 ```
 
 or in `~/.codex/config.toml`:
@@ -121,7 +116,7 @@ or in `~/.codex/config.toml`:
 ```toml
 [mcp_servers.testpilot]
 command = "npx"
-args = ["-y", "@yourorg/testpilot-mcp"]
+args = ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz"]
 ```
 
 Codex reads `AGENTS.md` and `.agents/skills/`.
@@ -129,7 +124,7 @@ Codex reads `AGENTS.md` and `.agents/skills/`.
 ## Gemini CLI
 
 ```bash
-gemini mcp add testpilot npx -y @yourorg/testpilot-mcp
+gemini mcp add testpilot npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz
 ```
 
 Gemini CLI reads `GEMINI.md` by default. To make it read TestPilot's `AGENTS.md`, add to `.gemini/settings.json`: `{"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}}`.
@@ -156,7 +151,7 @@ In hosted mode TestPilot works in a named workspace on the server. Share test ca
 
 ## Windows notes
 
-- If a tool says it cannot find `npx`, use `"command": "cmd"` and put `"/c", "npx"` in front of the arguments: `"args": ["/c", "npx", "-y", "@yourorg/testpilot-mcp"]`.
+- If a tool says it cannot find `npx`, use `"command": "cmd"` and put `"/c", "npx"` in front of the arguments: `"args": ["/c", "npx", "-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz"]`.
 - In JSON, write paths with double backslashes (`"C:\\code\\shop-web"`) or forward slashes (`"C:/code/shop-web"`).
 - Behind a company proxy, set `HTTPS_PROXY` and, if your company uses its own certificates, `NODE_EXTRA_CA_CERTS=C:\path\to\company-ca.pem` in the server's `env` block.
 - Playwright installs browsers into your user profile; if that is blocked, set `PLAYWRIGHT_BROWSERS_PATH` to a folder you can write to.
@@ -165,6 +160,6 @@ In hosted mode TestPilot works in a named workspace on the server. Share test ca
 
 Ask your AI tool: **"What is the TestPilot status of this repo?"** It should answer with the current step (for a new repository, "What kind of application are you testing?"). If the tool does not see TestPilot:
 
-1. Run `npx -y @yourorg/testpilot-mcp --version` in a terminal. It should print the version.
+1. Run `npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.0/testpilot-mcp-0.1.0.tgz --version` in a terminal. It should print the version (`0.1.0`).
 2. Look at the tool's MCP logs (Cursor: Output → MCP; Claude Code: `claude --debug`; VS Code: Output → MCP).
 3. Make sure Node.js is 22.19 or newer: `node --version`.
