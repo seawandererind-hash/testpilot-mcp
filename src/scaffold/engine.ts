@@ -17,6 +17,11 @@ export const CREATED_HEADER = 'Created by TestPilot. This file is yours: edit it
 /** Folder holding template packs, next to dist/ or src/ in the installed package. */
 export const TEMPLATES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'templates');
 
+/** Reads a bundled template with LF line endings, so output is the same when git checked the templates out with CRLF. */
+export function readTemplate(file: string): string {
+    return readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+}
+
 /** Conditions a pack entry can depend on; a list means all of them must hold. */
 export type When = 'ui' | 'web' | 'api' | 'electron' | 'mobile' | 'android' | 'ios' | 'desktop' | 'windows' | 'macos' | 'wincore' | 'novawindows' | 'local' | 'cloud';
 
@@ -156,7 +161,7 @@ export function renderTemplate(packId: string, from: string, ctx: Record<string,
     const file = path.join(TEMPLATES_DIR, packId, 'files', from);
     let template = templateCache.get(file);
     if (!template) {
-        template = Handlebars.compile(readFileSync(file, 'utf8'), { noEscape: true, strict: false });
+        template = Handlebars.compile(readTemplate(file), { noEscape: true, strict: false });
         templateCache.set(file, template);
     }
     return template(ctx);

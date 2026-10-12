@@ -1,4 +1,4 @@
-import { createReadStream, statSync } from 'node:fs';
+import { createReadStream, realpathSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 
@@ -57,6 +57,8 @@ export function createHttpApp(options: HttpAppOptions): { fetch: (request: Reque
         throw new Error('Hosted mode needs a public URL, a sign-in method and a workspaces folder.');
     }
     const mcpPath = options.publicUrl?.pathname.replace(/\/+$/, '') || '/mcp';
+    // Resolved once, so links and checks agree when the folder sits behind a symlink (macOS /var is /private/var).
+    const workspacesDir = remote ? realpathSync(options.workspacesDir!) : '';
 
     const handler = createMcpHandler(
         ctx => {
@@ -65,8 +67,8 @@ export function createHttpApp(options: HttpAppOptions): { fetch: (request: Reque
             return createServer({
                 mode: 'remote',
                 hosted: {
-                    workspacesDir: options.workspacesDir!,
-                    userBase: userBase(options.workspacesDir!, userKey(auth)),
+                    workspacesDir,
+                    userBase: userBase(workspacesDir, userKey(auth)),
                     user: String(auth?.extra?.user ?? 'unknown'),
                     publicOrigin: options.publicUrl!.origin,
                     signer: options.signer!,
@@ -85,7 +87,7 @@ export function createHttpApp(options: HttpAppOptions): { fetch: (request: Reque
         if (request.method !== 'GET') return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET' } });
         const check = options.signer!.verify(url.pathname);
         if ('error' in check) return new Response(check.error, { status: check.error === 'Not found' ? 404 : 403 });
-        const file = downloadFile(options.workspacesDir!, check.rel);
+        const file = downloadFile(workspacesDir, check.rel);
         if (!file) return new Response('This file is no longer available. Ask TestPilot for a new download link.', { status: 404 });
         const stream = Readable.toWeb(createReadStream(file)) as ReadableStream;
         return new Response(stream, {

@@ -6,7 +6,7 @@ import Handlebars from 'handlebars';
 import { APP_TYPE_OPTIONS, CI_OPTIONS, EXECUTION_OPTIONS, findFramework, LANGUAGE_LABELS, PATTERN_OPTIONS, TEST_CASE_SOURCE_OPTIONS } from '../catalog/frameworks.js';
 import type { Config } from '../core/schema.js';
 import type { ProjectStore } from '../core/store.js';
-import { GENERATED_HEADER, inTestRoot, type PlannedFile, TEMPLATES_DIR } from '../scaffold/engine.js';
+import { GENERATED_HEADER, inTestRoot, type PlannedFile, readTemplate, TEMPLATES_DIR } from '../scaffold/engine.js';
 
 const KNOWLEDGE_DIR = path.join(TEMPLATES_DIR, 'knowledge');
 const hb = Handlebars.create();
@@ -22,7 +22,7 @@ export function loadClientMap(): ClientMap {
 }
 
 function render(file: string, ctx: Record<string, unknown>): string {
-    return hb.compile(readFileSync(path.join(KNOWLEDGE_DIR, file), 'utf8'), { noEscape: true })(ctx);
+    return hb.compile(readTemplate(path.join(KNOWLEDGE_DIR, file)), { noEscape: true })(ctx);
 }
 
 const label = (options: Array<{ value: string; label: string }>, value: string | undefined, fallback = 'not chosen yet') => (value ? (options.find(o => o.value === value)?.label ?? value) : fallback);

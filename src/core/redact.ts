@@ -3,7 +3,8 @@
  * No tool returns a secret value; this is the second line of defence.
  */
 
-const SECRET_KEY = /(pass(word|wd)?|secret|token|api[-_]?key|access[-_]?key|auth(orization)?|credential|private[-_]?key|cookie|session)/i;
+// Whole words only, so counters such as `passed`, `passes` and `passRate` and fields such as `author` stay readable.
+const SECRET_KEY = /(password|passwd|passphrase|^(pass|pwd|auth)$|secret|token|api[-_]?key|access[-_]?key|authorization|credential|private[-_]?key|cookie|^session([-_]?(id|key))?$)/i;
 /** Keys that name a secret without holding one: TestPilot's own confirm tokens and lists of env-variable names. */
 const SAFE_KEY = /^(confirmToken|[A-Za-z]*Env|[A-Za-z]*Names)$/;
 const SECRET_PAIR = /\b([A-Za-z0-9_.-]*(?:password|passwd|secret|token|api[_-]?key|access[_-]?key)[A-Za-z0-9_.-]*)\s*([=:])\s*("?)([^\s",;]+)\3/gi;

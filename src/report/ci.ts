@@ -6,7 +6,7 @@ import Handlebars from 'handlebars';
 import { integrationsFor, keysFor } from '../catalog/env-keys.js';
 import type { Config } from '../core/schema.js';
 import type { ProjectStore } from '../core/store.js';
-import { compareWithDisk, CREATED_HEADER, loadPack, type PlannedFile, TEMPLATES_DIR } from '../scaffold/engine.js';
+import { compareWithDisk, CREATED_HEADER, loadPack, type PlannedFile, readTemplate, TEMPLATES_DIR } from '../scaffold/engine.js';
 
 const CI_FILES: Record<string, { template: string; target: string; where: string }> = {
     'github-actions': { template: 'github-actions.yml.hbs', target: '.github/workflows/ui-tests.yml', where: 'GitHub: Settings → Secrets and variables → Actions' },
@@ -53,6 +53,6 @@ export function planCi(store: ProjectStore, config: Config, providerOverride?: s
         browserList: browsers.join(' '),
         playwrightVersion
     };
-    const content = Handlebars.compile(readFileSync(path.join(TEMPLATES_DIR, 'ci', spec.template), 'utf8'), { noEscape: true })(ctx);
+    const content = Handlebars.compile(readTemplate(path.join(TEMPLATES_DIR, 'ci', spec.template)), { noEscape: true })(ctx);
     return { provider, file: compareWithDisk(store, spec.target, content), secrets, variables, where: spec.where };
 }

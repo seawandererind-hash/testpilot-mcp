@@ -1,4 +1,4 @@
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -20,7 +20,7 @@ describe('path sandbox', () => {
         const root = tempRepo();
         expect(() => safeJoin(root, '../outside.txt')).toThrow(PathSandboxError);
         expect(() => safeJoin(root, '/etc/passwd')).toThrow(PathSandboxError);
-        expect(safeJoin(root, 'tests/a.spec.ts')).toBe(path.join(root, 'tests/a.spec.ts'));
+        expect(safeJoin(root, 'tests/a.spec.ts')).toBe(path.join(realpathSync(root), 'tests/a.spec.ts'));
     });
 
     it('refuses symlinks that point outside', () => {
@@ -45,6 +45,18 @@ describe('redaction', () => {
         expect(redactString('JIRA_API_TOKEN=ATATT3xFfGF0abcdefghijklmnopqrstuvwxyz')).not.toContain('ATATT3');
         expect(redactString('https://user:hunter2@example.com')).not.toContain('hunter2');
         expect(redact({ password: 'x', nested: { apiKey: 'y', name: 'ok' } })).toEqual({ password: '[REDACTED]', nested: { apiKey: '[REDACTED]', name: 'ok' } });
+    });
+
+    it('keeps counters and ordinary fields that merely contain a secret-sounding word', () => {
+        const stats = { passed: 3, passes: 3, passRate: 0.75, author: 'Surya', sessionCount: 2 };
+        expect(redact(stats)).toEqual(stats);
+        expect(redact({ pass: 'x', auth: 'y', sessionId: 'z', clientSecret: 'w', JIRA_API_TOKEN: 'v' })).toEqual({
+            pass: '[REDACTED]',
+            auth: '[REDACTED]',
+            sessionId: '[REDACTED]',
+            clientSecret: '[REDACTED]',
+            JIRA_API_TOKEN: '[REDACTED]'
+        });
     });
 });
 
