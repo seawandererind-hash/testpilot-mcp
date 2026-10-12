@@ -17,5 +17,6 @@
     "testrail",
     "browserstack"
   ],
-  "logo": "assets/logo.svg"
+  "logo": "assets/logo.svg",
+  "license": "MIT"
 }

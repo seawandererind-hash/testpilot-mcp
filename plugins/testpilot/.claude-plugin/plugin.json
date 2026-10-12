@@ -17,5 +17,6 @@
     "jira",
     "testrail",
     "browserstack"
-  ]
+  ],
+  "license": "MIT"
 }

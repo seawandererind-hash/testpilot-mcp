@@ -155,3 +155,7 @@ npm run inspect:modern   # list tools with the MCP Inspector (also inspect:legac
 ```
 
 The code is in `src/`: `core/` (store, wizard, paths, redaction), `catalog/` (frameworks and keys), `scaffold/`, `knowledge/` (AI files), `testcases/` (importers, review), `plan/`, `explore/`, `generate/`, `run/`, `report/`, `integrations/`, `remote/` (hosted mode) and `tools/` (the MCP tools).
+
+## License
+
+[MIT](LICENSE)
