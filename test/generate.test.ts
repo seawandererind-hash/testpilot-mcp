@@ -97,6 +97,19 @@ describe('triage', () => {
         expect(t.error).not.toContain('s3cret');
         expect(t.attachments[0]).toEqual({ name: 'trace', path: 'test-results/x/trace.zip' });
     });
+
+    it('merges --repeat-each repetitions, so mixed results count as flaky', () => {
+        const run = (status: 'passed' | 'failed') => ({ projectName: 'chromium', status: status === 'passed' ? 'expected' : 'unexpected', results: [{ status, duration: 5, ...(status === 'failed' ? { error: { message: 'Test timeout of 30000ms exceeded.' } } : {}) }] });
+        const spec = (title: string, line: number, statuses: Array<'passed' | 'failed'>) => ({ title, file: 'a.spec.ts', line, tests: statuses.map(run) });
+        const report = { config: { rootDir: '/repo/tests' }, suites: [{ title: 'a.spec.ts', file: 'a.spec.ts', specs: [spec('TC-1 stable', 3, ['passed', 'passed']), spec('TC-2 shaky', 9, ['passed', 'failed']), spec('TC-3 broken', 15, ['failed', 'failed'])] }] };
+        const out = parseReport(report as never, '/repo', s => s, '/repo');
+        expect(out.map(t => [t.id, t.status, t.runs, t.passes])).toEqual([
+            ['TC-1', 'passed', 2, 2],
+            ['TC-2', 'flaky', 2, 1],
+            ['TC-3', 'failed', 2, 0]
+        ]);
+        expect(out[1].category).toBe('timing');
+    });
 });
 
 describe('plan and generate tools', () => {

@@ -125,8 +125,35 @@ function* specsOf(suites: PwSuite[] = []): Generator<PwSpec> {
     }
 }
 
-/** Reads Playwright's JSON report into one outcome per test and project. */
+/**
+ * Reads Playwright's JSON report into one outcome per test and project. With
+ * --repeat-each every repetition is reported as its own test; they are merged
+ * here, so a test that passed in some repetitions and failed in others is flaky.
+ */
 export function parseReport(json: { config?: { rootDir?: string }; suites?: PwSuite[] }, cwd: string, scrub: (s: string) => string, repoRoot: string): TestOutcome[] {
+    return mergeRepeats(readOutcomes(json, cwd, scrub, repoRoot));
+}
+
+function mergeRepeats(outcomes: TestOutcome[]): TestOutcome[] {
+    const merged = new Map<string, TestOutcome>();
+    for (const o of outcomes) {
+        const key = `${o.file}:${o.line}:${o.title}:${o.project ?? ''}`;
+        const seen = merged.get(key);
+        if (!seen) {
+            merged.set(key, { ...o, attachments: [...o.attachments] });
+            continue;
+        }
+        seen.runs += o.runs;
+        seen.passes += o.passes;
+        seen.durationMs += o.durationMs;
+        if (!seen.error && o.error) Object.assign(seen, { error: o.error, category: o.category, advice: o.advice });
+        seen.attachments.push(...o.attachments.filter(a => !seen.attachments.some(b => b.path === a.path)));
+        seen.status = seen.runs === 0 ? 'skipped' : seen.passes === seen.runs ? 'passed' : seen.passes === 0 ? 'failed' : 'flaky';
+    }
+    return [...merged.values()];
+}
+
+function readOutcomes(json: { config?: { rootDir?: string }; suites?: PwSuite[] }, cwd: string, scrub: (s: string) => string, repoRoot: string): TestOutcome[] {
     const out: TestOutcome[] = [];
     // Spec paths in the report are relative to the config's rootDir (its testDir).
     const rootDir = json.config?.rootDir ?? cwd;
