@@ -3,6 +3,9 @@
 import { _electron as electron, type ElectronApplication, test as base } from '@playwright/test';
 
 import { optionalEnv, requireEnv } from '../utils/env';
+{{else if isBdd}}
+// Cucumber steps (steps/) receive these fixtures; playwright-bdd needs `test` to extend its own.
+import { test as base } from 'playwright-bdd';
 {{else}}
 import { test as base } from '@playwright/test';
 {{/if}}

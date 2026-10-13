@@ -33,17 +33,18 @@ export const FRAMEWORKS: Record<AppType, FrameworkOption[]> = {
             label: 'Playwright',
             description: 'Fast, auto-waits for elements, built-in reports and traces.',
             languages: ['typescript', 'javascript', 'java', 'python', 'csharp'],
-            packs: { typescript: 'playwright-ts' },
+            packs: { typescript: 'playwright-ts', javascript: 'playwright-js' },
             pros: ['Waits for elements automatically, so fewer flaky tests', 'Trace viewer shows exactly what happened', 'Chromium, Firefox and WebKit from one API'],
             cons: ['No real Safari on Windows/Linux (WebKit is close but not identical)']
         },
         {
             value: 'selenium',
             label: 'Selenium 4',
-            description: 'The long-standing standard, with a huge community.',
+            description: 'The long-standing standard, with a huge community. With Java: Maven, TestNG, Page Object Model, Cucumber for BDD.',
             languages: ['java', 'python', 'csharp', 'javascript'],
-            pros: ['Most widely known', 'Works with every grid and cloud'],
-            cons: ['You write your own waits', 'More setup and boilerplate']
+            packs: { java: 'selenium-java' },
+            pros: ['Most widely known; most QA engineers already know it', 'Works with every grid and cloud', 'Selenium Manager downloads the browser drivers for you'],
+            cons: ['Explicit waits are your job (the generated BasePage wraps them)', 'More setup than Playwright']
         },
         {
             value: 'webdriverio',
@@ -132,7 +133,7 @@ export const FRAMEWORKS: Record<AppType, FrameworkOption[]> = {
             label: 'Playwright for Electron',
             description: 'Launches the Electron app and drives its windows like web pages.',
             languages: ['typescript', 'javascript'],
-            packs: { typescript: 'playwright-ts' },
+            packs: { typescript: 'playwright-ts', javascript: 'playwright-js' },
             pros: ['Same API as web tests'],
             cons: ['Playwright marks Electron support as experimental']
         }
@@ -143,7 +144,7 @@ export const FRAMEWORKS: Record<AppType, FrameworkOption[]> = {
             label: 'Playwright API testing',
             description: 'HTTP tests with Playwright\'s request client.',
             languages: ['typescript', 'javascript', 'java', 'python', 'csharp'],
-            packs: { typescript: 'playwright-ts' },
+            packs: { typescript: 'playwright-ts', javascript: 'playwright-js' },
             pros: ['Mix API and UI steps in one test'],
             cons: ['Fewer API-specific helpers than REST Assured']
         },
@@ -242,15 +243,19 @@ export const EXTRA_OPTIONS: Option[] = [
     { value: 'parallel', label: 'Parallel runs', description: 'Run tests in parallel safely.' }
 ];
 
-/** The recommended framework and language for an app type, with a reason. */
+/**
+ * The suggested framework and language for an app type, with a reason. The language is the team's
+ * call: a repository that already has Java or Python code gets that language and a framework that
+ * TestPilot can scaffold in it (Selenium + Java for the web); an empty repository gets TypeScript.
+ */
 export function recommendStack(appType: AppType, existingLanguages: string[] = []): { framework: string; language: string; pattern: Pattern; reason: string } {
-    const framework = FRAMEWORKS[appType][0];
-    const preferTs = existingLanguages.length === 0 || existingLanguages.some(l => l === 'typescript' || l === 'javascript');
-    const javaRepo = existingLanguages.includes('java') && !preferTs;
-    const pythonRepo = existingLanguages.includes('python') && !preferTs && !javaRepo;
-    const language = javaRepo && framework.languages.includes('java') ? 'java' : pythonRepo && framework.languages.includes('python') ? 'python' : framework.languages[0];
-    const why = javaRepo || pythonRepo ? `it matches the ${LANGUAGE_LABELS[language]} already in this repository` : 'TestPilot has ready-made templates for it and it has the best tooling';
-    return { framework: framework.value, language, pattern: 'pom', reason: `${framework.label} with ${LANGUAGE_LABELS[language]} and the Page Object Model: ${framework.description} I suggest ${LANGUAGE_LABELS[language]} because ${why}.` };
+    const hasJsTs = existingLanguages.some(l => l === 'typescript' || l === 'javascript');
+    const repoLanguage = hasJsTs ? (existingLanguages.includes('typescript') ? 'typescript' : 'javascript') : (['java', 'python', 'csharp'] as const).find(l => existingLanguages.includes(l));
+    const scaffoldable = FRAMEWORKS[appType].find(f => repoLanguage && f.packs?.[repoLanguage]);
+    const framework = scaffoldable ?? FRAMEWORKS[appType][0];
+    const language = repoLanguage && framework.languages.includes(repoLanguage) ? repoLanguage : framework.languages[0];
+    const why = repoLanguage === language ? `it matches the ${LANGUAGE_LABELS[language]} already in this repository` : 'it has the best tooling for this framework; pick another if your team knows it better';
+    return { framework: framework.value, language, pattern: 'pom', reason: `${framework.label} with ${LANGUAGE_LABELS[language]} and the Page Object Model: ${framework.description} I suggest ${LANGUAGE_LABELS[language]} because ${why}. The choice is yours: TestPilot scaffolds and generates tests for every combination marked as such.` };
 }
 
 export function findFramework(appType: AppType, value: string): FrameworkOption | undefined {

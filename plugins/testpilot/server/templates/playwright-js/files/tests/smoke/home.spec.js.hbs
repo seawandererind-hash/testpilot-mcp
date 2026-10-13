@@ -1,0 +1,8 @@
+// @ts-check
+// {{header}}
+const { test } = require('../../src/fixtures/test');
+
+test('SMOKE-1 home page opens', { tag: ['@smoke'], annotation: { type: 'test_key', description: 'SMOKE-1' } }, async ({ homePage }) => {
+    await homePage.open();
+    await homePage.expectVisible();
+});

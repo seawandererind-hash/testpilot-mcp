@@ -1,8 +1,18 @@
 {
   "id": "playwright-ts",
   "title": "Playwright + TypeScript",
-  "appTypes": ["web", "api", "electron"],
-  "patterns": ["pom", "hybrid", "keyword", "screenplay", "bdd"],
+  "appTypes": [
+    "web",
+    "api",
+    "electron"
+  ],
+  "patterns": [
+    "pom",
+    "hybrid",
+    "keyword",
+    "screenplay",
+    "bdd"
+  ],
   "devDependencies": {
     "@playwright/test": "1.64.0",
     "@types/node": "^22.20.0",
@@ -10,29 +20,143 @@
     "typescript": "^5.9.0"
   },
   "optionalDevDependencies": {
-    "allure": { "allure-playwright": "3.13.0" },
-    "accessibility": { "@axe-core/playwright": "^4.11.0" }
+    "allure": {
+      "allure-playwright": "3.13.0"
+    },
+    "accessibility": {
+      "@axe-core/playwright": "^4.11.0"
+    },
+    "bdd": {
+      "playwright-bdd": "9.2.1"
+    }
   },
   "scripts": {
-    "test": "playwright test",
-    "test:smoke": "playwright test --grep @smoke",
-    "test:headed": "playwright test --headed",
-    "test:ui": "playwright test --ui",
+    "test": [
+      {
+        "run": "bddgen && playwright test",
+        "when": "bdd"
+      },
+      {
+        "run": "playwright test"
+      }
+    ],
+    "test:smoke": [
+      {
+        "run": "bddgen && playwright test --grep @smoke",
+        "when": "bdd"
+      },
+      {
+        "run": "playwright test --grep @smoke"
+      }
+    ],
+    "test:headed": [
+      {
+        "run": "bddgen && playwright test --headed",
+        "when": "bdd"
+      },
+      {
+        "run": "playwright test --headed"
+      }
+    ],
+    "test:ui": [
+      {
+        "run": "bddgen && playwright test --ui",
+        "when": "bdd"
+      },
+      {
+        "run": "playwright test --ui"
+      }
+    ],
+    "bddgen": {
+      "run": "bddgen",
+      "when": "bdd"
+    },
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit"
   },
-  "install": [["npm", "install"], ["npx", "playwright", "install", "--with-deps", "chromium"]],
+  "install": [
+    [
+      "npm",
+      "install"
+    ],
+    [
+      "npx",
+      "playwright",
+      "install",
+      "--with-deps",
+      "chromium"
+    ]
+  ],
   "files": [
-    { "from": "playwright.config.ts.hbs", "to": "playwright.config.ts" },
-    { "from": "tsconfig.json.hbs", "to": "tsconfig.json", "ifMissing": true },
-    { "from": "src/utils/env.ts.hbs", "to": "src/utils/env.ts" },
-    { "from": "src/pages/BasePage.ts.hbs", "to": "src/pages/BasePage.ts", "when": "ui" },
-    { "from": "src/pages/HomePage.ts.hbs", "to": "src/pages/HomePage.ts", "when": "web" },
-    { "from": "src/fixtures/test.ts.hbs", "to": "src/fixtures/test.ts" },
-    { "from": "tests/smoke/home.spec.ts.hbs", "to": "tests/smoke/home.spec.ts", "when": "web" },
-    { "from": "tests/smoke/electron.spec.ts.hbs", "to": "tests/smoke/app-launch.spec.ts", "when": "electron" },
-    { "from": "tests/api/health.spec.ts.hbs", "to": "tests/api/health.spec.ts", "when": "api" },
-    { "from": "test-data/README.md.hbs", "to": "test-data/README.md" },
-    { "from": "test-data/users.json.hbs", "to": "test-data/users.json", "when": "ui" }
+    {
+      "from": "playwright.config.ts.hbs",
+      "to": "playwright.config.ts"
+    },
+    {
+      "from": "tsconfig.json.hbs",
+      "to": "tsconfig.json",
+      "ifMissing": true
+    },
+    {
+      "from": "src/utils/env.ts.hbs",
+      "to": "src/utils/env.ts"
+    },
+    {
+      "from": "src/pages/BasePage.ts.hbs",
+      "to": "src/pages/BasePage.ts",
+      "when": "ui"
+    },
+    {
+      "from": "src/pages/HomePage.ts.hbs",
+      "to": "src/pages/HomePage.ts",
+      "when": "web"
+    },
+    {
+      "from": "src/fixtures/test.ts.hbs",
+      "to": "src/fixtures/test.ts"
+    },
+    {
+      "from": "tests/smoke/home.spec.ts.hbs",
+      "to": "tests/smoke/home.spec.ts",
+      "when": [
+        "web",
+        "notbdd"
+      ]
+    },
+    {
+      "from": "tests/smoke/electron.spec.ts.hbs",
+      "to": "tests/smoke/app-launch.spec.ts",
+      "when": "electron"
+    },
+    {
+      "from": "tests/api/health.spec.ts.hbs",
+      "to": "tests/api/health.spec.ts",
+      "when": "api"
+    },
+    {
+      "from": "features/smoke.feature.hbs",
+      "to": "features/smoke.feature",
+      "when": [
+        "web",
+        "bdd"
+      ]
+    },
+    {
+      "from": "steps/home.steps.ts.hbs",
+      "to": "steps/home.steps.ts",
+      "when": [
+        "web",
+        "bdd"
+      ]
+    },
+    {
+      "from": "test-data/README.md.hbs",
+      "to": "test-data/README.md"
+    },
+    {
+      "from": "test-data/users.json.hbs",
+      "to": "test-data/users.json",
+      "when": "ui"
+    }
   ]
 }

@@ -1,6 +1,6 @@
 ---
 name: testpilot
-description: Set up, plan, write and run automated tests for this repository with the TestPilot MCP tools. Use when someone asks to start test automation, import or review test cases (Jira, Xray, Zephyr, TestRail, BrowserStack, Azure DevOps, Excel, CSV, Word, Gherkin), build an automation plan, generate or fix Playwright or Appium tests, run tests, or asks "where are we" with testing.
+description: Set up, plan, write and run automated tests for this repository with the TestPilot MCP tools. Use when someone asks to start test automation, import or review test cases (Jira, Xray, Zephyr, TestRail, BrowserStack, Azure DevOps, Excel, CSV, Word, Gherkin), build an automation plan, generate or fix Playwright, Selenium (Java) or Appium tests, run tests, or asks "where are we" with testing.
 ---
 
 # Test automation with TestPilot

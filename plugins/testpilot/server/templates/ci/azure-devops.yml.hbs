@@ -30,6 +30,15 @@ variables:
   - group: testpilot
 
 steps:
+{{#if isMaven}}
+  # Hosted agents have Java 21, Maven and Chrome preinstalled; Selenium Manager fetches the matching driver.
+  - task: JavaToolInstaller@1
+    inputs:
+      versionSpec: '21'
+      jdkArchitectureOption: x64
+      jdkSourceOption: PreInstalled
+    displayName: Use Java 21
+{{else}}
   - task: NodeTool@0
     inputs:
       versionSpec: '22.x'
@@ -47,6 +56,7 @@ steps:
   - script: npx playwright install --with-deps {{browserList}}
     displayName: Install browsers
     workingDirectory: {{testRoot}}
+{{/if}}
 {{/if}}
 
   - script: {{runCommand}}

@@ -1,0 +1,25 @@
+// {{header}}
+package {{javaPackage}}.bdd;
+
+import org.testng.ITestContext;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Listeners;
+
+import io.cucumber.testng.AbstractTestNGCucumberTests;
+import io.cucumber.testng.CucumberOptions;
+
+import {{javaPackage}}.TestPilotListener;
+
+/**
+ * Runs every feature under src/test/resources/features through TestNG.
+ * One scenario: mvn test -Dcucumber.filter.tags=@SHOP-123
+ */
+@Listeners(TestPilotListener.class)
+@CucumberOptions(features = "src/test/resources/features", glue = "{{javaPackage}}.bdd", plugin = {"pretty", "html:target/cucumber-report.html", "junit:target/cucumber-junit.xml"})
+public class CucumberTestRunner extends AbstractTestNGCucumberTests {
+    @Override
+    @DataProvider(parallel = true)
+    public Object[][] scenarios(ITestContext context) {
+        return super.scenarios(context);
+    }
+}

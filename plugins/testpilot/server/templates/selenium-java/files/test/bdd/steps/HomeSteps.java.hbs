@@ -1,0 +1,29 @@
+// {{header}}
+package {{javaPackage}}.bdd.steps;
+
+import org.testng.Assert;
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+
+import {{javaPackage}}.bdd.TestContext;
+import {{javaPackage}}.pages.HomePage;
+
+/** Step definitions for features/smoke.feature. TestPilot adds generated steps in GeneratedSteps.java. */
+public class HomeSteps {
+    private final TestContext context;
+
+    public HomeSteps(TestContext context) {
+        this.context = context;
+    }
+
+    @Given("I open the home page")
+    public void iOpenTheHomePage() {
+        context.page(HomePage.class).open();
+    }
+
+    @Then("the home page is visible")
+    public void theHomePageIsVisible() {
+        Assert.assertTrue(context.page(HomePage.class).isShown(), "the home page should load with a title");
+    }
+}

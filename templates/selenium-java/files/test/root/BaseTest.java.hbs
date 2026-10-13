@@ -1,0 +1,38 @@
+// {{header}}
+package {{javaPackage}};
+
+import java.lang.reflect.Method;
+
+import org.openqa.selenium.WebDriver;
+import org.testng.SkipException;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Listeners;
+
+import {{javaPackage}}.config.DriverFactory;
+
+/**
+ * Every test class extends this: a fresh browser per test, closed afterwards (screenshots on failure
+ * are taken by TestPilotListener), and `expect` for checks that wait before they judge.
+ */
+@Listeners(TestPilotListener.class)
+public abstract class BaseTest {
+    protected WebDriver driver;
+    protected Expect expect;
+
+    @BeforeMethod(alwaysRun = true)
+    public void startBrowser(Method method) {
+        driver = DriverFactory.create();
+        expect = new Expect(driver);
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void stopBrowser() {
+        DriverFactory.quit();
+    }
+
+    /** Marks a test as pending while it still has TODO(testpilot) steps, so it never passes by accident. */
+    protected void skipUntilDone(String reason) {
+        throw new SkipException("Pending: " + reason);
+    }
+}

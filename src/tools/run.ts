@@ -6,6 +6,7 @@ import { resolveBaseUrl } from '../core/env.js';
 import { completeActionStep } from '../core/wizard.js';
 import { readPlanMeta } from '../plan/plan.js';
 import { usesAppium } from '../explore/mobile.js';
+import { runMaven } from '../run/maven.js';
 import { type RunSummary, runPlaywright, saveRun } from '../run/playwright.js';
 import { categoriseAppium, runWdio } from '../run/wdio.js';
 import { inTestRoot } from '../scaffold/engine.js';
@@ -15,14 +16,16 @@ function escapeRegExp(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function describeRun(run: RunSummary, saved: string, runner: 'playwright' | 'wdio' = 'playwright'): string {
+function describeRun(run: RunSummary, saved: string, runner: 'playwright' | 'wdio' | 'maven' = 'playwright'): string {
     const s = run.stats;
     if (!s.total) {
         const triage = runner === 'wdio' && run.consoleTail ? categoriseAppium(run.consoleTail) : undefined;
         const reporterHint =
             runner === 'wdio'
                 ? 'If the results are missing, make sure the wdio config still lists TestPilotReporter (writing test-results/testpilot/).'
-                : 'If the report is missing, make sure playwright.config.ts still has the json reporter writing test-results/results.json.';
+                : runner === 'maven'
+                  ? 'If the results are missing, make sure TestPilotListener is still registered (testng.xml or @Listeners) so target/testpilot/results.json is written, and that `mvn -v` works.'
+                  : 'If the report is missing, make sure playwright.config.ts still has the json reporter writing test-results/results.json.';
         return `No test results were produced (exit code ${run.exitCode}).${triage && triage.category !== 'unknown' ? `\nLikely cause: ${triage.category}. ${triage.advice}` : ''}${run.consoleTail ? `\n\nLast output:\n${run.consoleTail}` : ''}\n\nIf no tests matched, check the ids or wave. ${reporterHint}`;
     }
     const lines = [`${s.passed} passed, ${s.failed} failed, ${s.flaky} flaky, ${s.skipped} skipped${run.repeat > 1 ? ` (each test ran ${run.repeat} times)` : ''} in ${Math.round(s.durationMs / 1000)}s.`];
@@ -34,6 +37,7 @@ function describeRun(run: RunSummary, saved: string, runner: 'playwright' | 'wdi
         const trace = t.attachments.find(a => a.name === 'trace');
         const shot = t.attachments.find(a => a.name === 'screenshot');
         if (trace) lines.push(`Trace: npx playwright show-trace ${trace.path}`);
+        else if (runner === 'maven' && run.reportFile) lines.push(`Details: ${run.reportFile}/`);
         else if (shot) lines.push(`Screenshot: ${shot.path}`);
     }
     if (bad.length > 15) lines.push('', `…and ${bad.length - 15} more in ${saved}.`);
@@ -50,7 +54,7 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
         {
             title: 'Run tests',
             description:
-                'Runs the tests (Playwright for web, WebdriverIO + Appium for mobile and desktop apps): all, a plan wave, specific test-case ids, files or @tags. Reports each failure with its likely cause (environment, locator, assertion, timing, data, script), advice, and the trace or screenshot to open. stabilityRuns: 2 runs each test twice without retries to prove it is stable; flaky tests are flagged. Results go to .testpilot/runs/ and update each case\'s status. Refuses production-looking addresses unless the user explicitly allows it. Appium runs need the Appium server running (npm run appium) or, for BrowserStack, the bs:// app id in .env.',
+                'Runs the tests (Playwright for web, Selenium + Java through Maven, WebdriverIO + Appium for mobile and desktop apps): all, a plan wave, specific test-case ids, files or @tags. Reports each failure with its likely cause (environment, locator, assertion, timing, data, script), advice, and the trace or screenshot to open. stabilityRuns: 2 runs each test twice without retries to prove it is stable; flaky tests are flagged. Results go to .testpilot/runs/ and update each case\'s status. Refuses production-looking addresses unless the user explicitly allows it. Appium runs need the Appium server running (npm run appium) or, for BrowserStack, the bs:// app id in .env.',
             inputSchema: z.object({
                 projectRoot: projectRootArg,
                 ids: z.array(z.string()).optional().describe('Test-case ids to run'),
@@ -90,12 +94,15 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
                 const { store } = openProject(options, args.projectRoot);
                 const config = store.readConfig();
                 const wdio = usesAppium(config) && config.stack.language === 'typescript';
-                if (!config.stack.framework?.startsWith('playwright') && !wdio) {
-                    return failure(`run_tests drives Playwright and the TypeScript Appium template today. For ${config.stack.framework ?? 'this framework'}, run the command from AGENTS.md ("How to run tests") in a terminal and share the output.`);
+                const maven = config.stack.templatePack === 'selenium-java';
+                if (!config.stack.framework?.startsWith('playwright') && !wdio && !maven) {
+                    return failure(`run_tests drives Playwright, the Selenium + Java template and the TypeScript Appium template today. For ${config.stack.framework ?? 'this framework'}, run the command from AGENTS.md ("How to run tests") in a terminal and share the output.`);
                 }
                 const testRoot = inTestRoot(config, '.') || '.';
                 let wdioConfig = 'wdio.conf.ts';
-                if (wdio) {
+                if (maven) {
+                    if (!store.exists(inTestRoot(config, 'pom.xml'))) return failure(`${inTestRoot(config, 'pom.xml')} is missing. Run preview_scaffold and scaffold_project to create the Maven project.`);
+                } else if (wdio) {
                     if (!store.exists(`${testRoot}/node_modules/@wdio/cli`) && !store.exists('node_modules/@wdio/cli')) {
                         return failure('WebdriverIO is not installed yet. Run npm install in the test folder (check_prerequisites lists anything else missing).');
                     }
@@ -130,7 +137,10 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
                     return f;
                 });
                 const grep = grepParts.length ? grepParts.join('|') : undefined;
-                const run = wdio
+                if (maven && files.length) return failure('Maven runs select tests by id or tag (groups and Cucumber tags), not by file. Pass ids, wave or tag instead.');
+                const run = maven
+                    ? await runMaven(store, config, { cwd: store.resolve(testRoot), ids, tag: args.tag, bdd: config.stack.pattern === 'bdd', repeat: args.stabilityRuns, timeoutMs: args.timeoutMinutes * 60_000 })
+                    : wdio
                     ? await runWdio(store, { cwd: store.resolve(testRoot), configFile: wdioConfig, specs: files, grep, repeat: args.stabilityRuns, timeoutMs: args.timeoutMinutes * 60_000, resultsDir: 'test-results/testpilot' })
                     : await runPlaywright(store, {
                           cwd: store.resolve(testRoot),
@@ -140,7 +150,8 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
                           project: args.project,
                           workers: args.workers,
                           timeoutMs: args.timeoutMinutes * 60_000,
-                          reportFile: 'test-results/results.json'
+                          reportFile: 'test-results/results.json',
+                          bdd: config.stack.pattern === 'bdd'
                       });
                 run.baseUrl = baseUrl;
                 const saved = saveRun(store, run);
@@ -164,7 +175,7 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
                 });
                 const allGood = run.stats.total > 0 && run.stats.failed === 0 && run.stats.flaky === 0;
                 if (allGood && run.repeat >= 2 && store.hasConfig()) completeActionStep(store, 'RUN', `${run.stats.passed} test(s) passed ${run.repeat} times in a row`);
-                return result(describeRun(run, saved, wdio ? 'wdio' : 'playwright'), { run: { ...run, tests: run.tests.slice(0, 100) }, saved });
+                return result(describeRun(run, saved, maven ? 'maven' : wdio ? 'wdio' : 'playwright'), { run: { ...run, tests: run.tests.slice(0, 100) }, saved });
             }
         )
     );

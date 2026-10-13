@@ -1,0 +1,54 @@
+// @ts-check
+// {{header}}
+const { expect } = require('@playwright/test');
+
+/**
+ * Shared behaviour for every page object.
+ * Locator priority: getByRole → getByLabel → getByTestId → getByText → CSS (last resort).
+ * Never use fixed waits (page.waitForTimeout); Playwright waits for elements automatically.
+ */
+class BasePage {
+    /** Path of this page relative to baseURL, e.g. '/login'. Subclasses set it. */
+    path = '/';
+
+    /** @param {import('@playwright/test').Page} page */
+    constructor(page) {
+        this.page = page;
+    }
+
+{{#if isElectron}}
+    /** The electronApp fixture opens the window; screens are reached through the app's own menus and buttons. */
+    async open() {
+        await this.page.waitForLoadState('domcontentloaded');
+    }
+
+    async expectLoaded() {
+        await expect(this.page.locator('body')).toBeVisible();
+    }
+{{else}}
+    async open() {
+        await this.page.goto(this.path);
+    }
+
+    async expectLoaded() {
+        await expect(this.page).toHaveURL(new RegExp(this.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    }
+{{/if}}
+
+    /** @param {string | RegExp} name */
+    button(name) {
+        return this.page.getByRole('button', { name });
+    }
+
+    /** @param {string | RegExp} name */
+    link(name) {
+        return this.page.getByRole('link', { name });
+    }
+
+    /** @param {string | RegExp} label */
+    field(label) {
+        return this.page.getByLabel(label);
+    }
+}
+
+module.exports = { BasePage };

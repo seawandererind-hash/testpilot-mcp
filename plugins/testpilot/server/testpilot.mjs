@@ -127,17 +127,17 @@ var require_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    function visit_(key, node2, visitor, path26) {
-      const ctrl = callVisitor(key, node2, visitor, path26);
+    function visit_(key, node2, visitor, path29) {
+      const ctrl = callVisitor(key, node2, visitor, path29);
       if (identity2.isNode(ctrl) || identity2.isPair(ctrl)) {
-        replaceNode(key, path26, ctrl);
-        return visit_(key, ctrl, visitor, path26);
+        replaceNode(key, path29, ctrl);
+        return visit_(key, ctrl, visitor, path29);
       }
       if (typeof ctrl !== "symbol") {
         if (identity2.isCollection(node2)) {
-          path26 = Object.freeze(path26.concat(node2));
+          path29 = Object.freeze(path29.concat(node2));
           for (let i = 0; i < node2.items.length; ++i) {
-            const ci = visit_(i, node2.items[i], visitor, path26);
+            const ci = visit_(i, node2.items[i], visitor, path29);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -148,13 +148,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity2.isPair(node2)) {
-          path26 = Object.freeze(path26.concat(node2));
-          const ck = visit_("key", node2.key, visitor, path26);
+          path29 = Object.freeze(path29.concat(node2));
+          const ck = visit_("key", node2.key, visitor, path29);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node2.key = null;
-          const cv = visit_("value", node2.value, visitor, path26);
+          const cv = visit_("value", node2.value, visitor, path29);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -175,17 +175,17 @@ var require_visit = __commonJS({
     visitAsync.BREAK = BREAK;
     visitAsync.SKIP = SKIP;
     visitAsync.REMOVE = REMOVE;
-    async function visitAsync_(key, node2, visitor, path26) {
-      const ctrl = await callVisitor(key, node2, visitor, path26);
+    async function visitAsync_(key, node2, visitor, path29) {
+      const ctrl = await callVisitor(key, node2, visitor, path29);
       if (identity2.isNode(ctrl) || identity2.isPair(ctrl)) {
-        replaceNode(key, path26, ctrl);
-        return visitAsync_(key, ctrl, visitor, path26);
+        replaceNode(key, path29, ctrl);
+        return visitAsync_(key, ctrl, visitor, path29);
       }
       if (typeof ctrl !== "symbol") {
         if (identity2.isCollection(node2)) {
-          path26 = Object.freeze(path26.concat(node2));
+          path29 = Object.freeze(path29.concat(node2));
           for (let i = 0; i < node2.items.length; ++i) {
-            const ci = await visitAsync_(i, node2.items[i], visitor, path26);
+            const ci = await visitAsync_(i, node2.items[i], visitor, path29);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -196,13 +196,13 @@ var require_visit = __commonJS({
             }
           }
         } else if (identity2.isPair(node2)) {
-          path26 = Object.freeze(path26.concat(node2));
-          const ck = await visitAsync_("key", node2.key, visitor, path26);
+          path29 = Object.freeze(path29.concat(node2));
+          const ck = await visitAsync_("key", node2.key, visitor, path29);
           if (ck === BREAK)
             return BREAK;
           else if (ck === REMOVE)
             node2.key = null;
-          const cv = await visitAsync_("value", node2.value, visitor, path26);
+          const cv = await visitAsync_("value", node2.value, visitor, path29);
           if (cv === BREAK)
             return BREAK;
           else if (cv === REMOVE)
@@ -229,23 +229,23 @@ var require_visit = __commonJS({
       }
       return visitor;
     }
-    function callVisitor(key, node2, visitor, path26) {
+    function callVisitor(key, node2, visitor, path29) {
       if (typeof visitor === "function")
-        return visitor(key, node2, path26);
+        return visitor(key, node2, path29);
       if (identity2.isMap(node2))
-        return visitor.Map?.(key, node2, path26);
+        return visitor.Map?.(key, node2, path29);
       if (identity2.isSeq(node2))
-        return visitor.Seq?.(key, node2, path26);
+        return visitor.Seq?.(key, node2, path29);
       if (identity2.isPair(node2))
-        return visitor.Pair?.(key, node2, path26);
+        return visitor.Pair?.(key, node2, path29);
       if (identity2.isScalar(node2))
-        return visitor.Scalar?.(key, node2, path26);
+        return visitor.Scalar?.(key, node2, path29);
       if (identity2.isAlias(node2))
-        return visitor.Alias?.(key, node2, path26);
+        return visitor.Alias?.(key, node2, path29);
       return void 0;
     }
-    function replaceNode(key, path26, node2) {
-      const parent = path26[path26.length - 1];
+    function replaceNode(key, path29, node2) {
+      const parent = path29[path29.length - 1];
       if (identity2.isCollection(parent)) {
         parent.items[key] = node2;
       } else if (identity2.isPair(parent)) {
@@ -857,10 +857,10 @@ var require_Collection = __commonJS({
     var createNode = require_createNode();
     var identity2 = require_identity();
     var Node = require_Node();
-    function collectionFromPath(schema, path26, value) {
+    function collectionFromPath(schema, path29, value) {
       let v = value;
-      for (let i = path26.length - 1; i >= 0; --i) {
-        const k = path26[i];
+      for (let i = path29.length - 1; i >= 0; --i) {
+        const k = path29[i];
         if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
           const a = [];
           a[k] = v;
@@ -879,7 +879,7 @@ var require_Collection = __commonJS({
         sourceObjects: /* @__PURE__ */ new Map()
       });
     }
-    var isEmptyPath = (path26) => path26 == null || typeof path26 === "object" && !!path26[Symbol.iterator]().next().done;
+    var isEmptyPath = (path29) => path29 == null || typeof path29 === "object" && !!path29[Symbol.iterator]().next().done;
     var Collection = class extends Node.NodeBase {
       constructor(type, schema) {
         super(type);
@@ -909,11 +909,11 @@ var require_Collection = __commonJS({
        * be a Pair instance or a `{ key, value }` object, which may not have a key
        * that already exists in the map.
        */
-      addIn(path26, value) {
-        if (isEmptyPath(path26))
+      addIn(path29, value) {
+        if (isEmptyPath(path29))
           this.add(value);
         else {
-          const [key, ...rest2] = path26;
+          const [key, ...rest2] = path29;
           const node2 = this.get(key, true);
           if (identity2.isCollection(node2))
             node2.addIn(rest2, value);
@@ -927,8 +927,8 @@ var require_Collection = __commonJS({
        * Removes a value from the collection.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path26) {
-        const [key, ...rest2] = path26;
+      deleteIn(path29) {
+        const [key, ...rest2] = path29;
         if (rest2.length === 0)
           return this.delete(key);
         const node2 = this.get(key, true);
@@ -942,8 +942,8 @@ var require_Collection = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path26, keepScalar) {
-        const [key, ...rest2] = path26;
+      getIn(path29, keepScalar) {
+        const [key, ...rest2] = path29;
         const node2 = this.get(key, true);
         if (rest2.length === 0)
           return !keepScalar && identity2.isScalar(node2) ? node2.value : node2;
@@ -961,8 +961,8 @@ var require_Collection = __commonJS({
       /**
        * Checks if the collection includes a value with the key `key`.
        */
-      hasIn(path26) {
-        const [key, ...rest2] = path26;
+      hasIn(path29) {
+        const [key, ...rest2] = path29;
         if (rest2.length === 0)
           return this.has(key);
         const node2 = this.get(key, true);
@@ -972,8 +972,8 @@ var require_Collection = __commonJS({
        * Sets a value in this collection. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path26, value) {
-        const [key, ...rest2] = path26;
+      setIn(path29, value) {
+        const [key, ...rest2] = path29;
         if (rest2.length === 0) {
           this.set(key, value);
         } else {
@@ -998,12 +998,12 @@ var require_stringifyComment = __commonJS({
   "node_modules/yaml/dist/stringify/stringifyComment.js"(exports2) {
     "use strict";
     var stringifyComment = (str) => str.replace(/^(?!$)(?: $)?/gm, "#");
-    function indentComment(comment3, indent) {
-      if (/^\n+$/.test(comment3))
-        return comment3.substring(1);
-      return indent ? comment3.replace(/^(?! *$)/gm, indent) : comment3;
+    function indentComment(comment4, indent) {
+      if (/^\n+$/.test(comment4))
+        return comment4.substring(1);
+      return indent ? comment4.replace(/^(?! *$)/gm, indent) : comment4;
     }
-    var lineComment = (str, indent, comment3) => str.endsWith("\n") ? indentComment(comment3, indent) : comment3.includes("\n") ? "\n" + indentComment(comment3, indent) : (str.endsWith(" ") ? "" : " ") + comment3;
+    var lineComment = (str, indent, comment4) => str.endsWith("\n") ? indentComment(comment4, indent) : comment4.includes("\n") ? "\n" + indentComment(comment4, indent) : (str.endsWith(" ") ? "" : " ") + comment4;
     exports2.indentComment = indentComment;
     exports2.lineComment = lineComment;
     exports2.stringifyComment = stringifyComment;
@@ -1287,7 +1287,7 @@ ${indent}`) + "'";
     } catch {
       blockEndNewlines = /\n+(?!\n|$)/g;
     }
-    function blockString({ comment: comment3, type, value }, ctx, onComment, onChompKeep) {
+    function blockString({ comment: comment4, type, value }, ctx, onComment, onChompKeep) {
       const { blockQuote, commentString, lineWidth } = ctx.options;
       if (!blockQuote || /\n[\t ]+$/.test(value)) {
         return quotedString(value, ctx);
@@ -1339,8 +1339,8 @@ ${indent}`) + "'";
       }
       const indentSize = indent ? "2" : "1";
       let header = (startWithSpace ? indentSize : "") + chomp;
-      if (comment3) {
-        header += " " + commentString(comment3.replace(/ ?[\r\n]+/g, " "));
+      if (comment4) {
+        header += " " + commentString(comment4.replace(/ ?[\r\n]+/g, " "));
         if (onComment)
           onComment();
       }
@@ -1884,20 +1884,20 @@ var require_stringifyCollection = __commonJS({
       const stringify3 = flow ? stringifyFlowCollection : stringifyBlockCollection;
       return stringify3(collection, ctx, options);
     }
-    function stringifyBlockCollection({ comment: comment3, items }, ctx, { blockItemPrefix, flowChars, itemIndent, onChompKeep, onComment }) {
+    function stringifyBlockCollection({ comment: comment4, items }, ctx, { blockItemPrefix, flowChars, itemIndent, onChompKeep, onComment }) {
       const { indent, options: { commentString } } = ctx;
       const itemCtx = Object.assign({}, ctx, { indent: itemIndent, type: null });
       let chompKeep = false;
       const lines = [];
       for (let i = 0; i < items.length; ++i) {
         const item = items[i];
-        let comment4 = null;
+        let comment5 = null;
         if (identity2.isNode(item)) {
           if (!chompKeep && item.spaceBefore)
             lines.push("");
           addCommentBefore(ctx, lines, item.commentBefore, chompKeep);
           if (item.comment)
-            comment4 = item.comment;
+            comment5 = item.comment;
         } else if (identity2.isPair(item)) {
           const ik = identity2.isNode(item.key) ? item.key : null;
           if (ik) {
@@ -1907,10 +1907,10 @@ var require_stringifyCollection = __commonJS({
           }
         }
         chompKeep = false;
-        let str2 = stringify2.stringify(item, itemCtx, () => comment4 = null, () => chompKeep = true);
-        if (comment4)
-          str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment4));
-        if (chompKeep && comment4)
+        let str2 = stringify2.stringify(item, itemCtx, () => comment5 = null, () => chompKeep = true);
+        if (comment5)
+          str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment5));
+        if (chompKeep && comment5)
           chompKeep = false;
         lines.push(blockItemPrefix + str2);
       }
@@ -1925,8 +1925,8 @@ var require_stringifyCollection = __commonJS({
 ${indent}${line}` : "\n";
         }
       }
-      if (comment3) {
-        str += "\n" + stringifyComment.indentComment(commentString(comment3), indent);
+      if (comment4) {
+        str += "\n" + stringifyComment.indentComment(commentString(comment4), indent);
         if (onComment)
           onComment();
       } else if (chompKeep && onChompKeep)
@@ -1946,13 +1946,13 @@ ${indent}${line}` : "\n";
       const lines = [];
       for (let i = 0; i < items.length; ++i) {
         const item = items[i];
-        let comment3 = null;
+        let comment4 = null;
         if (identity2.isNode(item)) {
           if (item.spaceBefore)
             lines.push("");
           addCommentBefore(ctx, lines, item.commentBefore, false);
           if (item.comment)
-            comment3 = item.comment;
+            comment4 = item.comment;
         } else if (identity2.isPair(item)) {
           const ik = identity2.isNode(item.key) ? item.key : null;
           if (ik) {
@@ -1965,16 +1965,16 @@ ${indent}${line}` : "\n";
           const iv = identity2.isNode(item.value) ? item.value : null;
           if (iv) {
             if (iv.comment)
-              comment3 = iv.comment;
+              comment4 = iv.comment;
             if (iv.commentBefore)
               reqNewline = true;
           } else if (item.value == null && ik?.comment) {
-            comment3 = ik.comment;
+            comment4 = ik.comment;
           }
         }
-        if (comment3)
+        if (comment4)
           reqNewline = true;
-        let str = stringify2.stringify(item, itemCtx, () => comment3 = null);
+        let str = stringify2.stringify(item, itemCtx, () => comment4 = null);
         reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
         if (i < items.length - 1) {
           str += ",";
@@ -1986,8 +1986,8 @@ ${indent}${line}` : "\n";
             str += ",";
           }
         }
-        if (comment3)
-          str += stringifyComment.lineComment(str, itemIndent, commentString(comment3));
+        if (comment4)
+          str += stringifyComment.lineComment(str, itemIndent, commentString(comment4));
         lines.push(str);
         linesAtValue = lines.length;
       }
@@ -2011,11 +2011,11 @@ ${indent}${end}`;
         }
       }
     }
-    function addCommentBefore({ indent, options: { commentString } }, lines, comment3, chompKeep) {
-      if (comment3 && chompKeep)
-        comment3 = comment3.replace(/^\n+/, "");
-      if (comment3) {
-        const ic = stringifyComment.indentComment(commentString(comment3), indent);
+    function addCommentBefore({ indent, options: { commentString } }, lines, comment4, chompKeep) {
+      if (comment4 && chompKeep)
+        comment4 = comment4.replace(/^\n+/, "");
+      if (comment4) {
+        const ic = stringifyComment.indentComment(commentString(comment4), indent);
         lines.push(ic.trimStart());
       }
     }
@@ -2635,7 +2635,7 @@ var require_binary = __commonJS({
           return src;
         }
       },
-      stringify({ comment: comment3, type, value }, ctx, onComment, onChompKeep) {
+      stringify({ comment: comment4, type, value }, ctx, onComment, onChompKeep) {
         if (!value)
           return "";
         const buf = value;
@@ -2660,7 +2660,7 @@ var require_binary = __commonJS({
           }
           str = lines.join(type === Scalar.Scalar.BLOCK_LITERAL ? "\n" : " ");
         }
-        return stringifyString.stringifyString({ comment: comment3, type, value: str }, ctx, onComment, onChompKeep);
+        return stringifyString.stringifyString({ comment: comment4, type, value: str }, ctx, onComment, onChompKeep);
       }
     };
     exports2.binary = binary;
@@ -3488,9 +3488,9 @@ var require_Document = __commonJS({
           this.contents.add(value);
       }
       /** Adds a value to the document. */
-      addIn(path26, value) {
+      addIn(path29, value) {
         if (assertCollection(this.contents))
-          this.contents.addIn(path26, value);
+          this.contents.addIn(path29, value);
       }
       /**
        * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3565,14 +3565,14 @@ var require_Document = __commonJS({
        * Removes a value from the document.
        * @returns `true` if the item was found and removed.
        */
-      deleteIn(path26) {
-        if (Collection.isEmptyPath(path26)) {
+      deleteIn(path29) {
+        if (Collection.isEmptyPath(path29)) {
           if (this.contents == null)
             return false;
           this.contents = null;
           return true;
         }
-        return assertCollection(this.contents) ? this.contents.deleteIn(path26) : false;
+        return assertCollection(this.contents) ? this.contents.deleteIn(path29) : false;
       }
       /**
        * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3587,10 +3587,10 @@ var require_Document = __commonJS({
        * scalar values from their surrounding node; to disable set `keepScalar` to
        * `true` (collections are always returned intact).
        */
-      getIn(path26, keepScalar) {
-        if (Collection.isEmptyPath(path26))
+      getIn(path29, keepScalar) {
+        if (Collection.isEmptyPath(path29))
           return !keepScalar && identity2.isScalar(this.contents) ? this.contents.value : this.contents;
-        return identity2.isCollection(this.contents) ? this.contents.getIn(path26, keepScalar) : void 0;
+        return identity2.isCollection(this.contents) ? this.contents.getIn(path29, keepScalar) : void 0;
       }
       /**
        * Checks if the document includes a value with the key `key`.
@@ -3601,10 +3601,10 @@ var require_Document = __commonJS({
       /**
        * Checks if the document includes a value at `path`.
        */
-      hasIn(path26) {
-        if (Collection.isEmptyPath(path26))
+      hasIn(path29) {
+        if (Collection.isEmptyPath(path29))
           return this.contents !== void 0;
-        return identity2.isCollection(this.contents) ? this.contents.hasIn(path26) : false;
+        return identity2.isCollection(this.contents) ? this.contents.hasIn(path29) : false;
       }
       /**
        * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3621,13 +3621,13 @@ var require_Document = __commonJS({
        * Sets a value in this document. For `!!set`, `value` needs to be a
        * boolean to add/remove the item from the set.
        */
-      setIn(path26, value) {
-        if (Collection.isEmptyPath(path26)) {
+      setIn(path29, value) {
+        if (Collection.isEmptyPath(path29)) {
           this.contents = value;
         } else if (this.contents == null) {
-          this.contents = Collection.collectionFromPath(this.schema, Array.from(path26), value);
+          this.contents = Collection.collectionFromPath(this.schema, Array.from(path29), value);
         } else if (assertCollection(this.contents)) {
-          this.contents.setIn(path26, value);
+          this.contents.setIn(path29, value);
         }
       }
       /**
@@ -3792,7 +3792,7 @@ var require_resolve_props = __commonJS({
       let spaceBefore = false;
       let atNewline = startOnNewline;
       let hasSpace = startOnNewline;
-      let comment3 = "";
+      let comment4 = "";
       let commentSep = "";
       let hasNewline = false;
       let reqSpace = false;
@@ -3826,18 +3826,18 @@ var require_resolve_props = __commonJS({
             if (!hasSpace)
               onError(token, "MISSING_CHAR", "Comments must be separated from other tokens by white space characters");
             const cb2 = token.source.substring(1) || " ";
-            if (!comment3)
-              comment3 = cb2;
+            if (!comment4)
+              comment4 = cb2;
             else
-              comment3 += commentSep + cb2;
+              comment4 += commentSep + cb2;
             commentSep = "";
             atNewline = false;
             break;
           }
           case "newline":
             if (atNewline) {
-              if (comment3)
-                comment3 += token.source;
+              if (comment4)
+                comment4 += token.source;
               else if (!found || indicator !== "seq-item-ind")
                 spaceBefore = true;
             } else
@@ -3905,7 +3905,7 @@ var require_resolve_props = __commonJS({
         comma,
         found,
         spaceBefore,
-        comment: comment3,
+        comment: comment4,
         hasNewline,
         anchor: anchor2,
         tag,
@@ -4158,7 +4158,7 @@ var require_resolve_end = __commonJS({
   "node_modules/yaml/dist/compose/resolve-end.js"(exports2) {
     "use strict";
     function resolveEnd(end, offset, reqSpace, onError) {
-      let comment3 = "";
+      let comment4 = "";
       if (end) {
         let hasSpace = false;
         let sep = "";
@@ -4172,15 +4172,15 @@ var require_resolve_end = __commonJS({
               if (reqSpace && !hasSpace)
                 onError(token, "MISSING_CHAR", "Comments must be separated from other tokens by white space characters");
               const cb2 = source.substring(1) || " ";
-              if (!comment3)
-                comment3 = cb2;
+              if (!comment4)
+                comment4 = cb2;
               else
-                comment3 += sep + cb2;
+                comment4 += sep + cb2;
               sep = "";
               break;
             }
             case "newline":
-              if (comment3)
+              if (comment4)
                 sep += source;
               hasSpace = true;
               break;
@@ -4190,7 +4190,7 @@ var require_resolve_end = __commonJS({
           offset += source.length;
         }
       }
-      return { comment: comment3, offset };
+      return { comment: comment4, offset };
     }
     exports2.resolveEnd = resolveEnd;
   }
@@ -4589,7 +4589,7 @@ var require_resolve_block_scalar = __commonJS({
       if (error2 !== -1)
         onError(error2, "UNEXPECTED_TOKEN", `Block scalar header includes extra characters: ${source}`);
       let hasSpace = false;
-      let comment3 = "";
+      let comment4 = "";
       let length = source.length;
       for (let i = 1; i < props.length; ++i) {
         const token = props[i];
@@ -4606,7 +4606,7 @@ var require_resolve_block_scalar = __commonJS({
               onError(token, "MISSING_CHAR", message);
             }
             length += token.source.length;
-            comment3 = token.source.substring(1);
+            comment4 = token.source.substring(1);
             break;
           case "error":
             onError(token, "UNEXPECTED_TOKEN", token.message);
@@ -4622,7 +4622,7 @@ var require_resolve_block_scalar = __commonJS({
           }
         }
       }
-      return { mode, indent, chomp, comment: comment3, length };
+      return { mode, indent, chomp, comment: comment4, length };
     }
     function splitLines(source) {
       const split = source.split(/\n( *)/);
@@ -4868,7 +4868,7 @@ var require_compose_scalar = __commonJS({
     var resolveBlockScalar = require_resolve_block_scalar();
     var resolveFlowScalar = require_resolve_flow_scalar();
     function composeScalar(ctx, token, tagToken, onError) {
-      const { value, type, comment: comment3, range: range2 } = token.type === "block-scalar" ? resolveBlockScalar.resolveBlockScalar(ctx, token, onError) : resolveFlowScalar.resolveFlowScalar(token, ctx.options.strict, onError);
+      const { value, type, comment: comment4, range: range2 } = token.type === "block-scalar" ? resolveBlockScalar.resolveBlockScalar(ctx, token, onError) : resolveFlowScalar.resolveFlowScalar(token, ctx.options.strict, onError);
       const tagName = tagToken ? ctx.directives.tagName(tagToken.source, (msg) => onError(tagToken, "TAG_RESOLVE_FAILED", msg)) : null;
       let tag;
       if (ctx.options.stringKeys && ctx.atKey) {
@@ -4896,8 +4896,8 @@ var require_compose_scalar = __commonJS({
         scalar.tag = tagName;
       if (tag.format)
         scalar.format = tag.format;
-      if (comment3)
-        scalar.comment = comment3;
+      if (comment4)
+        scalar.comment = comment4;
       return scalar;
     }
     function findScalarTagByName(schema, value, tagName, tagToken, onError) {
@@ -4983,7 +4983,7 @@ var require_compose_node = __commonJS({
     var CN = { composeNode, composeEmptyNode };
     function composeNode(ctx, token, props, onError) {
       const atKey = ctx.atKey;
-      const { spaceBefore, comment: comment3, anchor: anchor2, tag } = props;
+      const { spaceBefore, comment: comment4, anchor: anchor2, tag } = props;
       let node2;
       let isSrcToken = true;
       switch (token.type) {
@@ -5027,17 +5027,17 @@ var require_compose_node = __commonJS({
       }
       if (spaceBefore)
         node2.spaceBefore = true;
-      if (comment3) {
+      if (comment4) {
         if (token.type === "scalar" && token.source === "")
-          node2.comment = comment3;
+          node2.comment = comment4;
         else
-          node2.commentBefore = comment3;
+          node2.commentBefore = comment4;
       }
       if (ctx.options.keepSourceTokens && isSrcToken)
         node2.srcToken = token;
       return node2;
     }
-    function composeEmptyNode(ctx, offset, before2, pos, { spaceBefore, comment: comment3, anchor: anchor2, tag, end }, onError) {
+    function composeEmptyNode(ctx, offset, before2, pos, { spaceBefore, comment: comment4, anchor: anchor2, tag, end }, onError) {
       const token = {
         type: "scalar",
         offset: utilEmptyScalarPosition.emptyScalarPosition(offset, before2, pos),
@@ -5052,8 +5052,8 @@ var require_compose_node = __commonJS({
       }
       if (spaceBefore)
         node2.spaceBefore = true;
-      if (comment3) {
-        node2.comment = comment3;
+      if (comment4) {
+        node2.comment = comment4;
         node2.range[2] = end;
       }
       return node2;
@@ -5139,14 +5139,14 @@ var require_composer = __commonJS({
       return [offset, offset + (typeof source === "string" ? source.length : 1)];
     }
     function parsePrelude(prelude) {
-      let comment3 = "";
+      let comment4 = "";
       let atComment = false;
       let afterEmptyLine = false;
       for (let i = 0; i < prelude.length; ++i) {
         const source = prelude[i];
         switch (source[0]) {
           case "#":
-            comment3 += (comment3 === "" ? "" : afterEmptyLine ? "\n\n" : "\n") + (source.substring(1) || " ");
+            comment4 += (comment4 === "" ? "" : afterEmptyLine ? "\n\n" : "\n") + (source.substring(1) || " ");
             atComment = true;
             afterEmptyLine = false;
             break;
@@ -5161,7 +5161,7 @@ var require_composer = __commonJS({
             atComment = false;
         }
       }
-      return { comment: comment3, afterEmptyLine };
+      return { comment: comment4, afterEmptyLine };
     }
     var Composer = class {
       constructor(options = {}) {
@@ -5181,25 +5181,25 @@ var require_composer = __commonJS({
         this.options = options;
       }
       decorate(doc, afterDoc) {
-        const { comment: comment3, afterEmptyLine } = parsePrelude(this.prelude);
-        if (comment3) {
+        const { comment: comment4, afterEmptyLine } = parsePrelude(this.prelude);
+        if (comment4) {
           const dc = doc.contents;
           if (afterDoc) {
             doc.comment = doc.comment ? `${doc.comment}
-${comment3}` : comment3;
+${comment4}` : comment4;
           } else if (afterEmptyLine || doc.directives.docStart || !dc) {
-            doc.commentBefore = comment3;
+            doc.commentBefore = comment4;
           } else if (identity2.isCollection(dc) && !dc.flow && dc.items.length > 0) {
             let it = dc.items[0];
             if (identity2.isPair(it))
               it = it.key;
             const cb2 = it.commentBefore;
-            it.commentBefore = cb2 ? `${comment3}
-${cb2}` : comment3;
+            it.commentBefore = cb2 ? `${comment4}
+${cb2}` : comment4;
           } else {
             const cb2 = dc.commentBefore;
-            dc.commentBefore = cb2 ? `${comment3}
-${cb2}` : comment3;
+            dc.commentBefore = cb2 ? `${comment4}
+${cb2}` : comment4;
           }
         }
         if (afterDoc) {
@@ -5588,9 +5588,9 @@ var require_cst_visit = __commonJS({
     visit.BREAK = BREAK;
     visit.SKIP = SKIP;
     visit.REMOVE = REMOVE;
-    visit.itemAtPath = (cst, path26) => {
+    visit.itemAtPath = (cst, path29) => {
       let item = cst;
-      for (const [field, index] of path26) {
+      for (const [field, index] of path29) {
         const tok = item?.[field];
         if (tok && "items" in tok) {
           item = tok.items[index];
@@ -5599,23 +5599,23 @@ var require_cst_visit = __commonJS({
       }
       return item;
     };
-    visit.parentCollection = (cst, path26) => {
-      const parent = visit.itemAtPath(cst, path26.slice(0, -1));
-      const field = path26[path26.length - 1][0];
+    visit.parentCollection = (cst, path29) => {
+      const parent = visit.itemAtPath(cst, path29.slice(0, -1));
+      const field = path29[path29.length - 1][0];
       const coll = parent?.[field];
       if (coll && "items" in coll)
         return coll;
       throw new Error("Parent collection not found");
     };
-    function _visit(path26, item, visitor) {
-      let ctrl = visitor(item, path26);
+    function _visit(path29, item, visitor) {
+      let ctrl = visitor(item, path29);
       if (typeof ctrl === "symbol")
         return ctrl;
       for (const field of ["key", "value"]) {
         const token = item[field];
         if (token && "items" in token) {
           for (let i = 0; i < token.items.length; ++i) {
-            const ci = _visit(Object.freeze(path26.concat([[field, i]])), token.items[i], visitor);
+            const ci = _visit(Object.freeze(path29.concat([[field, i]])), token.items[i], visitor);
             if (typeof ci === "number")
               i = ci - 1;
             else if (ci === BREAK)
@@ -5626,10 +5626,10 @@ var require_cst_visit = __commonJS({
             }
           }
           if (typeof ctrl === "function" && field === "key")
-            ctrl = ctrl(item, path26);
+            ctrl = ctrl(item, path29);
         }
       }
-      return typeof ctrl === "function" ? ctrl(item, path26) : ctrl;
+      return typeof ctrl === "function" ? ctrl(item, path29) : ctrl;
     }
     exports2.visit = visit;
   }
@@ -8564,13 +8564,13 @@ var require_ast = __commonJS({
         helperExpression: function helperExpression(node2) {
           return node2.type === "SubExpression" || (node2.type === "MustacheStatement" || node2.type === "BlockStatement") && !!(node2.params && node2.params.length || node2.hash);
         },
-        scopedId: function scopedId(path26) {
-          return /^\.|this\b/.test(path26.original);
+        scopedId: function scopedId(path29) {
+          return /^\.|this\b/.test(path29.original);
         },
         // an ID is simple if it only has one part, and that part is not
         // `..` or `this`.
-        simpleId: function simpleId(path26) {
-          return path26.parts.length === 1 && !AST.helpers.scopedId(path26) && !path26.depth;
+        simpleId: function simpleId(path29) {
+          return path29.parts.length === 1 && !AST.helpers.scopedId(path29) && !path29.depth;
         }
       }
     };
@@ -9627,8 +9627,8 @@ var require_helpers2 = __commonJS({
         close: close.charAt(close.length - 3) === "~"
       };
     }
-    function stripComment(comment3) {
-      return comment3.replace(/^\{\{~?!-?-?/, "").replace(/-?-?~?\}\}$/, "");
+    function stripComment(comment4) {
+      return comment4.replace(/^\{\{~?!-?-?/, "").replace(/-?-?~?\}\}$/, "");
     }
     function preparePath(data, parts, loc) {
       loc = this.locInfo(loc);
@@ -9655,12 +9655,12 @@ var require_helpers2 = __commonJS({
         loc
       };
     }
-    function prepareMustache(path26, params, hash, open2, strip, locInfo) {
+    function prepareMustache(path29, params, hash, open2, strip, locInfo) {
       var escapeFlag = open2.charAt(3) || open2.charAt(2), escaped = escapeFlag !== "{" && escapeFlag !== "&";
       var decorator = /\*/.test(open2);
       return {
         type: decorator ? "Decorator" : "MustacheStatement",
-        path: path26,
+        path: path29,
         params,
         hash,
         escaped,
@@ -9932,9 +9932,9 @@ var require_compiler = __commonJS({
       },
       DecoratorBlock: function DecoratorBlock(decorator) {
         var program = decorator.program && this.compileProgram(decorator.program);
-        var params = this.setupFullMustacheParams(decorator, program, void 0), path26 = decorator.path;
+        var params = this.setupFullMustacheParams(decorator, program, void 0), path29 = decorator.path;
         this.useDecorators = true;
-        this.opcode("registerDecorator", params.length, path26.original);
+        this.opcode("registerDecorator", params.length, path29.original);
       },
       PartialStatement: function PartialStatement(partial3) {
         this.usePartial = true;
@@ -10001,48 +10001,48 @@ var require_compiler = __commonJS({
         }
       },
       ambiguousSexpr: function ambiguousSexpr(sexpr, program, inverse) {
-        var path26 = sexpr.path, name = path26.parts[0], isBlock = program != null || inverse != null;
-        this.opcode("getContext", validateDepth(path26));
+        var path29 = sexpr.path, name = path29.parts[0], isBlock = program != null || inverse != null;
+        this.opcode("getContext", validateDepth(path29));
         this.opcode("pushProgram", program);
         this.opcode("pushProgram", inverse);
-        path26.strict = true;
-        this.accept(path26);
+        path29.strict = true;
+        this.accept(path29);
         this.opcode("invokeAmbiguous", name, isBlock);
       },
       simpleSexpr: function simpleSexpr(sexpr) {
-        var path26 = sexpr.path;
-        path26.strict = true;
-        this.accept(path26);
+        var path29 = sexpr.path;
+        path29.strict = true;
+        this.accept(path29);
         this.opcode("resolvePossibleLambda");
       },
       helperSexpr: function helperSexpr(sexpr, program, inverse) {
-        var params = this.setupFullMustacheParams(sexpr, program, inverse), path26 = sexpr.path, name = path26.parts[0];
+        var params = this.setupFullMustacheParams(sexpr, program, inverse), path29 = sexpr.path, name = path29.parts[0];
         if (this.options.knownHelpers[name]) {
           this.opcode("invokeKnownHelper", params.length, name);
         } else if (this.options.knownHelpersOnly) {
           throw new _exception2["default"]("You specified knownHelpersOnly, but used the unknown helper " + name, sexpr);
         } else {
-          path26.strict = true;
-          path26.falsy = true;
-          this.accept(path26);
-          this.opcode("invokeHelper", params.length, path26.original, _ast2["default"].helpers.simpleId(path26));
+          path29.strict = true;
+          path29.falsy = true;
+          this.accept(path29);
+          this.opcode("invokeHelper", params.length, path29.original, _ast2["default"].helpers.simpleId(path29));
         }
       },
-      PathExpression: function PathExpression(path26) {
-        var depth = validateDepth(path26);
-        var parts = validateParts(path26);
+      PathExpression: function PathExpression(path29) {
+        var depth = validateDepth(path29);
+        var parts = validateParts(path29);
         this.addDepth(depth);
         this.opcode("getContext", depth);
-        var name = parts[0], scoped = _ast2["default"].helpers.scopedId(path26), blockParamId = !depth && !scoped && this.blockParamIndex(name);
+        var name = parts[0], scoped = _ast2["default"].helpers.scopedId(path29), blockParamId = !depth && !scoped && this.blockParamIndex(name);
         if (blockParamId) {
           this.opcode("lookupBlockParam", blockParamId, parts);
         } else if (!name) {
           this.opcode("pushContext");
-        } else if (path26.data) {
+        } else if (path29.data) {
           this.options.data = true;
-          this.opcode("lookupData", depth, parts, path26.strict);
+          this.opcode("lookupData", depth, parts, path29.strict);
         } else {
-          this.opcode("lookupOnContext", parts, path26.falsy, path26.strict, scoped);
+          this.opcode("lookupOnContext", parts, path29.falsy, path29.strict, scoped);
         }
       },
       StringLiteral: function StringLiteral(string4) {
@@ -10269,8 +10269,8 @@ var require_compiler = __commonJS({
       }
       return value;
     }
-    function validateParts(path26) {
-      return validateStringArray(path26, path26.parts, "parts");
+    function validateParts(path29) {
+      return validateStringArray(path29, path29.parts, "parts");
     }
     function validateBlockParams(program) {
       if (program.blockParams != null) {
@@ -10452,16 +10452,16 @@ var require_util2 = __commonJS({
     }
     exports2.urlGenerate = urlGenerate;
     function normalize(aPath) {
-      var path26 = aPath;
+      var path29 = aPath;
       var url2 = urlParse(aPath);
       if (url2) {
         if (!url2.path) {
           return aPath;
         }
-        path26 = url2.path;
+        path29 = url2.path;
       }
-      var isAbsolute = exports2.isAbsolute(path26);
-      var parts = path26.split(/\/+/);
+      var isAbsolute = exports2.isAbsolute(path29);
+      var parts = path29.split(/\/+/);
       for (var part, up = 0, i = parts.length - 1; i >= 0; i--) {
         part = parts[i];
         if (part === ".") {
@@ -10478,15 +10478,15 @@ var require_util2 = __commonJS({
           }
         }
       }
-      path26 = parts.join("/");
-      if (path26 === "") {
-        path26 = isAbsolute ? "/" : ".";
+      path29 = parts.join("/");
+      if (path29 === "") {
+        path29 = isAbsolute ? "/" : ".";
       }
       if (url2) {
-        url2.path = path26;
+        url2.path = path29;
         return urlGenerate(url2);
       }
-      return path26;
+      return path29;
     }
     exports2.normalize = normalize;
     function join(aRoot, aPath) {
@@ -13275,8 +13275,8 @@ var require_printer = __commonJS({
     PrintVisitor.prototype.ContentStatement = function(content) {
       return this.pad("CONTENT[ '" + content.value + "' ]");
     };
-    PrintVisitor.prototype.CommentStatement = function(comment3) {
-      return this.pad("{{! '" + comment3.value + "' }}");
+    PrintVisitor.prototype.CommentStatement = function(comment4) {
+      return this.pad("{{! '" + comment4.value + "' }}");
     };
     PrintVisitor.prototype.SubExpression = function(sexpr) {
       var params = sexpr.params, paramStrings = [], hash = void 0;
@@ -13288,8 +13288,8 @@ var require_printer = __commonJS({
       return this.accept(sexpr.path) + " " + params + hash;
     };
     PrintVisitor.prototype.PathExpression = function(id) {
-      var path26 = id.parts.join("/");
-      return (id.data ? "@" : "") + "PATH:" + path26;
+      var path29 = id.parts.join("/");
+      return (id.data ? "@" : "") + "PATH:" + path29;
     };
     PrintVisitor.prototype.StringLiteral = function(string4) {
       return '"' + string4.value + '"';
@@ -20212,8 +20212,8 @@ var require_utils3 = __commonJS({
       var result3 = transform3[inputType][outputType](input);
       return result3;
     };
-    exports2.resolve = function(path26) {
-      var parts = path26.split("/");
+    exports2.resolve = function(path29) {
+      var parts = path29.split("/");
       var result3 = [];
       for (var index = 0; index < parts.length; index++) {
         var part = parts[index];
@@ -25659,7 +25659,7 @@ var require_ZipFileWorker = __commonJS({
       return (dosPermissions || 0) & 63;
     };
     var generateZipParts = function(streamInfo, streamedContent, streamingEnded, offset, platform, encodeFileName) {
-      var file = streamInfo["file"], compression = streamInfo["compression"], useCustomEncoding = encodeFileName !== utf8.utf8encode, encodedFileName = utils.transformTo("string", encodeFileName(file.name)), utfEncodedFileName = utils.transformTo("string", utf8.utf8encode(file.name)), comment3 = file.comment, encodedComment = utils.transformTo("string", encodeFileName(comment3)), utfEncodedComment = utils.transformTo("string", utf8.utf8encode(comment3)), useUTF8ForFileName = utfEncodedFileName.length !== file.name.length, useUTF8ForComment = utfEncodedComment.length !== comment3.length, dosTime2, dosDate, extraFields = "", unicodePathExtraField = "", unicodeCommentExtraField = "", dir = file.dir, date4 = file.date;
+      var file = streamInfo["file"], compression = streamInfo["compression"], useCustomEncoding = encodeFileName !== utf8.utf8encode, encodedFileName = utils.transformTo("string", encodeFileName(file.name)), utfEncodedFileName = utils.transformTo("string", utf8.utf8encode(file.name)), comment4 = file.comment, encodedComment = utils.transformTo("string", encodeFileName(comment4)), utfEncodedComment = utils.transformTo("string", utf8.utf8encode(comment4)), useUTF8ForFileName = utfEncodedFileName.length !== file.name.length, useUTF8ForComment = utfEncodedComment.length !== comment4.length, dosTime2, dosDate, extraFields = "", unicodePathExtraField = "", unicodeCommentExtraField = "", dir = file.dir, date4 = file.date;
       var dataInfo = {
         crc32: 0,
         compressedSize: 0,
@@ -25746,9 +25746,9 @@ var require_ZipFileWorker = __commonJS({
         dirRecord
       };
     };
-    var generateCentralDirectoryEnd = function(entriesCount, centralDirLength, localDirLength, comment3, encodeFileName) {
+    var generateCentralDirectoryEnd = function(entriesCount, centralDirLength, localDirLength, comment4, encodeFileName) {
       var dirEnd = "";
-      var encodedComment = utils.transformTo("string", encodeFileName(comment3));
+      var encodedComment = utils.transformTo("string", encodeFileName(comment4));
       dirEnd = signature.CENTRAL_DIRECTORY_END + // number of this disk
       "\0\0\0\0" + // total number of entries in the central directory on this disk
       decToHex(entriesCount, 2) + // total number of entries in the central directory
@@ -25767,10 +25767,10 @@ var require_ZipFileWorker = __commonJS({
       decToHex(streamInfo["uncompressedSize"], 4);
       return descriptor;
     };
-    function ZipFileWorker(streamFiles, comment3, platform, encodeFileName) {
+    function ZipFileWorker(streamFiles, comment4, platform, encodeFileName) {
       GenericWorker.call(this, "ZipFileWorker");
       this.bytesWritten = 0;
-      this.zipComment = comment3;
+      this.zipComment = comment4;
       this.zipPlatform = platform;
       this.encodeFileName = encodeFileName;
       this.streamFiles = streamFiles;
@@ -25929,8 +25929,8 @@ var require_generate = __commonJS({
       }
       return compression;
     };
-    exports2.generateWorker = function(zip, options, comment3) {
-      var zipFileWorker = new ZipFileWorker(options.streamFiles, comment3, options.platform, options.encodeFileName);
+    exports2.generateWorker = function(zip, options, comment4) {
+      var zipFileWorker = new ZipFileWorker(options.streamFiles, comment4, options.platform, options.encodeFileName);
       var entriesCount = 0;
       try {
         zip.forEach(function(relativePath, file) {
@@ -26074,18 +26074,18 @@ var require_object = __commonJS({
       var object3 = new ZipObject(name, zipObjectContent, o);
       this.files[name] = object3;
     };
-    var parentFolder = function(path26) {
-      if (path26.slice(-1) === "/") {
-        path26 = path26.substring(0, path26.length - 1);
+    var parentFolder = function(path29) {
+      if (path29.slice(-1) === "/") {
+        path29 = path29.substring(0, path29.length - 1);
       }
-      var lastSlash = path26.lastIndexOf("/");
-      return lastSlash > 0 ? path26.substring(0, lastSlash) : "";
+      var lastSlash = path29.lastIndexOf("/");
+      return lastSlash > 0 ? path29.substring(0, lastSlash) : "";
     };
-    var forceTrailingSlash = function(path26) {
-      if (path26.slice(-1) !== "/") {
-        path26 += "/";
+    var forceTrailingSlash = function(path29) {
+      if (path29.slice(-1) !== "/") {
+        path29 += "/";
       }
-      return path26;
+      return path29;
     };
     var folderAdd = function(name, createFolders) {
       createFolders = typeof createFolders !== "undefined" ? createFolders : defaults.createFolders;
@@ -26257,8 +26257,8 @@ var require_object = __commonJS({
           if (opts.platform === "win32") {
             opts.platform = "DOS";
           }
-          var comment3 = opts.comment || this.comment || "";
-          worker = generate.generateWorker(this, opts, comment3);
+          var comment4 = opts.comment || this.comment || "";
+          worker = generate.generateWorker(this, opts, comment4);
         } catch (e) {
           worker = new GenericWorker("error");
           worker.error(e);
@@ -29821,8 +29821,8 @@ var require_utils4 = __commonJS({
         };
       },
       getRelsPath(filepath) {
-        const path26 = utils.parsePath(filepath);
-        return `${path26.path}/_rels/${path26.name}.rels`;
+        const path29 = utils.parsePath(filepath);
+        return `${path29.path}/_rels/${path29.name}.rels`;
       },
       xmlEncode(text2) {
         const regexResult = xmlDecodeRegex.exec(text2);
@@ -29899,9 +29899,9 @@ var require_utils4 = __commonJS({
         return result3;
       },
       fs: {
-        exists(path26) {
+        exists(path29) {
           return new Promise((resolve) => {
-            fs.access(path26, fs.constants.F_OK, (err) => {
+            fs.access(path29, fs.constants.F_OK, (err) => {
               resolve(!err);
             });
           });
@@ -36489,9 +36489,9 @@ var require_cell_xform = __commonJS({
           model.type = Enums.ValueType.Hyperlink;
           model.hyperlink = hyperlink;
         }
-        const comment3 = options.commentsMap && options.commentsMap[model.address];
-        if (comment3) {
-          model.comment = comment3;
+        const comment4 = options.commentsMap && options.commentsMap[model.address];
+        if (comment4) {
+          model.comment = comment4;
         }
       }
     };
@@ -39771,12 +39771,12 @@ var require_worksheet_xform = __commonJS({
           });
         });
         if (model.comments.length > 0) {
-          const comment3 = {
+          const comment4 = {
             Id: nextRid(rels),
             Type: RelType.Comments,
             Target: `../comments${model.id}.xml`
           };
-          rels.push(comment3);
+          rels.push(comment4);
           const vmlDrawing = {
             Id: nextRid(rels),
             Type: RelType.VmlDrawing,
@@ -40014,15 +40014,15 @@ var require_worksheet_xform = __commonJS({
           }
           if (rel.Type === RelType.VmlDrawing && model.comments && model.comments.length) {
             const vmlComment = options.vmlDrawings[rel.Target].comments;
-            model.comments.forEach((comment3, index) => {
-              comment3.note = Object.assign({}, comment3.note, vmlComment[index]);
+            model.comments.forEach((comment4, index) => {
+              comment4.note = Object.assign({}, comment4.note, vmlComment[index]);
             });
           }
           return h;
         }, {});
-        options.commentsMap = (model.comments || []).reduce((h, comment3) => {
-          if (comment3.ref) {
-            h[comment3.ref] = comment3;
+        options.commentsMap = (model.comments || []).reduce((h, comment4) => {
+          if (comment4.ref) {
+            h[comment4.ref] = comment4;
           }
           return h;
         }, {});
@@ -41458,8 +41458,8 @@ var require_comments_xform = __commonJS({
           xmlStream.leafNode("author", null, "Author");
           xmlStream.closeNode();
           xmlStream.openNode("commentList");
-          model.comments.forEach((comment3) => {
-            this.map.comment.render(xmlStream, comment3);
+          model.comments.forEach((comment4) => {
+            this.map.comment.render(xmlStream, comment4);
           });
           xmlStream.closeNode();
           xmlStream.closeNode();
@@ -42109,11 +42109,11 @@ var require_xlsx = __commonJS({
         delete model.drawingRels;
         delete model.vmlDrawings;
       }
-      async _processWorksheetEntry(stream, model, sheetNo, options, path26) {
+      async _processWorksheetEntry(stream, model, sheetNo, options, path29) {
         const xform = new WorksheetXform(options);
         const worksheet = await xform.parseStream(stream);
         worksheet.sheetNo = sheetNo;
-        model.worksheetHash[path26] = worksheet;
+        model.worksheetHash[path29] = worksheet;
         model.worksheets.push(worksheet);
       }
       async _processCommentEntry(stream, model, name) {
@@ -42409,8 +42409,8 @@ var require_xlsx = __commonJS({
         const themes = model.themes || { theme1: theme1Xml };
         Object.keys(themes).forEach((name) => {
           const xml = themes[name];
-          const path26 = `xl/theme/${name}.xml`;
-          zip.append(xml, { name: path26 });
+          const path29 = `xl/theme/${name}.xml`;
+          zip.append(xml, { name: path29 });
         });
       }
       async addOfficeRels(zip) {
@@ -43833,8 +43833,8 @@ var require_src = __commonJS({
       });
     };
     exports2.writeToString = (rows, options) => exports2.writeToBuffer(rows, options).then((buffer) => buffer.toString());
-    exports2.writeToPath = (path26, rows, options) => {
-      const stream = fs.createWriteStream(path26, { encoding: "utf8" });
+    exports2.writeToPath = (path29, rows, options) => {
+      const stream = fs.createWriteStream(path29, { encoding: "utf8" });
       return exports2.write(rows, options).pipe(stream);
     };
   }
@@ -44692,11 +44692,11 @@ var require_lodash8 = __commonJS({
     function baseForOwn(object3, iteratee2) {
       return object3 && baseFor(object3, iteratee2, keys2);
     }
-    function baseGet(object3, path26) {
-      path26 = isKey(path26, object3) ? [path26] : castPath(path26);
-      var index = 0, length = path26.length;
+    function baseGet(object3, path29) {
+      path29 = isKey(path29, object3) ? [path29] : castPath(path29);
+      var index = 0, length = path29.length;
       while (object3 != null && index < length) {
-        object3 = object3[toKey(path26[index++])];
+        object3 = object3[toKey(path29[index++])];
       }
       return index && index == length ? object3 : void 0;
     }
@@ -44818,18 +44818,18 @@ var require_lodash8 = __commonJS({
         return object3 === source || baseIsMatch(object3, source, matchData);
       };
     }
-    function baseMatchesProperty(path26, srcValue) {
-      if (isKey(path26) && isStrictComparable(srcValue)) {
-        return matchesStrictComparable(toKey(path26), srcValue);
+    function baseMatchesProperty(path29, srcValue) {
+      if (isKey(path29) && isStrictComparable(srcValue)) {
+        return matchesStrictComparable(toKey(path29), srcValue);
       }
       return function(object3) {
-        var objValue = get2(object3, path26);
-        return objValue === void 0 && objValue === srcValue ? hasIn(object3, path26) : baseIsEqual(srcValue, objValue, void 0, UNORDERED_COMPARE_FLAG | PARTIAL_COMPARE_FLAG);
+        var objValue = get2(object3, path29);
+        return objValue === void 0 && objValue === srcValue ? hasIn(object3, path29) : baseIsEqual(srcValue, objValue, void 0, UNORDERED_COMPARE_FLAG | PARTIAL_COMPARE_FLAG);
       };
     }
-    function basePropertyDeep(path26) {
+    function basePropertyDeep(path29) {
       return function(object3) {
-        return baseGet(object3, path26);
+        return baseGet(object3, path29);
       };
     }
     function baseToString(value) {
@@ -45047,11 +45047,11 @@ var require_lodash8 = __commonJS({
         return result3;
       };
     }
-    function hasPath(object3, path26, hasFunc) {
-      path26 = isKey(path26, object3) ? [path26] : castPath(path26);
-      var result3, index = -1, length = path26.length;
+    function hasPath(object3, path29, hasFunc) {
+      path29 = isKey(path29, object3) ? [path29] : castPath(path29);
+      var result3, index = -1, length = path29.length;
       while (++index < length) {
-        var key = toKey(path26[index]);
+        var key = toKey(path29[index]);
         if (!(result3 = object3 != null && hasFunc(object3, key))) {
           break;
         }
@@ -45188,12 +45188,12 @@ var require_lodash8 = __commonJS({
     function toString2(value) {
       return value == null ? "" : baseToString(value);
     }
-    function get2(object3, path26, defaultValue) {
-      var result3 = object3 == null ? void 0 : baseGet(object3, path26);
+    function get2(object3, path29, defaultValue) {
+      var result3 = object3 == null ? void 0 : baseGet(object3, path29);
       return result3 === void 0 ? defaultValue : result3;
     }
-    function hasIn(object3, path26) {
-      return object3 != null && hasPath(object3, path26, baseHasIn);
+    function hasIn(object3, path29) {
+      return object3 != null && hasPath(object3, path29, baseHasIn);
     }
     function keys2(object3) {
       return isArrayLike(object3) ? arrayLikeKeys(object3) : baseKeys(object3);
@@ -45201,8 +45201,8 @@ var require_lodash8 = __commonJS({
     function identity2(value) {
       return value;
     }
-    function property2(path26) {
-      return isKey(path26) ? baseProperty(toKey(path26)) : basePropertyDeep(path26);
+    function property2(path29) {
+      return isKey(path29) ? baseProperty(toKey(path29)) : basePropertyDeep(path29);
     }
     module2.exports = groupBy;
   }
@@ -47324,8 +47324,8 @@ var require_minimatch = __commonJS({
       return new Minimatch(pattern, options).match(p);
     };
     module2.exports = minimatch;
-    var path26 = require_path();
-    minimatch.sep = path26.sep;
+    var path29 = require_path();
+    minimatch.sep = path29.sep;
     var GLOBSTAR = /* @__PURE__ */ Symbol("globstar **");
     minimatch.GLOBSTAR = GLOBSTAR;
     var expand = require_brace_expansion();
@@ -47931,8 +47931,8 @@ var require_minimatch = __commonJS({
         if (this.empty) return f === "";
         if (f === "/" && partial3) return true;
         const options = this.options;
-        if (path26.sep !== "/") {
-          f = f.split(path26.sep).join("/");
+        if (path29.sep !== "/") {
+          f = f.split(path29.sep).join("/");
         }
         f = f.split(slashSplit);
         this.debug(this.pattern, "split", f);
@@ -48030,8 +48030,8 @@ var require_readdir_glob = __commonJS({
         });
       });
     }
-    async function* exploreWalkAsync(dir, path26, followSymlinks, useStat, shouldSkip, strict) {
-      let files = await readdir(path26 + dir, strict);
+    async function* exploreWalkAsync(dir, path29, followSymlinks, useStat, shouldSkip, strict) {
+      let files = await readdir(path29 + dir, strict);
       for (const file of files) {
         let name = file.name;
         if (name === void 0) {
@@ -48040,7 +48040,7 @@ var require_readdir_glob = __commonJS({
         }
         const filename = dir + "/" + name;
         const relative = filename.slice(1);
-        const absolute = path26 + "/" + relative;
+        const absolute = path29 + "/" + relative;
         let stats = null;
         if (useStat || followSymlinks) {
           stats = await stat(absolute, followSymlinks);
@@ -48054,15 +48054,15 @@ var require_readdir_glob = __commonJS({
         if (stats.isDirectory()) {
           if (!shouldSkip(relative)) {
             yield { relative, absolute, stats };
-            yield* exploreWalkAsync(filename, path26, followSymlinks, useStat, shouldSkip, false);
+            yield* exploreWalkAsync(filename, path29, followSymlinks, useStat, shouldSkip, false);
           }
         } else {
           yield { relative, absolute, stats };
         }
       }
     }
-    async function* explore(path26, followSymlinks, useStat, shouldSkip) {
-      yield* exploreWalkAsync("", path26, followSymlinks, useStat, shouldSkip, true);
+    async function* explore(path29, followSymlinks, useStat, shouldSkip) {
+      yield* exploreWalkAsync("", path29, followSymlinks, useStat, shouldSkip, true);
     }
     function readOptions(options) {
       return {
@@ -50100,14 +50100,14 @@ var require_polyfills = __commonJS({
       fs.fstatSync = statFixSync(fs.fstatSync);
       fs.lstatSync = statFixSync(fs.lstatSync);
       if (fs.chmod && !fs.lchmod) {
-        fs.lchmod = function(path26, mode, cb2) {
+        fs.lchmod = function(path29, mode, cb2) {
           if (cb2) process.nextTick(cb2);
         };
         fs.lchmodSync = function() {
         };
       }
       if (fs.chown && !fs.lchown) {
-        fs.lchown = function(path26, uid, gid, cb2) {
+        fs.lchown = function(path29, uid, gid, cb2) {
           if (cb2) process.nextTick(cb2);
         };
         fs.lchownSync = function() {
@@ -50174,9 +50174,9 @@ var require_polyfills = __commonJS({
         };
       })(fs.readSync);
       function patchLchmod(fs2) {
-        fs2.lchmod = function(path26, mode, callback) {
+        fs2.lchmod = function(path29, mode, callback) {
           fs2.open(
-            path26,
+            path29,
             constants2.O_WRONLY | constants2.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -50192,8 +50192,8 @@ var require_polyfills = __commonJS({
             }
           );
         };
-        fs2.lchmodSync = function(path26, mode) {
-          var fd = fs2.openSync(path26, constants2.O_WRONLY | constants2.O_SYMLINK, mode);
+        fs2.lchmodSync = function(path29, mode) {
+          var fd = fs2.openSync(path29, constants2.O_WRONLY | constants2.O_SYMLINK, mode);
           var threw = true;
           var ret2;
           try {
@@ -50214,8 +50214,8 @@ var require_polyfills = __commonJS({
       }
       function patchLutimes(fs2) {
         if (constants2.hasOwnProperty("O_SYMLINK") && fs2.futimes) {
-          fs2.lutimes = function(path26, at, mt, cb2) {
-            fs2.open(path26, constants2.O_SYMLINK, function(er, fd) {
+          fs2.lutimes = function(path29, at, mt, cb2) {
+            fs2.open(path29, constants2.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb2) cb2(er);
                 return;
@@ -50227,8 +50227,8 @@ var require_polyfills = __commonJS({
               });
             });
           };
-          fs2.lutimesSync = function(path26, at, mt) {
-            var fd = fs2.openSync(path26, constants2.O_SYMLINK);
+          fs2.lutimesSync = function(path29, at, mt) {
+            var fd = fs2.openSync(path29, constants2.O_SYMLINK);
             var ret2;
             var threw = true;
             try {
@@ -50346,11 +50346,11 @@ var require_legacy_streams = __commonJS({
         ReadStream,
         WriteStream
       };
-      function ReadStream(path26, options) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path26, options);
+      function ReadStream(path29, options) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path29, options);
         Stream.call(this);
         var self2 = this;
-        this.path = path26;
+        this.path = path29;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -50395,10 +50395,10 @@ var require_legacy_streams = __commonJS({
           self2._read();
         });
       }
-      function WriteStream(path26, options) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path26, options);
+      function WriteStream(path29, options) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path29, options);
         Stream.call(this);
-        this.path = path26;
+        this.path = path29;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -50541,14 +50541,14 @@ var require_graceful_fs = __commonJS({
       fs2.createWriteStream = createWriteStream;
       var fs$readFile = fs2.readFile;
       fs2.readFile = readFile;
-      function readFile(path26, options, cb2) {
+      function readFile(path29, options, cb2) {
         if (typeof options === "function")
           cb2 = options, options = null;
-        return go$readFile(path26, options, cb2);
-        function go$readFile(path27, options2, cb3, startTime) {
-          return fs$readFile(path27, options2, function(err) {
+        return go$readFile(path29, options, cb2);
+        function go$readFile(path30, options2, cb3, startTime) {
+          return fs$readFile(path30, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path27, options2, cb3], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path30, options2, cb3], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb3 === "function")
                 cb3.apply(this, arguments);
@@ -50558,14 +50558,14 @@ var require_graceful_fs = __commonJS({
       }
       var fs$writeFile = fs2.writeFile;
       fs2.writeFile = writeFile;
-      function writeFile(path26, data, options, cb2) {
+      function writeFile(path29, data, options, cb2) {
         if (typeof options === "function")
           cb2 = options, options = null;
-        return go$writeFile(path26, data, options, cb2);
-        function go$writeFile(path27, data2, options2, cb3, startTime) {
-          return fs$writeFile(path27, data2, options2, function(err) {
+        return go$writeFile(path29, data, options, cb2);
+        function go$writeFile(path30, data2, options2, cb3, startTime) {
+          return fs$writeFile(path30, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path27, data2, options2, cb3], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path30, data2, options2, cb3], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb3 === "function")
                 cb3.apply(this, arguments);
@@ -50576,14 +50576,14 @@ var require_graceful_fs = __commonJS({
       var fs$appendFile = fs2.appendFile;
       if (fs$appendFile)
         fs2.appendFile = appendFile;
-      function appendFile(path26, data, options, cb2) {
+      function appendFile(path29, data, options, cb2) {
         if (typeof options === "function")
           cb2 = options, options = null;
-        return go$appendFile(path26, data, options, cb2);
-        function go$appendFile(path27, data2, options2, cb3, startTime) {
-          return fs$appendFile(path27, data2, options2, function(err) {
+        return go$appendFile(path29, data, options, cb2);
+        function go$appendFile(path30, data2, options2, cb3, startTime) {
+          return fs$appendFile(path30, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path27, data2, options2, cb3], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path30, data2, options2, cb3], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb3 === "function")
                 cb3.apply(this, arguments);
@@ -50614,31 +50614,31 @@ var require_graceful_fs = __commonJS({
       var fs$readdir = fs2.readdir;
       fs2.readdir = readdir;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir(path26, options, cb2) {
+      function readdir(path29, options, cb2) {
         if (typeof options === "function")
           cb2 = options, options = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path27, options2, cb3, startTime) {
-          return fs$readdir(path27, fs$readdirCallback(
-            path27,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path30, options2, cb3, startTime) {
+          return fs$readdir(path30, fs$readdirCallback(
+            path30,
             options2,
             cb3,
             startTime
           ));
-        } : function go$readdir2(path27, options2, cb3, startTime) {
-          return fs$readdir(path27, options2, fs$readdirCallback(
-            path27,
+        } : function go$readdir2(path30, options2, cb3, startTime) {
+          return fs$readdir(path30, options2, fs$readdirCallback(
+            path30,
             options2,
             cb3,
             startTime
           ));
         };
-        return go$readdir(path26, options, cb2);
-        function fs$readdirCallback(path27, options2, cb3, startTime) {
+        return go$readdir(path29, options, cb2);
+        function fs$readdirCallback(path30, options2, cb3, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path27, options2, cb3],
+                [path30, options2, cb3],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -50709,7 +50709,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path26, options) {
+      function ReadStream(path29, options) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -50729,7 +50729,7 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function WriteStream(path26, options) {
+      function WriteStream(path29, options) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -50747,22 +50747,22 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function createReadStream2(path26, options) {
-        return new fs2.ReadStream(path26, options);
+      function createReadStream2(path29, options) {
+        return new fs2.ReadStream(path29, options);
       }
-      function createWriteStream(path26, options) {
-        return new fs2.WriteStream(path26, options);
+      function createWriteStream(path29, options) {
+        return new fs2.WriteStream(path29, options);
       }
       var fs$open = fs2.open;
       fs2.open = open2;
-      function open2(path26, flags, mode, cb2) {
+      function open2(path29, flags, mode, cb2) {
         if (typeof mode === "function")
           cb2 = mode, mode = null;
-        return go$open(path26, flags, mode, cb2);
-        function go$open(path27, flags2, mode2, cb3, startTime) {
-          return fs$open(path27, flags2, mode2, function(err, fd) {
+        return go$open(path29, flags, mode, cb2);
+        function go$open(path30, flags2, mode2, cb3, startTime) {
+          return fs$open(path30, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path27, flags2, mode2, cb3], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path30, flags2, mode2, cb3], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb3 === "function")
                 cb3.apply(this, arguments);
@@ -52686,22 +52686,22 @@ var require_lazystream = __commonJS({
 // node_modules/normalize-path/index.js
 var require_normalize_path = __commonJS({
   "node_modules/normalize-path/index.js"(exports2, module2) {
-    module2.exports = function(path26, stripTrailing) {
-      if (typeof path26 !== "string") {
+    module2.exports = function(path29, stripTrailing) {
+      if (typeof path29 !== "string") {
         throw new TypeError("expected path to be a string");
       }
-      if (path26 === "\\" || path26 === "/") return "/";
-      var len = path26.length;
-      if (len <= 1) return path26;
+      if (path29 === "\\" || path29 === "/") return "/";
+      var len = path29.length;
+      if (len <= 1) return path29;
       var prefix = "";
-      if (len > 4 && path26[3] === "\\") {
-        var ch = path26[2];
-        if ((ch === "?" || ch === ".") && path26.slice(0, 2) === "\\\\") {
-          path26 = path26.slice(2);
+      if (len > 4 && path29[3] === "\\") {
+        var ch = path29[2];
+        if ((ch === "?" || ch === ".") && path29.slice(0, 2) === "\\\\") {
+          path29 = path29.slice(2);
           prefix = "//";
         }
       }
-      var segs = path26.split(/[/\\]+/);
+      var segs = path29.split(/[/\\]+/);
       if (stripTrailing !== false && segs[segs.length - 1] === "") {
         segs.pop();
       }
@@ -56161,7 +56161,7 @@ var require_minimatch2 = __commonJS({
   "node_modules/minimatch/minimatch.js"(exports2, module2) {
     module2.exports = minimatch;
     minimatch.Minimatch = Minimatch;
-    var path26 = (function() {
+    var path29 = (function() {
       try {
         return __require("path");
       } catch (e) {
@@ -56169,7 +56169,7 @@ var require_minimatch2 = __commonJS({
     })() || {
       sep: "/"
     };
-    minimatch.sep = path26.sep;
+    minimatch.sep = path29.sep;
     var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {};
     var expand = require_brace_expansion2();
     var plTypes = {
@@ -56258,8 +56258,8 @@ var require_minimatch2 = __commonJS({
       assertValidPattern(pattern);
       if (!options) options = {};
       pattern = pattern.trim();
-      if (!options.allowWindowsEscape && path26.sep !== "/") {
-        pattern = pattern.split(path26.sep).join("/");
+      if (!options.allowWindowsEscape && path29.sep !== "/") {
+        pattern = pattern.split(path29.sep).join("/");
       }
       this.options = options;
       this.maxGlobstarRecursion = options.maxGlobstarRecursion !== void 0 ? options.maxGlobstarRecursion : 200;
@@ -56630,8 +56630,8 @@ var require_minimatch2 = __commonJS({
       if (this.empty) return f === "";
       if (f === "/" && partial3) return true;
       var options = this.options;
-      if (path26.sep !== "/") {
-        f = f.split(path26.sep).join("/");
+      if (path29.sep !== "/") {
+        f = f.split(path29.sep).join("/");
       }
       f = f.split(slashSplit);
       this.debug(this.pattern, "split", f);
@@ -56832,12 +56832,12 @@ var require_minimatch2 = __commonJS({
 var require_path_is_absolute = __commonJS({
   "node_modules/path-is-absolute/index.js"(exports2, module2) {
     "use strict";
-    function posix(path26) {
-      return path26.charAt(0) === "/";
+    function posix(path29) {
+      return path29.charAt(0) === "/";
     }
-    function win32(path26) {
+    function win32(path29) {
       var splitDeviceRe = /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/]+[^\\\/]+)?([\\\/])?([\s\S]*?)$/;
-      var result3 = splitDeviceRe.exec(path26);
+      var result3 = splitDeviceRe.exec(path29);
       var device = result3[1] || "";
       var isUnc = Boolean(device && device.charAt(1) !== ":");
       return Boolean(result3[2] || isUnc);
@@ -56862,7 +56862,7 @@ var require_common2 = __commonJS({
       return Object.prototype.hasOwnProperty.call(obj2, field);
     }
     var fs = __require("fs");
-    var path26 = __require("path");
+    var path29 = __require("path");
     var minimatch = require_minimatch2();
     var isAbsolute = require_path_is_absolute();
     var Minimatch = minimatch.Minimatch;
@@ -56927,11 +56927,11 @@ var require_common2 = __commonJS({
       if (!ownProp(options, "cwd"))
         self2.cwd = cwd;
       else {
-        self2.cwd = path26.resolve(options.cwd);
+        self2.cwd = path29.resolve(options.cwd);
         self2.changedCwd = self2.cwd !== cwd;
       }
-      self2.root = options.root || path26.resolve(self2.cwd, "/");
-      self2.root = path26.resolve(self2.root);
+      self2.root = options.root || path29.resolve(self2.cwd, "/");
+      self2.root = path29.resolve(self2.root);
       if (process.platform === "win32")
         self2.root = self2.root.replace(/\\/g, "/");
       self2.cwdAbs = isAbsolute(self2.cwd) ? self2.cwd : makeAbs(self2, self2.cwd);
@@ -57013,30 +57013,30 @@ var require_common2 = __commonJS({
     function makeAbs(self2, f) {
       var abs = f;
       if (f.charAt(0) === "/") {
-        abs = path26.join(self2.root, f);
+        abs = path29.join(self2.root, f);
       } else if (isAbsolute(f) || f === "") {
         abs = f;
       } else if (self2.changedCwd) {
-        abs = path26.resolve(self2.cwd, f);
+        abs = path29.resolve(self2.cwd, f);
       } else {
-        abs = path26.resolve(f);
+        abs = path29.resolve(f);
       }
       if (process.platform === "win32")
         abs = abs.replace(/\\/g, "/");
       return abs;
     }
-    function isIgnored(self2, path27) {
+    function isIgnored(self2, path30) {
       if (!self2.ignore.length)
         return false;
       return self2.ignore.some(function(item) {
-        return item.matcher.match(path27) || !!(item.gmatcher && item.gmatcher.match(path27));
+        return item.matcher.match(path30) || !!(item.gmatcher && item.gmatcher.match(path30));
       });
     }
-    function childrenIgnored(self2, path27) {
+    function childrenIgnored(self2, path30) {
       if (!self2.ignore.length)
         return false;
       return self2.ignore.some(function(item) {
-        return !!(item.gmatcher && item.gmatcher.match(path27));
+        return !!(item.gmatcher && item.gmatcher.match(path30));
       });
     }
   }
@@ -57052,7 +57052,7 @@ var require_sync = __commonJS({
     var Minimatch = minimatch.Minimatch;
     var Glob = require_glob().Glob;
     var util = __require("util");
-    var path26 = __require("path");
+    var path29 = __require("path");
     var assert2 = __require("assert");
     var isAbsolute = require_path_is_absolute();
     var common = require_common2();
@@ -57181,7 +57181,7 @@ var require_sync = __commonJS({
               e = prefix + e;
           }
           if (e.charAt(0) === "/" && !this.nomount) {
-            e = path26.join(this.root, e);
+            e = path29.join(this.root, e);
           }
           this._emitMatch(index, e);
         }
@@ -57332,9 +57332,9 @@ var require_sync = __commonJS({
       if (prefix && isAbsolute(prefix) && !this.nomount) {
         var trail = /[\/\\]$/.test(prefix);
         if (prefix.charAt(0) === "/") {
-          prefix = path26.join(this.root, prefix);
+          prefix = path29.join(this.root, prefix);
         } else {
-          prefix = path26.resolve(this.root, prefix);
+          prefix = path29.resolve(this.root, prefix);
           if (trail)
             prefix += "/";
         }
@@ -57526,7 +57526,7 @@ var require_glob = __commonJS({
     var Minimatch = minimatch.Minimatch;
     var inherits2 = require_inherits();
     var EE = __require("events").EventEmitter;
-    var path26 = __require("path");
+    var path29 = __require("path");
     var assert2 = __require("assert");
     var isAbsolute = require_path_is_absolute();
     var globSync = require_sync();
@@ -57808,7 +57808,7 @@ var require_glob = __commonJS({
               e = prefix + e;
           }
           if (e.charAt(0) === "/" && !this.nomount) {
-            e = path26.join(this.root, e);
+            e = path29.join(this.root, e);
           }
           this._emitMatch(index, e);
         }
@@ -57997,9 +57997,9 @@ var require_glob = __commonJS({
       if (prefix && isAbsolute(prefix) && !this.nomount) {
         var trail = /[\/\\]$/.test(prefix);
         if (prefix.charAt(0) === "/") {
-          prefix = path26.join(this.root, prefix);
+          prefix = path29.join(this.root, prefix);
         } else {
-          prefix = path26.resolve(this.root, prefix);
+          prefix = path29.resolve(this.root, prefix);
           if (trail)
             prefix += "/";
         }
@@ -58077,7 +58077,7 @@ var require_glob = __commonJS({
 var require_file = __commonJS({
   "node_modules/archiver-utils/file.js"(exports2, module2) {
     var fs = require_graceful_fs();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var flatten3 = require_lodash10();
     var difference = require_lodash11();
     var union2 = require_lodash12();
@@ -58102,7 +58102,7 @@ var require_file = __commonJS({
       return result3;
     };
     file.exists = function() {
-      var filepath = path26.join.apply(path26, arguments);
+      var filepath = path29.join.apply(path29, arguments);
       return fs.existsSync(filepath);
     };
     file.expand = function(...args) {
@@ -58116,7 +58116,7 @@ var require_file = __commonJS({
       });
       if (options.filter) {
         matches = matches.filter(function(filepath) {
-          filepath = path26.join(options.cwd || "", filepath);
+          filepath = path29.join(options.cwd || "", filepath);
           try {
             if (typeof options.filter === "function") {
               return options.filter(filepath);
@@ -58133,7 +58133,7 @@ var require_file = __commonJS({
     file.expandMapping = function(patterns, destBase, options) {
       options = Object.assign({
         rename: function(destBase2, destPath) {
-          return path26.join(destBase2 || "", destPath);
+          return path29.join(destBase2 || "", destPath);
         }
       }, options);
       var files = [];
@@ -58141,14 +58141,14 @@ var require_file = __commonJS({
       file.expand(options, patterns).forEach(function(src) {
         var destPath = src;
         if (options.flatten) {
-          destPath = path26.basename(destPath);
+          destPath = path29.basename(destPath);
         }
         if (options.ext) {
           destPath = destPath.replace(/(\.[^\/]*)?$/, options.ext);
         }
         var dest = options.rename(destBase, destPath, options);
         if (options.cwd) {
-          src = path26.join(options.cwd, src);
+          src = path29.join(options.cwd, src);
         }
         dest = dest.replace(pathSeparatorRe, "/");
         src = src.replace(pathSeparatorRe, "/");
@@ -58230,7 +58230,7 @@ var require_file = __commonJS({
 var require_archiver_utils = __commonJS({
   "node_modules/archiver-utils/index.js"(exports2, module2) {
     var fs = require_graceful_fs();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var nutil = __require("util");
     var lazystream = require_lazystream();
     var normalizePath = require_normalize_path();
@@ -58320,11 +58320,11 @@ var require_archiver_utils = __commonJS({
           if (!file) {
             return callback(null, results);
           }
-          filepath = path26.join(dirpath, file);
+          filepath = path29.join(dirpath, file);
           fs.stat(filepath, function(err2, stats) {
             results.push({
               path: filepath,
-              relative: path26.relative(base, filepath).replace(/\\/g, "/"),
+              relative: path29.relative(base, filepath).replace(/\\/g, "/"),
               stats
             });
             if (stats && stats.isDirectory()) {
@@ -58383,7 +58383,7 @@ var require_core2 = __commonJS({
     var fs = __require("fs");
     var glob = require_readdir_glob();
     var async = require_async();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var util = require_archiver_utils();
     var inherits2 = __require("util").inherits;
     var ArchiverError = require_error();
@@ -58659,9 +58659,9 @@ var require_core2 = __commonJS({
         task.source = Buffer.concat([]);
       } else if (stats.isSymbolicLink() && this._moduleSupports("symlink")) {
         var linkPath = fs.readlinkSync(task.filepath);
-        var dirName = path26.dirname(task.filepath);
+        var dirName = path29.dirname(task.filepath);
         task.data.type = "symlink";
-        task.data.linkname = path26.relative(dirName, path26.resolve(dirName, linkPath));
+        task.data.linkname = path29.relative(dirName, path29.resolve(dirName, linkPath));
         task.data.sourceType = "buffer";
         task.source = Buffer.concat([]);
       } else {
@@ -59278,11 +59278,11 @@ var require_zip_archive_entry = __commonJS({
     ZipArchiveEntry.prototype.getVersionNeededToExtract = function() {
       return this.minver;
     };
-    ZipArchiveEntry.prototype.setComment = function(comment3) {
-      if (Buffer.byteLength(comment3) !== comment3.length) {
+    ZipArchiveEntry.prototype.setComment = function(comment4) {
+      if (Buffer.byteLength(comment4) !== comment4.length) {
         this.getGeneralPurposeBit().useUTF8ForNames(true);
       }
-      this.comment = comment3;
+      this.comment = comment4;
     };
     ZipArchiveEntry.prototype.setCompressedSize = function(size2) {
       if (size2 < 0) {
@@ -60135,10 +60135,10 @@ var require_zip_archive_output_stream = __commonJS({
       this.write(zipUtil.getShortBytes(records));
       this.write(zipUtil.getLongBytes(size2));
       this.write(zipUtil.getLongBytes(offset));
-      var comment3 = this.getComment();
-      var commentLength = Buffer.byteLength(comment3);
+      var comment4 = this.getComment();
+      var commentLength = Buffer.byteLength(comment4);
       this.write(zipUtil.getShortBytes(commentLength));
-      this.write(comment3);
+      this.write(comment4);
     };
     ZipArchiveOutputStream.prototype._writeCentralDirectoryZip64 = function() {
       this.write(zipUtil.getLongBytes(constants2.SIG_ZIP64_EOCD));
@@ -60185,15 +60185,15 @@ var require_zip_archive_output_stream = __commonJS({
       this.write(zipUtil.getLongBytes(compressedSize));
       this.write(zipUtil.getLongBytes(size2));
       var name = ae.getName();
-      var comment3 = ae.getComment();
+      var comment4 = ae.getComment();
       var extra = ae.getCentralDirectoryExtra();
       if (gpb.usesUTF8ForNames()) {
         name = Buffer.from(name);
-        comment3 = Buffer.from(comment3);
+        comment4 = Buffer.from(comment4);
       }
       this.write(zipUtil.getShortBytes(name.length));
       this.write(zipUtil.getShortBytes(extra.length));
-      this.write(zipUtil.getShortBytes(comment3.length));
+      this.write(zipUtil.getShortBytes(comment4.length));
       this.write(constants2.SHORT_ZERO);
       this.write(zipUtil.getShortBytes(ae.getInternalAttributes()));
       this.write(zipUtil.getLongBytes(ae.getExternalAttributes()));
@@ -60204,7 +60204,7 @@ var require_zip_archive_output_stream = __commonJS({
       }
       this.write(name);
       this.write(extra);
-      this.write(comment3);
+      this.write(comment4);
     };
     ZipArchiveOutputStream.prototype._writeDataDescriptor = function(ae) {
       this.write(zipUtil.getLongBytes(constants2.SIG_DD));
@@ -60251,14 +60251,14 @@ var require_zip_archive_output_stream = __commonJS({
       this.write(extra);
       ae._offsets.contents = this.offset;
     };
-    ZipArchiveOutputStream.prototype.getComment = function(comment3) {
+    ZipArchiveOutputStream.prototype.getComment = function(comment4) {
       return this._archive.comment !== null ? this._archive.comment : "";
     };
     ZipArchiveOutputStream.prototype.isZip64 = function() {
       return this._archive.forceZip64 || this._entries.length > constants2.ZIP64_MAGIC_SHORT || this._archive.centralLength > constants2.ZIP64_MAGIC || this._archive.centralOffset > constants2.ZIP64_MAGIC;
     };
-    ZipArchiveOutputStream.prototype.setComment = function(comment3) {
-      this._archive.comment = comment3;
+    ZipArchiveOutputStream.prototype.setComment = function(comment4) {
+      this._archive.comment = comment4;
     };
   }
 });
@@ -60279,7 +60279,7 @@ var require_compress_commons = __commonJS({
 var require_file2 = __commonJS({
   "node_modules/zip-stream/node_modules/archiver-utils/file.js"(exports2, module2) {
     var fs = require_graceful_fs();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var flatten3 = require_lodash10();
     var difference = require_lodash11();
     var union2 = require_lodash12();
@@ -60304,7 +60304,7 @@ var require_file2 = __commonJS({
       return result3;
     };
     file.exists = function() {
-      var filepath = path26.join.apply(path26, arguments);
+      var filepath = path29.join.apply(path29, arguments);
       return fs.existsSync(filepath);
     };
     file.expand = function(...args) {
@@ -60318,7 +60318,7 @@ var require_file2 = __commonJS({
       });
       if (options.filter) {
         matches = matches.filter(function(filepath) {
-          filepath = path26.join(options.cwd || "", filepath);
+          filepath = path29.join(options.cwd || "", filepath);
           try {
             if (typeof options.filter === "function") {
               return options.filter(filepath);
@@ -60335,7 +60335,7 @@ var require_file2 = __commonJS({
     file.expandMapping = function(patterns, destBase, options) {
       options = Object.assign({
         rename: function(destBase2, destPath) {
-          return path26.join(destBase2 || "", destPath);
+          return path29.join(destBase2 || "", destPath);
         }
       }, options);
       var files = [];
@@ -60343,14 +60343,14 @@ var require_file2 = __commonJS({
       file.expand(options, patterns).forEach(function(src) {
         var destPath = src;
         if (options.flatten) {
-          destPath = path26.basename(destPath);
+          destPath = path29.basename(destPath);
         }
         if (options.ext) {
           destPath = destPath.replace(/(\.[^\/]*)?$/, options.ext);
         }
         var dest = options.rename(destBase, destPath, options);
         if (options.cwd) {
-          src = path26.join(options.cwd, src);
+          src = path29.join(options.cwd, src);
         }
         dest = dest.replace(pathSeparatorRe, "/");
         src = src.replace(pathSeparatorRe, "/");
@@ -60432,7 +60432,7 @@ var require_file2 = __commonJS({
 var require_archiver_utils2 = __commonJS({
   "node_modules/zip-stream/node_modules/archiver-utils/index.js"(exports2, module2) {
     var fs = require_graceful_fs();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var lazystream = require_lazystream();
     var normalizePath = require_normalize_path();
     var defaults = require_lodash9();
@@ -60519,11 +60519,11 @@ var require_archiver_utils2 = __commonJS({
           if (!file) {
             return callback(null, results);
           }
-          filepath = path26.join(dirpath, file);
+          filepath = path29.join(dirpath, file);
           fs.stat(filepath, function(err2, stats) {
             results.push({
               path: filepath,
-              relative: path26.relative(base, filepath).replace(/\\/g, "/"),
+              relative: path29.relative(base, filepath).replace(/\\/g, "/"),
               stats
             });
             if (stats && stats.isDirectory()) {
@@ -62181,14 +62181,14 @@ var require_sheet_comments_writer = __commonJS({
           '<?xml version="1.0" encoding="UTF-8"?><xml xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:x="urn:schemas-microsoft-com:office:excel"><o:shapelayout v:ext="edit"><o:idmap v:ext="edit" data="1" /></o:shapelayout><v:shapetype id="_x0000_t202" coordsize="21600,21600" o:spt="202" path="m,l,21600r21600,l21600,xe"><v:stroke joinstyle="miter" /><v:path gradientshapeok="t" o:connecttype="rect" /></v:shapetype>'
         );
       }
-      _writeComment(comment3, index) {
+      _writeComment(comment4, index) {
         const commentXform = new CommentXform();
         const commentsXmlStream = new XmlStream();
-        commentXform.render(commentsXmlStream, comment3);
+        commentXform.render(commentsXmlStream, comment4);
         this.commentsStream.write(commentsXmlStream.xml);
         const vmlShapeXform = new VmlShapeXform();
         const vmlXmlStream = new XmlStream();
-        vmlShapeXform.render(vmlXmlStream, comment3, index);
+        vmlShapeXform.render(vmlXmlStream, comment4, index);
         this.vmlStream.write(vmlXmlStream.xml);
       }
       _writeClose() {
@@ -62207,8 +62207,8 @@ var require_sheet_comments_writer = __commonJS({
           comments.forEach((item) => {
             item.refAddress = colCache.decodeAddress(item.ref);
           });
-          comments.forEach((comment3) => {
-            this._writeComment(comment3, this.count);
+          comments.forEach((comment4) => {
+            this._writeComment(comment4, this.count);
             this.count += 1;
           });
         }
@@ -62812,9 +62812,9 @@ var require_workbook_writer = __commonJS({
       get definedNames() {
         return this._definedNames;
       }
-      _openStream(path26) {
+      _openStream(path29) {
         const stream = new StreamBuf({ bufSize: 65536, batch: true });
-        this.zip.append(stream, { name: path26 });
+        this.zip.append(stream, { name: path29 });
         stream.on("finish", () => {
           stream.emit("zipped");
         });
@@ -69241,7 +69241,7 @@ var require_traverse = __commonJS({
       return options == null ? emptyNull : options;
     }
     function walk2(root2, cb2) {
-      var path26 = [];
+      var path29 = [];
       var parents = [];
       var alive = true;
       var options = arguments.length > 2 ? arguments[2] : emptyNull;
@@ -69254,13 +69254,13 @@ var require_traverse = __commonJS({
         var state = {
           node: node2,
           node_,
-          path: [].concat(path26),
+          path: [].concat(path29),
           parent: parents[parents.length - 1],
           parents,
-          key: path26[path26.length - 1],
+          key: path29[path29.length - 1],
           removedKeys: { __proto__: null },
-          isRoot: path26.length === 0,
-          level: path26.length,
+          isRoot: path29.length === 0,
+          level: path29.length,
           circular: null,
           update: function(x, stopHere) {
             if (!state.isRoot && !wasSpliced(originalKey, splicedSiblings)) {
@@ -69363,7 +69363,7 @@ var require_traverse = __commonJS({
               return;
             }
             var key = shiftedKey(listedKey, splicedChildren);
-            path26[path26.length] = key;
+            path29[path29.length] = key;
             if (modifiers.pre) {
               modifiers.pre.call(state, state.node[key], key);
             }
@@ -69379,7 +69379,7 @@ var require_traverse = __commonJS({
             if (modifiers.post) {
               modifiers.post.call(state, child);
             }
-            path26.pop();
+            path29.pop();
           });
           parents.pop();
         }
@@ -77555,8 +77555,8 @@ var require_parse = __commonJS({
       var self2 = this;
       return self2.pull(18).then(function(data) {
         var vars = binary.parse(data).word16lu("diskNumber").word16lu("diskStart").word16lu("numberOfRecordsOnDisk").word16lu("numberOfRecords").word32lu("sizeOfCentralDirectory").word32lu("offsetToStartOfCentralDirectory").word16lu("commentLength").vars;
-        return self2.pull(vars.commentLength).then(function(comment3) {
-          comment3 = comment3.toString("utf8");
+        return self2.pull(vars.commentLength).then(function(comment4) {
+          comment4 = comment4.toString("utf8");
           self2.end();
           self2.push(null);
         });
@@ -79648,7 +79648,7 @@ var require_dir_reader = __commonJS({
     module2.exports = DirReader;
     var fs = require_graceful_fs();
     var inherits2 = require_inherits();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var Reader = require_reader();
     var assert2 = __require("assert").ok;
     inherits2(DirReader, Reader);
@@ -79703,7 +79703,7 @@ var require_dir_reader = __commonJS({
         }
         return;
       }
-      var p = path26.resolve(self2._path, self2.entries[self2._index]);
+      var p = path29.resolve(self2._path, self2.entries[self2._index]);
       assert2(p !== self2._path);
       assert2(self2.entries[self2._index]);
       self2._currentEntry = p;
@@ -79711,12 +79711,12 @@ var require_dir_reader = __commonJS({
         if (er) return self2.error(er);
         var who = self2._proxy || self2;
         stat.path = p;
-        stat.basename = path26.basename(p);
-        stat.dirname = path26.dirname(p);
+        stat.basename = path29.basename(p);
+        stat.dirname = path29.dirname(p);
         var childProps = self2.getChildProps.call(who, stat);
         childProps.path = p;
-        childProps.basename = path26.basename(p);
-        childProps.dirname = path26.dirname(p);
+        childProps.basename = path29.basename(p);
+        childProps.dirname = path29.dirname(p);
         var entry = Reader(childProps, stat);
         self2._currentEntry = entry;
         entry.on("pause", function(who2) {
@@ -80053,7 +80053,7 @@ var require_reader = __commonJS({
     var fs = require_graceful_fs();
     var Stream = __require("stream").Stream;
     var inherits2 = require_inherits();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var getType = require_get_type();
     var hardLinks = Reader.hardLinks = {};
     var Abstract = require_abstract();
@@ -80118,7 +80118,7 @@ var require_reader = __commonJS({
       self2.depth = props.depth = props.depth || 0;
       self2.parent = props.parent || null;
       self2.root = props.root || props.parent && props.parent.root || self2;
-      self2._path = self2.path = path26.resolve(props.path);
+      self2._path = self2.path = path29.resolve(props.path);
       if (process.platform === "win32") {
         self2.path = self2._path = self2.path.replace(/\?/g, "_");
         if (self2._path.length >= 260) {
@@ -80126,8 +80126,8 @@ var require_reader = __commonJS({
           self2._path = "\\\\?\\" + self2.path.replace(/\//g, "\\");
         }
       }
-      self2.basename = props.basename = path26.basename(self2.path);
-      self2.dirname = props.dirname = path26.dirname(self2.path);
+      self2.basename = props.basename = path29.basename(self2.path);
+      self2.dirname = props.dirname = path29.dirname(self2.path);
       props.parent = props.root = null;
       self2.size = props.size;
       self2.filter = typeof props.filter === "function" ? props.filter : null;
@@ -80237,7 +80237,7 @@ var require_rimraf = __commonJS({
     module2.exports = rimraf;
     rimraf.sync = rimrafSync;
     var assert2 = __require("assert");
-    var path26 = __require("path");
+    var path29 = __require("path");
     var fs = __require("fs");
     var glob = void 0;
     try {
@@ -80428,7 +80428,7 @@ var require_rimraf = __commonJS({
           return options.rmdir(p, cb2);
         var errState;
         files.forEach(function(f) {
-          rimraf(path26.join(p, f), options, function(er2) {
+          rimraf(path29.join(p, f), options, function(er2) {
             if (errState)
               return;
             if (er2)
@@ -80505,7 +80505,7 @@ var require_rimraf = __commonJS({
       assert2(p);
       assert2(options);
       options.readdirSync(p).forEach(function(f) {
-        rimrafSync(path26.join(p, f), options);
+        rimrafSync(path29.join(p, f), options);
       });
       var retries = isWindows ? 100 : 1;
       var i = 0;
@@ -80527,7 +80527,7 @@ var require_rimraf = __commonJS({
 // node_modules/mkdirp/index.js
 var require_mkdirp = __commonJS({
   "node_modules/mkdirp/index.js"(exports2, module2) {
-    var path26 = __require("path");
+    var path29 = __require("path");
     var fs = __require("fs");
     var _0777 = parseInt("0777", 8);
     module2.exports = mkdirP.mkdirp = mkdirP.mkdirP = mkdirP;
@@ -80547,7 +80547,7 @@ var require_mkdirp = __commonJS({
       var cb2 = f || /* istanbul ignore next */
       function() {
       };
-      p = path26.resolve(p);
+      p = path29.resolve(p);
       xfs.mkdir(p, mode, function(er) {
         if (!er) {
           made = made || p;
@@ -80555,8 +80555,8 @@ var require_mkdirp = __commonJS({
         }
         switch (er.code) {
           case "ENOENT":
-            if (path26.dirname(p) === p) return cb2(er);
-            mkdirP(path26.dirname(p), opts, function(er2, made2) {
+            if (path29.dirname(p) === p) return cb2(er);
+            mkdirP(path29.dirname(p), opts, function(er2, made2) {
               if (er2) cb2(er2, made2);
               else mkdirP(p, opts, cb2, made2);
             });
@@ -80583,14 +80583,14 @@ var require_mkdirp = __commonJS({
         mode = _0777;
       }
       if (!made) made = null;
-      p = path26.resolve(p);
+      p = path29.resolve(p);
       try {
         xfs.mkdirSync(p, mode);
         made = made || p;
       } catch (err0) {
         switch (err0.code) {
           case "ENOENT":
-            made = sync(path26.dirname(p), opts, made);
+            made = sync(path29.dirname(p), opts, made);
             sync(p, opts, made);
             break;
           // In the case of any other error, just see if there's a dir
@@ -80675,7 +80675,7 @@ var require_dir_writer = __commonJS({
     var Writer = require_writer();
     var inherits2 = require_inherits();
     var mkdir = require_mkdirp();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var collect = require_collect();
     inherits2(DirWriter, Writer);
     function DirWriter(props) {
@@ -80750,7 +80750,7 @@ var require_dir_writer = __commonJS({
       if (entry.parent) {
         pp = pp.substr(entry.parent._path.length + 1);
       }
-      props.path = path26.join(self2.path, path26.join("/", pp));
+      props.path = path29.join(self2.path, path29.join("/", pp));
       props.filter = self2.filter;
       Object.keys(entry.props).forEach(function(k) {
         if (!props.hasOwnProperty(k)) {
@@ -80791,7 +80791,7 @@ var require_link_writer = __commonJS({
     var fs = require_graceful_fs();
     var Writer = require_writer();
     var inherits2 = require_inherits();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var rimraf = require_rimraf();
     inherits2(LinkWriter, Writer);
     function LinkWriter(props) {
@@ -80812,7 +80812,7 @@ var require_link_writer = __commonJS({
       var self2 = this;
       var hard = self2.type === "Link" || process.platform === "win32";
       var link = hard ? "link" : "symlink";
-      var lp = hard ? path26.resolve(self2.dirname, self2.linkpath) : self2.linkpath;
+      var lp = hard ? path29.resolve(self2.dirname, self2.linkpath) : self2.linkpath;
       if (hard) return clobber(self2, lp, link);
       fs.readlink(self2._path, function(er, p) {
         if (p && p === lp) return finish(self2);
@@ -81036,7 +81036,7 @@ var require_writer = __commonJS({
     var inherits2 = require_inherits();
     var rimraf = require_rimraf();
     var mkdir = require_mkdirp();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var umask = process.platform === "win32" ? 0 : process.umask();
     var getType = require_get_type();
     var Abstract = require_abstract();
@@ -81079,7 +81079,7 @@ var require_writer = __commonJS({
       self2.clobber = props.clobber === false ? props.clobber : true;
       self2.parent = props.parent || null;
       self2.root = props.root || props.parent && props.parent.root || self2;
-      self2._path = self2.path = path26.resolve(props.path);
+      self2._path = self2.path = path29.resolve(props.path);
       if (process.platform === "win32") {
         self2.path = self2._path = self2.path.replace(/\?/g, "_");
         if (self2._path.length >= 260) {
@@ -81087,8 +81087,8 @@ var require_writer = __commonJS({
           self2._path = "\\\\?\\" + self2.path.replace(/\//g, "\\");
         }
       }
-      self2.basename = path26.basename(props.path);
-      self2.dirname = path26.dirname(props.path);
+      self2.basename = path29.basename(props.path);
+      self2.dirname = path29.dirname(props.path);
       self2.linkpath = props.linkpath || null;
       props.parent = props.root = null;
       self2.size = props.size;
@@ -81141,13 +81141,13 @@ var require_writer = __commonJS({
       }
     };
     function create2(self2) {
-      mkdir(path26.dirname(self2._path), Writer.dirmode, function(er, made) {
+      mkdir(path29.dirname(self2._path), Writer.dirmode, function(er, made) {
         if (er) return self2.error(er);
         self2._madeDir = made;
         return self2._create();
       });
     }
-    function endChmod(self2, want, current, path27, cb2) {
+    function endChmod(self2, want, current, path30, cb2) {
       var wantMode = want.mode;
       var chmod = want.follow || self2.type !== "SymbolicLink" ? "chmod" : "lchmod";
       if (!fs[chmod]) return cb2();
@@ -81155,9 +81155,9 @@ var require_writer = __commonJS({
       var curMode = current.mode & parseInt("0777", 8);
       wantMode = wantMode & parseInt("0777", 8);
       if (wantMode === curMode) return cb2();
-      fs[chmod](path27, wantMode, cb2);
+      fs[chmod](path30, wantMode, cb2);
     }
-    function endChown(self2, want, current, path27, cb2) {
+    function endChown(self2, want, current, path30, cb2) {
       if (process.platform === "win32") return cb2();
       if (!process.getuid || process.getuid() !== 0) return cb2();
       if (typeof want.uid !== "number" && typeof want.gid !== "number") return cb2();
@@ -81166,9 +81166,9 @@ var require_writer = __commonJS({
       if (!fs[chown]) return cb2();
       if (typeof want.uid !== "number") want.uid = current.uid;
       if (typeof want.gid !== "number") want.gid = current.gid;
-      fs[chown](path27, want.uid, want.gid, cb2);
+      fs[chown](path30, want.uid, want.gid, cb2);
     }
-    function endUtimes(self2, want, current, path27, cb2) {
+    function endUtimes(self2, want, current, path30, cb2) {
       if (!fs.utimes || process.platform === "win32") return cb2();
       var utimes = want.follow || self2.type !== "SymbolicLink" ? "utimes" : "lutimes";
       if (utimes === "lutimes" && !fs[utimes]) {
@@ -81184,7 +81184,7 @@ var require_writer = __commonJS({
       if (!isDate(meA)) meA = new Date(meA);
       if (!isDate(meM)) meA = new Date(meM);
       if (meA.getTime() === curA.getTime() && meM.getTime() === curM.getTime()) return cb2();
-      fs[utimes](path27, meA, meM, cb2);
+      fs[utimes](path30, meA, meM, cb2);
     }
     Writer.prototype._finish = function() {
       var self2 = this;
@@ -81246,7 +81246,7 @@ var require_writer = __commonJS({
     };
     function endMadeDir(self2, p, cb2) {
       var made = self2._madeDir;
-      var d = path26.dirname(p);
+      var d = path29.dirname(p);
       endMadeDir_(self2, d, function(er) {
         if (er) return cb2(er);
         if (d === made) {
@@ -81335,17 +81335,17 @@ var require_extract2 = __commonJS({
     module2.exports = Extract;
     var Parse = require_parse();
     var Writer = require_fstream().Writer;
-    var path26 = __require("path");
+    var path29 = __require("path");
     var stream = __require("stream");
     var duplexer2 = require_duplexer2();
     var Promise2 = require_bluebird();
     function Extract(opts) {
-      opts.path = path26.resolve(path26.normalize(opts.path));
+      opts.path = path29.resolve(path29.normalize(opts.path));
       var parser = new Parse(opts);
       var outStream = new stream.Writable({ objectMode: true });
       outStream._write = function(entry, encoding, cb2) {
         if (entry.type == "Directory") return cb2();
-        var extractPath = path26.join(opts.path, entry.path);
+        var extractPath = path29.join(opts.path, entry.path);
         if (extractPath.indexOf(opts.path) != 0) {
           return cb2();
         }
@@ -82782,7 +82782,7 @@ var require_directory = __commonJS({
     var BufferStream = require_BufferStream();
     var parseExtraField = require_parseExtraField();
     var Buffer2 = require_Buffer();
-    var path26 = __require("path");
+    var path29 = __require("path");
     var Writer = require_fstream().Writer;
     var parseDateTime = require_parseDateTime();
     var signature = Buffer2.alloc(4);
@@ -82852,18 +82852,18 @@ var require_directory = __commonJS({
           vars.offsetToStartOfCentralDirectory += startOffset;
         }
       }).then(function() {
-        if (vars.commentLength) return endDir.pull(vars.commentLength).then(function(comment3) {
-          vars.comment = comment3.toString("utf8");
+        if (vars.commentLength) return endDir.pull(vars.commentLength).then(function(comment4) {
+          vars.comment = comment4.toString("utf8");
         });
       }).then(function() {
         source.stream(vars.offsetToStartOfCentralDirectory).pipe(records);
         vars.extract = function(opts) {
           if (!opts || !opts.path) throw new Error("PATH_MISSING");
-          opts.path = path26.resolve(path26.normalize(opts.path));
+          opts.path = path29.resolve(path29.normalize(opts.path));
           return vars.files.then(function(files) {
             return Promise2.map(files, function(entry) {
               if (entry.type == "Directory") return;
-              var extractPath = path26.join(opts.path, entry.path);
+              var extractPath = path29.join(opts.path, entry.path);
               if (extractPath.indexOf(opts.path) != 0) {
                 return;
               }
@@ -82887,8 +82887,8 @@ var require_directory = __commonJS({
             }).then(function(extraField) {
               vars2.extra = parseExtraField(extraField, vars2);
               return records.pull(vars2.fileCommentLength);
-            }).then(function(comment3) {
-              vars2.comment = comment3;
+            }).then(function(comment4) {
+              vars2.comment = comment4;
               vars2.type = vars2.uncompressedSize === 0 && /[\/\\]$/.test(vars2.path) ? "Directory" : "File";
               vars2.stream = function(_password) {
                 return unzip2(source, vars2.offsetToLocalFileHeader, _password, vars2);
@@ -83023,7 +83023,7 @@ var require_tmp = __commonJS({
   "node_modules/tmp/lib/tmp.js"(exports2, module2) {
     var fs = __require("fs");
     var os = __require("os");
-    var path26 = __require("path");
+    var path29 = __require("path");
     var crypto6 = __require("crypto");
     var _c = { fs: fs.constants, os: os.constants };
     var RANDOM_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -83230,12 +83230,12 @@ var require_tmp = __commonJS({
       return [actualOptions, callback];
     }
     function _resolvePath(name, tmpDir, cb2) {
-      const pathToResolve = path26.isAbsolute(name) ? name : path26.join(tmpDir, name);
+      const pathToResolve = path29.isAbsolute(name) ? name : path29.join(tmpDir, name);
       fs.stat(pathToResolve, function(err) {
         if (err) {
-          fs.realpath(path26.dirname(pathToResolve), function(err2, parentDir) {
+          fs.realpath(path29.dirname(pathToResolve), function(err2, parentDir) {
             if (err2) return cb2(err2);
-            cb2(null, path26.join(parentDir, path26.basename(pathToResolve)));
+            cb2(null, path29.join(parentDir, path29.basename(pathToResolve)));
           });
         } else {
           fs.realpath(pathToResolve, cb2);
@@ -83243,22 +83243,22 @@ var require_tmp = __commonJS({
       });
     }
     function _resolvePathSync(name, tmpDir) {
-      const pathToResolve = path26.isAbsolute(name) ? name : path26.join(tmpDir, name);
+      const pathToResolve = path29.isAbsolute(name) ? name : path29.join(tmpDir, name);
       try {
         fs.statSync(pathToResolve);
         return fs.realpathSync(pathToResolve);
       } catch (_err) {
-        const parentDir = fs.realpathSync(path26.dirname(pathToResolve));
-        return path26.join(parentDir, path26.basename(pathToResolve));
+        const parentDir = fs.realpathSync(path29.dirname(pathToResolve));
+        return path29.join(parentDir, path29.basename(pathToResolve));
       }
     }
     function _generateTmpName(opts) {
       const tmpDir = opts.tmpdir;
       if (!_isUndefined(opts.name)) {
-        return path26.join(tmpDir, opts.dir, opts.name);
+        return path29.join(tmpDir, opts.dir, opts.name);
       }
       if (!_isUndefined(opts.template)) {
-        return path26.join(tmpDir, opts.dir, opts.template).replace(TEMPLATE_PATTERN, _randomChars(6));
+        return path29.join(tmpDir, opts.dir, opts.template).replace(TEMPLATE_PATTERN, _randomChars(6));
       }
       const name = [
         opts.prefix ? opts.prefix : "tmp",
@@ -83268,7 +83268,7 @@ var require_tmp = __commonJS({
         _randomChars(12),
         opts.postfix ? "-" + opts.postfix : ""
       ].join("");
-      return path26.join(tmpDir, opts.dir, name);
+      return path29.join(tmpDir, opts.dir, name);
     }
     function _assertPath(option, value) {
       if (typeof value !== "string") {
@@ -83282,8 +83282,8 @@ var require_tmp = __commonJS({
     function _assertOptionsBase(options) {
       if (!_isUndefined(options.name)) {
         const name = options.name;
-        if (path26.isAbsolute(name)) throw new Error(`name option must not contain an absolute path, found "${name}".`);
-        const basename = path26.basename(name);
+        if (path29.isAbsolute(name)) throw new Error(`name option must not contain an absolute path, found "${name}".`);
+        const basename = path29.basename(name);
         if (basename === ".." || basename === "." || basename !== name) {
           throw new Error(`name option must not contain a path, found "${name}".`);
         }
@@ -83312,8 +83312,8 @@ var require_tmp = __commonJS({
       if (_isUndefined(name)) return cb2(null);
       _resolvePath(name, tmpDir, function(err, resolvedPath) {
         if (err) return cb2(err);
-        const relativePath = path26.relative(tmpDir, resolvedPath);
-        if (relativePath.startsWith("..") || path26.isAbsolute(relativePath)) {
+        const relativePath = path29.relative(tmpDir, resolvedPath);
+        if (relativePath.startsWith("..") || path29.isAbsolute(relativePath)) {
           return cb2(new Error(`${option} option must be relative to "${tmpDir}", found "${relativePath}".`));
         }
         cb2(null, relativePath);
@@ -83322,8 +83322,8 @@ var require_tmp = __commonJS({
     function _getRelativePathSync(option, name, tmpDir) {
       if (_isUndefined(name)) return;
       const resolvedPath = _resolvePathSync(name, tmpDir);
-      const relativePath = path26.relative(tmpDir, resolvedPath);
-      if (relativePath.startsWith("..") || path26.isAbsolute(relativePath)) {
+      const relativePath = path29.relative(tmpDir, resolvedPath);
+      if (relativePath.startsWith("..") || path29.isAbsolute(relativePath)) {
         throw new Error(`${option} option must be relative to "${tmpDir}", found "${relativePath}".`);
       }
       return relativePath;
@@ -83955,12 +83955,12 @@ var require_workbook_reader = __commonJS({
                   yield* this._parseWorksheet(iterateStream(entry), sheetNo);
                 } else {
                   await new Promise((resolve, reject2) => {
-                    tmp.file((err, path26, fd, tempFileCleanupCallback) => {
+                    tmp.file((err, path29, fd, tempFileCleanupCallback) => {
                       if (err) {
                         return reject2(err);
                       }
-                      waitingWorkSheets.push({ sheetNo, path: path26, tempFileCleanupCallback });
-                      const tempStream = fs.createWriteStream(path26);
+                      waitingWorkSheets.push({ sheetNo, path: path29, tempFileCleanupCallback });
+                      const tempStream = fs.createWriteStream(path29);
                       tempStream.on("error", reject2);
                       entry.pipe(tempStream);
                       return tempStream.on("finish", () => {
@@ -83978,8 +83978,8 @@ var require_workbook_reader = __commonJS({
           }
           entry.autodrain();
         }
-        for (const { sheetNo, path: path26, tempFileCleanupCallback } of waitingWorkSheets) {
-          let fileStream = fs.createReadStream(path26);
+        for (const { sheetNo, path: path29, tempFileCleanupCallback } of waitingWorkSheets) {
+          let fileStream = fs.createReadStream(path29);
           if (!fileStream[Symbol.asyncIterator]) {
             fileStream = fileStream.pipe(new PassThrough());
           }
@@ -85063,8 +85063,8 @@ var init_tap = __esm({
 });
 
 // node_modules/underscore/modules/toPath.js
-function toPath(path26) {
-  return isArray_default(path26) ? path26 : [path26];
+function toPath(path29) {
+  return isArray_default(path29) ? path29 : [path29];
 }
 var init_toPath = __esm({
   "node_modules/underscore/modules/toPath.js"() {
@@ -85075,8 +85075,8 @@ var init_toPath = __esm({
 });
 
 // node_modules/underscore/modules/_toPath.js
-function toPath2(path26) {
-  return _2.toPath(path26);
+function toPath2(path29) {
+  return _2.toPath(path29);
 }
 var init_toPath2 = __esm({
   "node_modules/underscore/modules/_toPath.js"() {
@@ -85086,11 +85086,11 @@ var init_toPath2 = __esm({
 });
 
 // node_modules/underscore/modules/_deepGet.js
-function deepGet(obj2, path26) {
-  var length = path26.length;
+function deepGet(obj2, path29) {
+  var length = path29.length;
   for (var i = 0; i < length; i++) {
     if (obj2 == null) return void 0;
-    obj2 = obj2[path26[i]];
+    obj2 = obj2[path29[i]];
   }
   return length ? obj2 : void 0;
 }
@@ -85100,8 +85100,8 @@ var init_deepGet = __esm({
 });
 
 // node_modules/underscore/modules/get.js
-function get(object3, path26, defaultValue) {
-  var value = deepGet(object3, toPath2(path26));
+function get(object3, path29, defaultValue) {
+  var value = deepGet(object3, toPath2(path29));
   return isUndefined(value) ? defaultValue : value;
 }
 var init_get = __esm({
@@ -85113,11 +85113,11 @@ var init_get = __esm({
 });
 
 // node_modules/underscore/modules/has.js
-function has2(obj2, path26) {
-  path26 = toPath2(path26);
-  var length = path26.length;
+function has2(obj2, path29) {
+  path29 = toPath2(path29);
+  var length = path29.length;
   for (var i = 0; i < length; i++) {
-    var key = path26[i];
+    var key = path29[i];
     if (!has(obj2, key)) return false;
     obj2 = obj2[key];
   }
@@ -85154,10 +85154,10 @@ var init_matcher = __esm({
 });
 
 // node_modules/underscore/modules/property.js
-function property(path26) {
-  path26 = toPath2(path26);
+function property(path29) {
+  path29 = toPath2(path29);
   return function(obj2) {
-    return deepGet(obj2, path26);
+    return deepGet(obj2, path29);
   };
 }
 var init_property = __esm({
@@ -85266,8 +85266,8 @@ var init_noop = __esm({
 // node_modules/underscore/modules/propertyOf.js
 function propertyOf(obj2) {
   if (obj2 == null) return noop;
-  return function(path26) {
-    return get(obj2, path26);
+  return function(path29) {
+    return get(obj2, path29);
   };
 }
 var init_propertyOf = __esm({
@@ -85461,14 +85461,14 @@ var init_template = __esm({
 });
 
 // node_modules/underscore/modules/result.js
-function result2(obj2, path26, fallback) {
-  path26 = toPath2(path26);
-  var length = path26.length;
+function result2(obj2, path29, fallback) {
+  path29 = toPath2(path29);
+  var length = path29.length;
   if (!length) {
     return isFunction_default(fallback) ? fallback.call(obj2) : fallback;
   }
   for (var i = 0; i < length; i++) {
-    var prop = obj2 == null ? void 0 : obj2[path26[i]];
+    var prop = obj2 == null ? void 0 : obj2[path29[i]];
     if (prop === void 0) {
       prop = fallback;
       i = length;
@@ -86151,14 +86151,14 @@ var init_invoke = __esm({
     init_map();
     init_deepGet();
     init_toPath2();
-    invoke_default = restArguments(function(obj2, path26, args) {
+    invoke_default = restArguments(function(obj2, path29, args) {
       var contextPath, func;
-      if (isFunction_default(path26)) {
-        func = path26;
+      if (isFunction_default(path29)) {
+        func = path29;
       } else {
-        path26 = toPath2(path26);
-        contextPath = path26.slice(0, -1);
-        path26 = path26[path26.length - 1];
+        path29 = toPath2(path29);
+        contextPath = path29.slice(0, -1);
+        path29 = path29[path29.length - 1];
       }
       return map(obj2, function(context) {
         var method = func;
@@ -86167,7 +86167,7 @@ var init_invoke = __esm({
             context = deepGet(context, contextPath);
           }
           if (context == null) return void 0;
-          method = context[path26];
+          method = context[path29];
         }
         return method == null ? method : method.apply(context, args);
       });
@@ -87488,7 +87488,7 @@ var require_documents = __commonJS({
         commentId: options.commentId
       };
     }
-    function comment3(options) {
+    function comment4(options) {
       return {
         type: types.comment,
         commentId: options.commentId,
@@ -87578,7 +87578,7 @@ var require_documents = __commonJS({
     exports2.Notes = Notes;
     exports2.Note = Note;
     exports2.commentReference = commentReference;
-    exports2.comment = comment3;
+    exports2.comment = comment4;
     exports2.Image = Image;
     exports2.Table = Table;
     exports2.TableRow = TableRow;
@@ -87795,27 +87795,27 @@ var require_zipfile = __commonJS({
         };
       });
     }
-    function splitPath(path26) {
-      var lastIndex = path26.lastIndexOf("/");
+    function splitPath(path29) {
+      var lastIndex = path29.lastIndexOf("/");
       if (lastIndex === -1) {
-        return { dirname: "", basename: path26 };
+        return { dirname: "", basename: path29 };
       } else {
         return {
-          dirname: path26.substring(0, lastIndex),
-          basename: path26.substring(lastIndex + 1)
+          dirname: path29.substring(0, lastIndex),
+          basename: path29.substring(lastIndex + 1)
         };
       }
     }
     function joinPath() {
-      var nonEmptyPaths = Array.prototype.filter.call(arguments, function(path26) {
-        return path26;
+      var nonEmptyPaths = Array.prototype.filter.call(arguments, function(path29) {
+        return path29;
       });
       var relevantPaths = [];
-      nonEmptyPaths.forEach(function(path26) {
-        if (/^\//.test(path26)) {
-          relevantPaths = [path26];
+      nonEmptyPaths.forEach(function(path29) {
+        if (/^\//.test(path29)) {
+          relevantPaths = [path29];
         } else {
-          relevantPaths.push(path26);
+          relevantPaths.push(path29);
         }
       });
       return relevantPaths.join("/");
@@ -95295,9 +95295,9 @@ var require_office_xml_reader = __commonJS({
         return collapseAlternateContent(document2)[0];
       });
     }
-    function readXmlFromZipFile(docxFile, path26) {
-      if (docxFile.exists(path26)) {
-        return docxFile.read(path26, "utf-8").then(stripUtf8Bom).then(read);
+    function readXmlFromZipFile(docxFile, path29) {
+      if (docxFile.exists(path29)) {
+        return docxFile.read(path29, "utf-8").then(stripUtf8Bom).then(read);
       } else {
         return promises.resolve(null);
       }
@@ -97083,10 +97083,10 @@ var require_body_reader = __commonJS({
         }
       }
       function findEmbeddedImageFile(relationshipId) {
-        var path26 = uris.uriToZipEntryName("word", relationships.findTargetByRelationshipId(relationshipId));
+        var path29 = uris.uriToZipEntryName("word", relationships.findTargetByRelationshipId(relationshipId));
         return {
-          path: path26,
-          read: docxFile.read.bind(docxFile, path26)
+          path: path29,
+          read: docxFile.read.bind(docxFile, path29)
         };
       }
       function readImage(imageFile, altText) {
@@ -97324,12 +97324,12 @@ var require_content_types_reader = __commonJS({
     }
     function contentTypes(overrides, extensionDefaults) {
       return {
-        findContentType: function(path26) {
-          var overrideContentType = overrides[path26];
+        findContentType: function(path29) {
+          var overrideContentType = overrides[path29];
           if (overrideContentType) {
             return overrideContentType;
           } else {
-            var pathParts = path26.split(".");
+            var pathParts = path29.split(".");
             var extension = pathParts[pathParts.length - 1];
             if (Object.prototype.hasOwnProperty.call(extensionDefaults, extension)) {
               return extensionDefaults[extension];
@@ -97587,11 +97587,11 @@ var require_fs2 = __commonJS({
   "node_modules/mammoth/lib/fs.js"(exports2) {
     var fs = __require("fs");
     var promises = require_promises();
-    function readFile(path26, options) {
-      return promises.resolve(fs.promises.readFile(path26, options));
+    function readFile(path29, options) {
+      return promises.resolve(fs.promises.readFile(path29, options));
     }
-    function writeFile(path26, data, options) {
-      return promises.resolve(fs.promises.writeFile(path26, data, options));
+    function writeFile(path29, data, options) {
+      return promises.resolve(fs.promises.writeFile(path29, data, options));
     }
     exports2.createWriteStream = fs.createWriteStream.bind(fs);
     exports2.readFile = readFile;
@@ -97623,19 +97623,19 @@ var require_files = __commonJS({
       }
       var base = options.relativeToFile ? dirname(options.relativeToFile) : null;
       function read(uri, encoding) {
-        return resolveUri(uri).then(function(path26) {
-          return fs.readFile(path26, encoding).catch(function(error2) {
+        return resolveUri(uri).then(function(path29) {
+          return fs.readFile(path29, encoding).catch(function(error2) {
             var message = "could not open external image: '" + uri + "' (document directory: '" + base + "')\n" + error2.message;
             return promises.reject(new Error(message));
           });
         });
       }
       function resolveUri(uri) {
-        var path26 = uriToPath(uri);
-        if (isAbsolutePath(path26)) {
-          return promises.resolve(path26);
+        var path29 = uriToPath(uri);
+        if (isAbsolutePath(path29)) {
+          return promises.resolve(path29);
         } else if (base) {
-          return promises.resolve(resolvePath(base, path26));
+          return promises.resolve(resolvePath(base, path29));
         } else {
           return promises.reject(new Error("could not find external image '" + uri + "', path of input document is unknown"));
         }
@@ -97650,11 +97650,11 @@ var require_files = __commonJS({
       }
       var uri = url2.parse(uriString);
       if (isLocalFileUri(uri) || isRelativeUri(uri)) {
-        var path26 = decodeURIComponent(uri.path);
-        if (platform === "win32" && /^\/[a-z]:/i.test(path26)) {
-          return path26.slice(1);
+        var path29 = decodeURIComponent(uri.path);
+        if (platform === "win32" && /^\/[a-z]:/i.test(path29)) {
+          return path29.slice(1);
         } else {
-          return path26;
+          return path29;
         }
       } else {
         throw new Error("Could not convert URI to path: " + uriString);
@@ -97854,18 +97854,18 @@ var require_docx_reader = __commonJS({
       readElement: contentTypesReader.readContentTypesFromXml,
       defaultValue: contentTypesReader.defaultContentTypes
     });
-    function readNumberingFromZipFile(zipFile, path26, styles) {
+    function readNumberingFromZipFile(zipFile, path29, styles) {
       return xmlFileReader({
-        filename: path26,
+        filename: path29,
         readElement: function(element) {
           return numberingXml.readNumberingXml(element, { styles });
         },
         defaultValue: numberingXml.defaultNumbering
       })(zipFile);
     }
-    function readStylesFromZipFile(zipFile, path26) {
+    function readStylesFromZipFile(zipFile, path29) {
       return xmlFileReader({
-        filename: path26,
+        filename: path29,
         readElement: stylesReader.readStylesXml,
         defaultValue: stylesReader.defaultStyles
       })(zipFile);
@@ -97896,10 +97896,10 @@ var require_style_map = __commonJS({
       });
     }
     function updateRelationships(docxFile) {
-      var path26 = "word/_rels/document.xml.rels";
+      var path29 = "word/_rels/document.xml.rels";
       var relationshipsUri = "http://schemas.openxmlformats.org/package/2006/relationships";
       var relationshipElementName = "{" + relationshipsUri + "}Relationship";
-      return docxFile.read(path26, "utf8").then(xml.readString).then(function(relationshipsContainer) {
+      return docxFile.read(path29, "utf8").then(xml.readString).then(function(relationshipsContainer) {
         var relationships = relationshipsContainer.children;
         addOrUpdateElement(relationships, relationshipElementName, "Id", {
           "Id": "rMammothStyleMap",
@@ -97907,21 +97907,21 @@ var require_style_map = __commonJS({
           "Target": styleMapAbsolutePath
         });
         var namespaces = { "": relationshipsUri };
-        return docxFile.write(path26, xml.writeString(relationshipsContainer, namespaces));
+        return docxFile.write(path29, xml.writeString(relationshipsContainer, namespaces));
       });
     }
     function updateContentTypes(docxFile) {
-      var path26 = "[Content_Types].xml";
+      var path29 = "[Content_Types].xml";
       var contentTypesUri = "http://schemas.openxmlformats.org/package/2006/content-types";
       var overrideName = "{" + contentTypesUri + "}Override";
-      return docxFile.read(path26, "utf8").then(xml.readString).then(function(typesElement) {
+      return docxFile.read(path29, "utf8").then(xml.readString).then(function(typesElement) {
         var children = typesElement.children;
         addOrUpdateElement(children, overrideName, "PartName", {
           "PartName": styleMapAbsolutePath,
           "ContentType": "text/prs.mammoth.style-map"
         });
         var namespaces = { "": contentTypesUri };
-        return docxFile.write(path26, xml.writeString(typesElement, namespaces));
+        return docxFile.write(path29, xml.writeString(typesElement, namespaces));
       });
     }
     function addOrUpdateElement(elements, name, identifyingAttribute, attributes) {
@@ -98617,9 +98617,9 @@ var require_document_to_html = __commonJS({
         };
         var paths = [];
         if (run2.highlight !== null) {
-          var path26 = findHtmlPath({ type: "highlight", color: run2.highlight });
-          if (path26) {
-            paths.push(path26);
+          var path29 = findHtmlPath({ type: "highlight", color: run2.highlight });
+          if (path29) {
+            paths.push(path29);
           }
         }
         if (run2.isSmallCaps) {
@@ -98654,15 +98654,15 @@ var require_document_to_html = __commonJS({
           messages.push(unrecognisedStyleWarning("run", run2));
         }
         paths.push(stylePath);
-        paths.forEach(function(path27) {
-          nodes = path27.wrap.bind(path27, nodes);
+        paths.forEach(function(path30) {
+          nodes = path30.wrap.bind(path30, nodes);
         });
         return nodes();
       }
       function findHtmlPathForRunProperty(elementType, defaultTagName) {
-        var path26 = findHtmlPath({ type: elementType });
-        if (path26) {
-          return path26;
+        var path29 = findHtmlPath({ type: elementType });
+        if (path29) {
+          return path29;
         } else if (defaultTagName) {
           return htmlPaths.element(defaultTagName, {}, { fresh: false });
         } else {
@@ -98767,10 +98767,10 @@ var require_document_to_html = __commonJS({
       }
       function convertCommentReference(reference, messages, context) {
         return findHtmlPath(reference, htmlPaths.ignore).wrap(function() {
-          var comment3 = comments[reference.commentId];
+          var comment4 = comments[reference.commentId];
           var count = referencedComments.length + 1;
-          var label4 = "[" + commentAuthorLabel(comment3) + count + "]";
-          referencedComments.push({ label: label4, comment: comment3 });
+          var label4 = "[" + commentAuthorLabel(comment4) + count + "]";
+          referencedComments.push({ label: label4, comment: comment4 });
           return [
             Html.freshElement("a", {
               href: "#" + referentHtmlId("comment", reference.commentId),
@@ -98781,11 +98781,11 @@ var require_document_to_html = __commonJS({
       }
       function convertComment(referencedComment, messages, context) {
         var label4 = referencedComment.label;
-        var comment3 = referencedComment.comment;
-        var body = convertElements(comment3.body, messages, context).concat([
+        var comment4 = referencedComment.comment;
+        var body = convertElements(comment4.body, messages, context).concat([
           Html.nonFreshElement("p", {}, [
             Html.text(" "),
-            Html.freshElement("a", { "href": "#" + referenceHtmlId("comment", comment3.commentId) }, [
+            Html.freshElement("a", { "href": "#" + referenceHtmlId("comment", comment4.commentId) }, [
               Html.text("\u2191")
             ])
           ])
@@ -98793,7 +98793,7 @@ var require_document_to_html = __commonJS({
         return [
           Html.freshElement(
             "dt",
-            { "id": referentHtmlId("comment", comment3.commentId) },
+            { "id": referentHtmlId("comment", comment4.commentId) },
             [Html.text("Comment " + label4)]
           ),
           Html.freshElement("dd", {}, body)
@@ -98917,8 +98917,8 @@ var require_document_to_html = __commonJS({
         }
       });
     }
-    var commentAuthorLabel = exports2.commentAuthorLabel = function commentAuthorLabel2(comment3) {
-      return comment3.authorInitials || "";
+    var commentAuthorLabel = exports2.commentAuthorLabel = function commentAuthorLabel2(comment4) {
+      return comment4.authorInitials || "";
     };
   }
 });
@@ -100499,7 +100499,7 @@ var require_lib8 = __commonJS({
 // src/index.ts
 import { mkdirSync as mkdirSync3, realpathSync as realpathSync5 } from "node:fs";
 import { createServer as createNodeServer } from "node:http";
-import path25 from "node:path";
+import path28 from "node:path";
 import { parseArgs } from "node:util";
 
 // node_modules/@modelcontextprotocol/server/dist/chunk-Br0eD_fh.mjs
@@ -100796,10 +100796,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj2, path26) {
-  if (!path26)
+function getElementAtPath(obj2, path29) {
+  if (!path29)
     return obj2;
-  return path26.reduce((acc, key) => acc?.[key], obj2);
+  return path29.reduce((acc, key) => acc?.[key], obj2);
 }
 function promiseAllObject(promisesObj) {
   const keys2 = Object.keys(promisesObj);
@@ -101139,11 +101139,11 @@ function explicitlyAborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path26, issues) {
+function prefixIssues(path29, issues) {
   return issues.map((iss) => {
     var _a3;
     (_a3 = iss).path ?? (_a3.path = []);
-    iss.path.unshift(path26);
+    iss.path.unshift(path29);
     return iss;
   });
 }
@@ -101604,16 +101604,16 @@ function flattenError(error2, mapper = (issue2) => issue2.message) {
 }
 function formatError(error2, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error3, path26 = []) => {
+  const processError = (error3, path29 = []) => {
     for (const issue2 of error3.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
-        issue2.errors.map((issues) => processError({ issues }, [...path26, ...issue2.path]));
+        issue2.errors.map((issues) => processError({ issues }, [...path29, ...issue2.path]));
       } else if (issue2.code === "invalid_key") {
-        processError({ issues: issue2.issues }, [...path26, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
       } else if (issue2.code === "invalid_element") {
-        processError({ issues: issue2.issues }, [...path26, ...issue2.path]);
+        processError({ issues: issue2.issues }, [...path29, ...issue2.path]);
       } else {
-        const fullpath = [...path26, ...issue2.path];
+        const fullpath = [...path29, ...issue2.path];
         if (fullpath.length === 0) {
           fieldErrors._errors.push(mapper(issue2));
         } else {
@@ -111003,9 +111003,9 @@ var rev2026Codec = {
     });
     const parsed = buildSchemas2026().RequestMetaEnvelopeSchema.safeParse(meta2);
     if (!parsed.success) for (const issue2 of parsed.error.issues) {
-      const path26 = issue2.path.map(String);
-      const key = path26.length > 0 ? path26.join(".") : "_meta";
-      if (path26.length === 1 && issues.some((existing) => existing.key === key && existing.problem === "missing")) continue;
+      const path29 = issue2.path.map(String);
+      const key = path29.length > 0 ? path29.join(".") : "_meta";
+      if (path29.length === 1 && issues.some((existing) => existing.key === key && existing.problem === "missing")) continue;
       issues.push({
         key,
         problem: issue2.message
@@ -111334,29 +111334,29 @@ var PERMITTED_X_MCP_HEADER_TYPES = /* @__PURE__ */ new Set([
 function scanXMcpHeaderDeclarations(inputSchema) {
   const declarations = [];
   const seenLower = /* @__PURE__ */ new Map();
-  const visit = (node2, path26, reachable) => {
+  const visit = (node2, path29, reachable) => {
     if (node2 === null || typeof node2 !== "object") return void 0;
     const schema = node2;
     if (X_MCP_HEADER_KEY in schema) {
-      if (!reachable || path26.length === 0) return `${pathName(path26)}: x-mcp-header is only permitted on properties statically reachable via a chain of 'properties' keys (not under items, additionalProperties, oneOf/anyOf/allOf/not, if/then/else, or $ref)`;
+      if (!reachable || path29.length === 0) return `${pathName(path29)}: x-mcp-header is only permitted on properties statically reachable via a chain of 'properties' keys (not under items, additionalProperties, oneOf/anyOf/allOf/not, if/then/else, or $ref)`;
       const raw = schema[X_MCP_HEADER_KEY];
-      if (typeof raw !== "string" || raw.length === 0) return `${pathName(path26)}: x-mcp-header MUST be a non-empty string`;
-      if (!RFC9110_TOKEN.test(raw)) return `${pathName(path26)}: x-mcp-header '${raw}' is not a valid RFC 9110 token (no spaces, control characters or HTTP delimiters)`;
+      if (typeof raw !== "string" || raw.length === 0) return `${pathName(path29)}: x-mcp-header MUST be a non-empty string`;
+      if (!RFC9110_TOKEN.test(raw)) return `${pathName(path29)}: x-mcp-header '${raw}' is not a valid RFC 9110 token (no spaces, control characters or HTTP delimiters)`;
       const type = typeof schema.type === "string" ? schema.type : void 0;
-      if (type === void 0 || !PERMITTED_X_MCP_HEADER_TYPES.has(type)) return `${pathName(path26)}: x-mcp-header is only permitted on primitive-typed properties (string, integer, boolean); got ${type ?? "<none>"}`;
+      if (type === void 0 || !PERMITTED_X_MCP_HEADER_TYPES.has(type)) return `${pathName(path29)}: x-mcp-header is only permitted on primitive-typed properties (string, integer, boolean); got ${type ?? "<none>"}`;
       const lower = raw.toLowerCase();
       const prior = seenLower.get(lower);
       if (prior !== void 0) return `x-mcp-header '${raw}' is not case-insensitively unique (also declared as '${prior}')`;
       seenLower.set(lower, raw);
       declarations.push({
-        path: path26,
+        path: path29,
         headerName: raw,
         type
       });
     }
     const properties = schema.properties;
     if (properties !== null && typeof properties === "object") for (const [key, child] of Object.entries(properties)) {
-      const fault$1 = visit(child, [...path26, key], reachable);
+      const fault$1 = visit(child, [...path29, key], reachable);
       if (fault$1 !== void 0) return fault$1;
     }
     for (const k of NON_REACHABLE_SUBSCHEMA_KEYWORDS) {
@@ -111364,7 +111364,7 @@ function scanXMcpHeaderDeclarations(inputSchema) {
       if (sub === void 0) continue;
       const branches = Array.isArray(sub) ? sub : sub !== null && typeof sub === "object" && OBJECT_VALUED_SUBSCHEMA_KEYWORDS.has(k) ? Object.values(sub) : [sub];
       for (const branch of branches) {
-        const fault$1 = visit(branch, [...path26, `<${k}>`], false);
+        const fault$1 = visit(branch, [...path29, `<${k}>`], false);
         if (fault$1 !== void 0) return fault$1;
       }
     }
@@ -111404,8 +111404,8 @@ var OBJECT_VALUED_SUBSCHEMA_KEYWORDS = /* @__PURE__ */ new Set([
   "$defs",
   "definitions"
 ]);
-function pathName(path26) {
-  return path26.length === 0 ? "<root>" : path26.join(".");
+function pathName(path29) {
+  return path29.length === 0 ? "<root>" : path29.join(".");
 }
 var BASE64_SENTINEL_PREFIX = "=?base64?";
 var BASE64_SENTINEL_SUFFIX = "?=";
@@ -111436,9 +111436,9 @@ function decodeMcpParamValue(value) {
     return;
   }
 }
-function valueAtPath(root2, path26) {
+function valueAtPath(root2, path29) {
   let node2 = root2;
-  for (const key of path26) {
+  for (const key of path29) {
     if (node2 === null || typeof node2 !== "object") return void 0;
     node2 = node2[key];
   }
@@ -111947,7 +111947,7 @@ var PROPERTY_KEYS_BY_TYPE = {
   array: shapeKeys([UntitledMultiSelectEnumSchemaSchema, TitledMultiSelectEnumSchemaSchema])
 };
 var SUPPORTED_STRING_FORMATS = new Set(StringSchemaSchema.shape.format.unwrap().options);
-function walkProperty(node2, path26, vendor, unsupported) {
+function walkProperty(node2, path29, vendor, unsupported) {
   if (!isJsonObject(node2)) return node2;
   const allowedKeys = typeof node2.type === "string" && Object.hasOwn(PROPERTY_KEYS_BY_TYPE, node2.type) ? PROPERTY_KEYS_BY_TYPE[node2.type] : void 0;
   if (allowedKeys === void 0) return node2;
@@ -111955,8 +111955,8 @@ function walkProperty(node2, path26, vendor, unsupported) {
   for (const [key, value] of Object.entries(node2)) if (allowedKeys.has(key) || isAnnotationOnlyJsonSchemaKeyword(key)) pruned[key] = value;
   else if (key === "pattern" && node2.type === "string" && typeof node2.format === "string") {
     if (!SUPPORTED_STRING_FORMATS.has(node2.format)) pruned[key] = value;
-    else if (typeof value !== "string" || !isLibraryFormatPattern(node2.format, value, vendor)) unsupported.push(`${path26}.${key}`);
-  } else unsupported.push(`${path26}.${key}`);
+    else if (typeof value !== "string" || !isLibraryFormatPattern(node2.format, value, vendor)) unsupported.push(`${path29}.${key}`);
+  } else unsupported.push(`${path29}.${key}`);
   return pruned;
 }
 function walkRequestedSchema(converted, vendor) {
@@ -111973,11 +111973,11 @@ function describeUnsupportedProperties(pruned, fallback) {
   const offenders = Object.entries(pruned.properties).filter(([, node2]) => !parseSchema(PrimitiveSchemaDefinitionSchema, node2).success).map(([name]) => `properties.${name}`);
   return offenders.length > 0 ? offenders.join(", ") : fallback;
 }
-function findDroppedConstraintPaths(original, parsed, path26 = "") {
-  if (Array.isArray(original) && Array.isArray(parsed)) return original.flatMap((item, index) => findDroppedConstraintPaths(item, parsed[index], `${path26}[${index}]`));
+function findDroppedConstraintPaths(original, parsed, path29 = "") {
+  if (Array.isArray(original) && Array.isArray(parsed)) return original.flatMap((item, index) => findDroppedConstraintPaths(item, parsed[index], `${path29}[${index}]`));
   if (!isJsonObject(original) || !isJsonObject(parsed)) return [];
   return Object.entries(original).flatMap(([key, value]) => {
-    const childPath = path26 ? `${path26}.${key}` : key;
+    const childPath = path29 ? `${path29}.${key}` : key;
     if (!Object.prototype.hasOwnProperty.call(parsed, key)) return isAnnotationOnlyJsonSchemaKeyword(key) ? [] : [childPath];
     return findDroppedConstraintPaths(value, parsed[key], childPath);
   });
@@ -114500,9 +114500,9 @@ var require_util = /* @__PURE__ */ __commonJSMin(((exports2) => {
     return false;
   }
   exports2.schemaHasRules = schemaHasRules;
-  function schemaHasRulesButRef(schema, RULES3) {
+  function schemaHasRulesButRef(schema, RULES4) {
     if (typeof schema == "boolean") return !schema;
-    for (const key in schema) if (key !== "$ref" && RULES3.all[key]) return true;
+    for (const key in schema) if (key !== "$ref" && RULES4.all[key]) return true;
     return false;
   }
   exports2.schemaHasRulesButRef = schemaHasRulesButRef;
@@ -115692,15 +115692,15 @@ var require_validate = /* @__PURE__ */ __commonJSMin(((exports2) => {
   }
   function schemaKeywords(it, types, typeErrors, errsCount) {
     const { gen, schema, data, allErrors, opts, self: self2 } = it;
-    const { RULES: RULES3 } = self2;
-    if (schema.$ref && (opts.ignoreKeywordsWithRef || !(0, util_1.schemaHasRulesButRef)(schema, RULES3))) {
-      gen.block(() => keywordCode(it, "$ref", RULES3.all.$ref.definition));
+    const { RULES: RULES4 } = self2;
+    if (schema.$ref && (opts.ignoreKeywordsWithRef || !(0, util_1.schemaHasRulesButRef)(schema, RULES4))) {
+      gen.block(() => keywordCode(it, "$ref", RULES4.all.$ref.definition));
       return;
     }
     if (!opts.jtd) checkStrictTypes(it, types);
     gen.block(() => {
-      for (const group2 of RULES3.rules) groupKeywords(group2);
-      groupKeywords(RULES3.post);
+      for (const group2 of RULES4.rules) groupKeywords(group2);
+      groupKeywords(RULES4.post);
     });
     function groupKeywords(group2) {
       if (!(0, applicability_1.shouldUseGroup)(schema, group2)) return;
@@ -116312,8 +116312,8 @@ var require_utils = /* @__PURE__ */ __commonJSMin(((exports2, module2) => {
     for (let i = 0; i < str.length; i++) if (str[i] === token) ind++;
     return ind;
   }
-  function removeDotSegments(path26) {
-    let input = path26;
+  function removeDotSegments(path29) {
+    let input = path29;
     const output = [];
     let nextSlash = -1;
     let len = 0;
@@ -116466,8 +116466,8 @@ var require_schemes = /* @__PURE__ */ __commonJSMin(((exports2, module2) => {
       wsComponent.secure = void 0;
     }
     if (wsComponent.resourceName) {
-      const [path26, query] = wsComponent.resourceName.split("?");
-      wsComponent.path = path26 && path26 !== "/" ? path26 : void 0;
+      const [path29, query] = wsComponent.resourceName.split("?");
+      wsComponent.path = path29 && path29 !== "/" ? path29 : void 0;
       wsComponent.query = query;
       wsComponent.resourceName = void 0;
     }
@@ -117133,10 +117133,10 @@ var require_core$3 = /* @__PURE__ */ __commonJSMin(((exports2) => {
       return typeof rule == "object" ? rule.definition : !!rule;
     }
     removeKeyword(keyword) {
-      const { RULES: RULES3 } = this;
-      delete RULES3.keywords[keyword];
-      delete RULES3.all[keyword];
-      for (const group2 of RULES3.rules) {
+      const { RULES: RULES4 } = this;
+      delete RULES4.keywords[keyword];
+      delete RULES4.all[keyword];
+      for (const group2 of RULES4.rules) {
         const i = group2.rules.findIndex((rule) => rule.keyword === keyword);
         if (i >= 0) group2.rules.splice(i, 1);
       }
@@ -117282,9 +117282,9 @@ var require_core$3 = /* @__PURE__ */ __commonJSMin(((exports2) => {
   }
   const KEYWORD_NAME = /^[a-z_$][a-z0-9_$:-]*$/i;
   function checkKeyword(keyword, def) {
-    const { RULES: RULES3 } = this;
+    const { RULES: RULES4 } = this;
     (0, util_1.eachItem)(keyword, (kwd) => {
-      if (RULES3.keywords[kwd]) throw new Error(`Keyword ${kwd} is already defined`);
+      if (RULES4.keywords[kwd]) throw new Error(`Keyword ${kwd} is already defined`);
       if (!KEYWORD_NAME.test(kwd)) throw new Error(`Keyword ${kwd} has invalid name`);
     });
     if (!def) return;
@@ -117294,16 +117294,16 @@ var require_core$3 = /* @__PURE__ */ __commonJSMin(((exports2) => {
     var _a3;
     const post = definition === null || definition === void 0 ? void 0 : definition.post;
     if (dataType && post) throw new Error('keyword with "post" flag cannot have "type"');
-    const { RULES: RULES3 } = this;
-    let ruleGroup = post ? RULES3.post : RULES3.rules.find(({ type: t }) => t === dataType);
+    const { RULES: RULES4 } = this;
+    let ruleGroup = post ? RULES4.post : RULES4.rules.find(({ type: t }) => t === dataType);
     if (!ruleGroup) {
       ruleGroup = {
         type: dataType,
         rules: []
       };
-      RULES3.rules.push(ruleGroup);
+      RULES4.rules.push(ruleGroup);
     }
-    RULES3.keywords[keyword] = true;
+    RULES4.keywords[keyword] = true;
     if (!definition) return;
     const rule = {
       keyword,
@@ -117315,7 +117315,7 @@ var require_core$3 = /* @__PURE__ */ __commonJSMin(((exports2) => {
     };
     if (definition.before) addBeforeRule.call(this, ruleGroup, rule, definition.before);
     else ruleGroup.rules.push(rule);
-    RULES3.all[keyword] = rule;
+    RULES4.all[keyword] = rule;
     (_a3 = definition.implements) === null || _a3 === void 0 || _a3.forEach((kwd) => this.addKeyword(kwd));
   }
   function addBeforeRule(ruleGroup, rule, before2) {
@@ -121030,8 +121030,8 @@ function protectedResourceMetadataPath(resourceServerUrl) {
   const rsPath = stripTrailingSlash(resourceServerUrl.pathname);
   return `/.well-known/oauth-protected-resource${rsPath === "/" ? "" : rsPath}`;
 }
-function stripTrailingSlash(path26) {
-  return path26.length > 1 && path26.endsWith("/") ? path26.slice(0, -1) : path26;
+function stripTrailingSlash(path29) {
+  return path29.length > 1 && path29.endsWith("/") ? path29.slice(0, -1) : path29;
 }
 var ALLOWED_METHODS = "GET, HEAD, OPTIONS";
 function metadataDocumentResponse(request2, metadata) {
@@ -122668,9 +122668,9 @@ var PerRequestHTTPServerTransport = class {
   * Writes an SSE comment frame (a keep-alive heartbeat). Dropped when the
   * exchange is not currently streaming.
   */
-  writeCommentFrame(comment3) {
+  writeCommentFrame(comment4) {
     if (this._closed || this._sse === void 0 || this._sse.closed) return;
-    const frame = comment3.split("\n").map((line) => `: ${line}`).join("\n");
+    const frame = comment4.split("\n").map((line) => `: ${line}`).join("\n");
     this.writeFrame(`${frame}
 
 `);
@@ -124784,7 +124784,7 @@ function toError2(value) {
 
 // src/http.ts
 import { createReadStream, realpathSync as realpathSync4, statSync as statSync8 } from "node:fs";
-import path24 from "node:path";
+import path27 from "node:path";
 import { Readable as Readable2 } from "node:stream";
 
 // src/remote/auth.ts
@@ -124792,11 +124792,11 @@ import { createHash, createPublicKey, timingSafeEqual, verify as verifySignature
 var SKEW_SECONDS = 60;
 async function discoverAuthorizationServer(issuer, doFetch = fetch) {
   const url2 = new URL(issuer);
-  const path26 = url2.pathname.replace(/\/+$/, "");
+  const path29 = url2.pathname.replace(/\/+$/, "");
   const candidates = [
-    `${url2.origin}/.well-known/oauth-authorization-server${path26}`,
-    `${url2.origin}${path26}/.well-known/openid-configuration`,
-    `${url2.origin}/.well-known/openid-configuration${path26}`
+    `${url2.origin}/.well-known/oauth-authorization-server${path29}`,
+    `${url2.origin}${path29}/.well-known/openid-configuration`,
+    `${url2.origin}/.well-known/openid-configuration${path29}`
   ];
   const problems = [];
   for (const candidate of candidates) {
@@ -125756,6 +125756,9 @@ function readGitRemote(root2) {
   }
 }
 
+// src/core/wizard.ts
+import path6 from "node:path";
+
 // src/catalog/frameworks.ts
 var APP_TYPE_OPTIONS = [
   { value: "web", label: "Web app", description: "Runs in a browser and you open it with a URL." },
@@ -125775,17 +125778,18 @@ var FRAMEWORKS = {
       label: "Playwright",
       description: "Fast, auto-waits for elements, built-in reports and traces.",
       languages: ["typescript", "javascript", "java", "python", "csharp"],
-      packs: { typescript: "playwright-ts" },
+      packs: { typescript: "playwright-ts", javascript: "playwright-js" },
       pros: ["Waits for elements automatically, so fewer flaky tests", "Trace viewer shows exactly what happened", "Chromium, Firefox and WebKit from one API"],
       cons: ["No real Safari on Windows/Linux (WebKit is close but not identical)"]
     },
     {
       value: "selenium",
       label: "Selenium 4",
-      description: "The long-standing standard, with a huge community.",
+      description: "The long-standing standard, with a huge community. With Java: Maven, TestNG, Page Object Model, Cucumber for BDD.",
       languages: ["java", "python", "csharp", "javascript"],
-      pros: ["Most widely known", "Works with every grid and cloud"],
-      cons: ["You write your own waits", "More setup and boilerplate"]
+      packs: { java: "selenium-java" },
+      pros: ["Most widely known; most QA engineers already know it", "Works with every grid and cloud", "Selenium Manager downloads the browser drivers for you"],
+      cons: ["Explicit waits are your job (the generated BasePage wraps them)", "More setup than Playwright"]
     },
     {
       value: "webdriverio",
@@ -125874,7 +125878,7 @@ var FRAMEWORKS = {
       label: "Playwright for Electron",
       description: "Launches the Electron app and drives its windows like web pages.",
       languages: ["typescript", "javascript"],
-      packs: { typescript: "playwright-ts" },
+      packs: { typescript: "playwright-ts", javascript: "playwright-js" },
       pros: ["Same API as web tests"],
       cons: ["Playwright marks Electron support as experimental"]
     }
@@ -125885,7 +125889,7 @@ var FRAMEWORKS = {
       label: "Playwright API testing",
       description: "HTTP tests with Playwright's request client.",
       languages: ["typescript", "javascript", "java", "python", "csharp"],
-      packs: { typescript: "playwright-ts" },
+      packs: { typescript: "playwright-ts", javascript: "playwright-js" },
       pros: ["Mix API and UI steps in one test"],
       cons: ["Fewer API-specific helpers than REST Assured"]
     },
@@ -125976,13 +125980,13 @@ var EXTRA_OPTIONS = [
   { value: "parallel", label: "Parallel runs", description: "Run tests in parallel safely." }
 ];
 function recommendStack(appType, existingLanguages = []) {
-  const framework = FRAMEWORKS[appType][0];
-  const preferTs = existingLanguages.length === 0 || existingLanguages.some((l2) => l2 === "typescript" || l2 === "javascript");
-  const javaRepo = existingLanguages.includes("java") && !preferTs;
-  const pythonRepo = existingLanguages.includes("python") && !preferTs && !javaRepo;
-  const language = javaRepo && framework.languages.includes("java") ? "java" : pythonRepo && framework.languages.includes("python") ? "python" : framework.languages[0];
-  const why = javaRepo || pythonRepo ? `it matches the ${LANGUAGE_LABELS[language]} already in this repository` : "TestPilot has ready-made templates for it and it has the best tooling";
-  return { framework: framework.value, language, pattern: "pom", reason: `${framework.label} with ${LANGUAGE_LABELS[language]} and the Page Object Model: ${framework.description} I suggest ${LANGUAGE_LABELS[language]} because ${why}.` };
+  const hasJsTs = existingLanguages.some((l2) => l2 === "typescript" || l2 === "javascript");
+  const repoLanguage = hasJsTs ? existingLanguages.includes("typescript") ? "typescript" : "javascript" : ["java", "python", "csharp"].find((l2) => existingLanguages.includes(l2));
+  const scaffoldable = FRAMEWORKS[appType].find((f) => repoLanguage && f.packs?.[repoLanguage]);
+  const framework = scaffoldable ?? FRAMEWORKS[appType][0];
+  const language = repoLanguage && framework.languages.includes(repoLanguage) ? repoLanguage : framework.languages[0];
+  const why = repoLanguage === language ? `it matches the ${LANGUAGE_LABELS[language]} already in this repository` : "it has the best tooling for this framework; pick another if your team knows it better";
+  return { framework: framework.value, language, pattern: "pom", reason: `${framework.label} with ${LANGUAGE_LABELS[language]} and the Page Object Model: ${framework.description} I suggest ${LANGUAGE_LABELS[language]} because ${why}. The choice is yours: TestPilot scaffolds and generates tests for every combination marked as such.` };
 }
 function findFramework(appType, value) {
   return FRAMEWORKS[appType].find((f) => f.value === value);
@@ -126150,7 +126154,7 @@ function keysFor(integrations) {
 // src/core/env.ts
 var ENV_FILE = ".env";
 var ENV_EXAMPLE_FILE = ".env.example";
-var GITIGNORE_LINES = [".env", ".env.*", "!.env.example", "apps/", "test-results/", "playwright-report/", "allure-results/", "allure-report/", ".testpilot/tmp/"];
+var GITIGNORE_LINES = [".env", ".env.*", "!.env.example", "apps/", "test-results/", "playwright-report/", "allure-results/", "allure-report/", ".features-gen/", "target/", ".testpilot/tmp/", ".testpilot/tools/"];
 function parseDotenv(content) {
   const out = /* @__PURE__ */ new Map();
   for (const rawLine of content.split(/\r?\n/)) {
@@ -126257,6 +126261,19 @@ var STEPS = [
     apply: (config2, answer) => {
       config2.appType = answer;
       return `App type: ${label(APP_TYPE_OPTIONS, answer)}`;
+    },
+    // The project name feeds package names (Java), artifact ids and report titles; the folder name is the default.
+    after: (store, config2) => {
+      if (config2.project.name) return;
+      const pkg2 = store.read("package.json");
+      let name;
+      try {
+        name = pkg2 ? JSON.parse(pkg2).name?.replace(/^@[^/]+\//, "") : void 0;
+      } catch {
+        name = void 0;
+      }
+      config2.project.name = (name || path6.basename(store.root)).replace(/[^A-Za-z0-9 _-]+/g, " ").trim() || "app";
+      store.writeConfig(config2);
     }
   },
   {
@@ -126299,12 +126316,12 @@ var STEPS = [
     title: "Language",
     kind: "choice",
     allowFreeText: true,
-    question: () => "Which programming language should the tests be written in?",
-    why: "Pick the language your team already knows; it matters more than any other choice for long-term maintenance.",
+    question: () => "Which programming language should the tests be written in? This is your team's choice; every option works.",
+    why: "Pick the language your team already knows; it matters more than any other choice for long-term maintenance. TestPilot never forces a language: it scaffolds TypeScript, JavaScript and Java (Selenium) itself and guides the others.",
     options: (ctx) => {
       const fw = ctx.config.appType && ctx.config.stack.framework ? findFramework(ctx.config.appType, ctx.config.stack.framework) : void 0;
       const langs = fw?.languages ?? Object.keys(LANGUAGE_LABELS);
-      return langs.map((l2) => ({ value: l2, label: LANGUAGE_LABELS[l2] ?? l2, description: fw?.packs?.[l2] ? "TestPilot can scaffold this combination." : "TestPilot will guide you, without a ready-made template yet." }));
+      return langs.map((l2) => ({ value: l2, label: LANGUAGE_LABELS[l2] ?? l2, description: fw?.packs?.[l2] ? "TestPilot scaffolds the framework, generates the tests and runs them for this combination." : "TestPilot writes the plan, skills and agents and guides you; the framework itself follows the official getting-started steps." }));
     },
     recommended: (ctx) => {
       const fw = ctx.config.appType && ctx.config.stack.framework ? findFramework(ctx.config.appType, ctx.config.stack.framework) : void 0;
@@ -126325,7 +126342,7 @@ var STEPS = [
     title: "Design pattern",
     kind: "choice",
     question: () => "Which design pattern should the framework follow?",
-    why: "The pattern decides how tests are organised. The Page Object Model is the safest default for most teams.",
+    why: "The pattern decides how tests are organised. The Page Object Model is the safest default for most teams; BDD (Cucumber) adds Given/When/Then feature files on top of the same page objects.",
     options: () => PATTERN_OPTIONS,
     recommended: () => "pom",
     apply: (config2, answer) => {
@@ -126904,27 +126921,27 @@ ${lines.join("\n")}`,
 
 // src/tools/explore.ts
 import { existsSync as existsSync10 } from "node:fs";
-import path11 from "node:path";
+import path12 from "node:path";
 
 // src/explore/mobile.ts
 import { spawn as spawn3 } from "node:child_process";
-import path8 from "node:path";
+import path9 from "node:path";
 
 // src/scaffold/engine.ts
 var import_handlebars = __toESM(require_lib(), 1);
 import { spawn } from "node:child_process";
 import { existsSync as existsSync7, readFileSync as readFileSync4 } from "node:fs";
-import path7 from "node:path";
+import path8 from "node:path";
 
 // src/package-root.ts
 import { existsSync as existsSync6 } from "node:fs";
-import path6 from "node:path";
+import path7 from "node:path";
 import { fileURLToPath } from "node:url";
 var PACKAGE_ROOT = (() => {
-  let dir = path6.dirname(fileURLToPath(import.meta.url));
+  let dir = path7.dirname(fileURLToPath(import.meta.url));
   for (; ; ) {
-    if (existsSync6(path6.join(dir, "package.json")) && existsSync6(path6.join(dir, "templates"))) return dir;
-    const up = path6.dirname(dir);
+    if (existsSync6(path7.join(dir, "package.json")) && existsSync6(path7.join(dir, "templates"))) return dir;
+    const up = path7.dirname(dir);
     if (up === dir) throw new Error("TestPilot could not find its templates folder next to package.json.");
     dir = up;
   }
@@ -126933,12 +126950,12 @@ var PACKAGE_ROOT = (() => {
 // src/scaffold/engine.ts
 var GENERATED_HEADER = "generated by TestPilot; edit .testpilot/config.yaml instead";
 var CREATED_HEADER = "Created by TestPilot. This file is yours: edit it freely.";
-var TEMPLATES_DIR = path7.join(PACKAGE_ROOT, "templates");
+var TEMPLATES_DIR = path8.join(PACKAGE_ROOT, "templates");
 function readTemplate(file) {
   return readFileSync4(file, "utf8").replace(/\r\n/g, "\n");
 }
 function loadPack(id) {
-  const file = path7.join(TEMPLATES_DIR, id, "manifest.json");
+  const file = path8.join(TEMPLATES_DIR, id, "manifest.json");
   if (!existsSync7(file)) throw new Error(`Template pack "${id}" is not installed.`);
   return JSON.parse(readFileSync4(file, "utf8"));
 }
@@ -126968,9 +126985,18 @@ function renderContext(config2) {
     browsers,
     reporting: { html: reporting.has("html"), junit: reporting.has("junit"), allure: reporting.has("allure") },
     cloud: config2.execution.target === "browserstack",
+    isBdd: config2.stack.pattern === "bdd",
+    isJs: config2.stack.language === "javascript",
+    javaPackage: javaPackageFor(config2),
+    javaPackagePath: javaPackageFor(config2).replace(/\./g, "/"),
+    artifactId: `${(config2.project.name ?? "app").toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "app"}-tests`,
     projectName: config2.project.name ?? "app",
     projectNameJson: JSON.stringify(config2.project.name ?? "app")
   };
+}
+function javaPackageFor(config2) {
+  const name = (config2.project.name ?? "app").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  return `com.${/^[a-z]/.test(name) ? name : `app${name}`}.tests`;
 }
 function automationNameFor(config2) {
   switch (config2.appType) {
@@ -127017,6 +127043,10 @@ function applies(when, ctx) {
       return !ctx.cloud;
     case "cloud":
       return Boolean(ctx.cloud);
+    case "bdd":
+      return Boolean(ctx.isBdd);
+    case "notbdd":
+      return !ctx.isBdd;
   }
 }
 function installCommandsFor(pack, config2) {
@@ -127030,7 +127060,7 @@ function manualSetupFor(pack, config2) {
 }
 var templateCache = /* @__PURE__ */ new Map();
 function renderTemplate(packId, from, ctx) {
-  const file = path7.join(TEMPLATES_DIR, packId, "files", from);
+  const file = path8.join(TEMPLATES_DIR, packId, "files", from);
   let template2 = templateCache.get(file);
   if (!template2) {
     template2 = import_handlebars.default.compile(readTemplate(file), { noEscape: true, strict: false });
@@ -127040,7 +127070,7 @@ function renderTemplate(packId, from, ctx) {
 }
 function inTestRoot(config2, relative) {
   const root2 = config2.project.testRoot && config2.project.testRoot !== "." ? config2.project.testRoot : "";
-  return toPosix(path7.posix.join(root2, relative));
+  return toPosix(path8.posix.join(root2, relative));
 }
 function planPack(store, config2, packId) {
   const pack = loadPack(packId);
@@ -127048,11 +127078,11 @@ function planPack(store, config2, packId) {
   const files = [];
   for (const f of pack.files) {
     if (!applies(f.when, ctx)) continue;
-    const target = inTestRoot(config2, f.to);
+    const target = inTestRoot(config2, f.to.includes("{{") ? import_handlebars.default.compile(f.to, { noEscape: true })(ctx) : f.to);
     const content = renderTemplate(packId, f.from, ctx);
     files.push(compareWithDisk(store, target, content, f.ifMissing));
   }
-  files.push(planPackageJson(store, config2, pack, ctx));
+  if (pack.packageJson !== false) files.push(planPackageJson(store, config2, pack, ctx));
   return { pack, files };
 }
 function compareWithDisk(store, target, content, ifMissing = false) {
@@ -127071,7 +127101,7 @@ function planPackageJson(store, config2, pack, ctx = renderContext(config2)) {
   const added = [];
   const deps = { ...pack.devDependencies };
   for (const [feature, extra] of Object.entries(pack.optionalDevDependencies ?? {})) {
-    if (config2.integrations.reporting?.includes(feature) || config2.extras.includes(feature) || config2.execution.target === feature) Object.assign(deps, extra);
+    if (config2.integrations.reporting?.includes(feature) || config2.extras.includes(feature) || config2.execution.target === feature || config2.stack.pattern === feature) Object.assign(deps, extra);
   }
   for (const [name, version3] of Object.entries(deps)) {
     if (!pkg2.devDependencies[name] && !pkg2.dependencies?.[name]) {
@@ -127080,8 +127110,9 @@ function planPackageJson(store, config2, pack, ctx = renderContext(config2)) {
     }
   }
   for (const [name, entry] of Object.entries(pack.scripts)) {
-    if (typeof entry !== "string" && !applies(entry.when, ctx)) continue;
-    const script = typeof entry === "string" ? entry : entry.run;
+    const variant = typeof entry === "string" ? { run: entry } : Array.isArray(entry) ? entry.find((v) => applies(v.when, ctx)) : applies(entry.when, ctx) ? entry : void 0;
+    if (!variant) continue;
+    const script = variant.run;
     const key = pkg2.scripts[name] && pkg2.scripts[name] !== script ? `tp:${name}` : name;
     if (!pkg2.scripts[key]) {
       pkg2.scripts[key] = script;
@@ -127159,8 +127190,10 @@ import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 const require = createRequire(path.join(process.cwd(), 'package.json'));
+// Projects without Node dependencies (Selenium + Java) keep a small Playwright under .testpilot/tools for exploration only.
+const toolsRequire = process.env.TESTPILOT_TOOLS ? createRequire(path.join(process.env.TESTPILOT_TOOLS, 'package.json')) : require;
 let pw;
-try { pw = require('@playwright/test'); } catch { try { pw = require('playwright'); } catch { console.log('__TESTPILOT__' + JSON.stringify({ fatal: 'Playwright is not installed in this project. Run npm install, then npx playwright install chromium.' })); process.exit(0); } }
+try { pw = require('@playwright/test'); } catch { try { pw = require('playwright'); } catch { try { pw = toolsRequire('playwright'); } catch { console.log('__TESTPILOT__' + JSON.stringify({ fatal: process.env.TESTPILOT_TOOLS_HINT || 'Playwright is not installed in this project. Run npm install, then npx playwright install chromium.' })); process.exit(0); } } }
 const args = JSON.parse(process.env.TESTPILOT_EXPLORE);
 const launch = {};
 if (process.env.BROWSER_CHANNEL) launch.channel = process.env.BROWSER_CHANNEL;
@@ -127230,11 +127263,17 @@ function parseAriaSnapshot(snapshot) {
 function quote(s) {
   return `'${s.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\r?\n/g, " ")}'`;
 }
+var TOOLS_DIR = ".testpilot/tools";
 async function exploreWeb(store, cwd, options) {
   const scriptRel = ".testpilot/tmp/explore.mjs";
   store.write(scriptRel, EXPLORE_SCRIPT);
   const outDir = store.resolve(`${EXPLORATION_DIR}/screenshots`);
-  const env3 = { ...process.env, TESTPILOT_EXPLORE: JSON.stringify({ url: options.url, maxPages: options.maxPages, screenshots: options.screenshots, outDir, storageState: options.storageState ? store.resolve(options.storageState) : void 0, ignoreHttpsErrors: options.ignoreHttpsErrors }) };
+  const env3 = {
+    ...process.env,
+    TESTPILOT_EXPLORE: JSON.stringify({ url: options.url, maxPages: options.maxPages, screenshots: options.screenshots, outDir, storageState: options.storageState ? store.resolve(options.storageState) : void 0, ignoreHttpsErrors: options.ignoreHttpsErrors }),
+    TESTPILOT_TOOLS: store.resolve(TOOLS_DIR),
+    TESTPILOT_TOOLS_HINT: options.toolsHint ?? ""
+  };
   const stdout = await new Promise((resolve, reject2) => {
     const child = spawn2(process.execPath, [store.resolve(scriptRel)], { cwd, env: env3, windowsHide: true });
     let out = "";
@@ -127723,12 +127762,12 @@ async function appiumAnswers(raw, timeoutMs = 4e3) {
   }
 }
 function resolveAppPath(cwd, value) {
-  return path8.isAbsolute(value) || /^[A-Za-z]:[\\/]/.test(value) ? value : path8.resolve(cwd, value);
+  return path9.isAbsolute(value) || /^[A-Za-z]:[\\/]/.test(value) ? value : path9.resolve(cwd, value);
 }
 
 // src/run/playwright.ts
 import { existsSync as existsSync8, readFileSync as readFileSync5, statSync as statSync6 } from "node:fs";
-import path9 from "node:path";
+import path10 from "node:path";
 var RULES2 = [
   {
     category: "environment",
@@ -127813,11 +127852,11 @@ function readOutcomes(json, cwd, scrub, repoRoot) {
       const rawError = failed ? messages.length ? messages.join("\n") : `Test ${failed.status}` : void 0;
       const error2 = rawError ? scrub(rawError.replace(ANSI, "")).split("\n").slice(0, 12).join("\n").slice(0, 1500) : void 0;
       const triage = error2 ? categorise(error2) : void 0;
-      const attachments = (failed?.attachments ?? []).filter((a) => a.path && ["trace", "screenshot", "video", "error-context"].includes(a.name)).map((a) => ({ name: a.name, path: path9.relative(repoRoot, a.path).split(path9.sep).join("/") }));
+      const attachments = (failed?.attachments ?? []).filter((a) => a.path && ["trace", "screenshot", "video", "error-context"].includes(a.name)).map((a) => ({ name: a.name, path: path10.relative(repoRoot, a.path).split(path10.sep).join("/") }));
       out.push({
         id: key,
         title: spec.title,
-        file: path9.relative(repoRoot, path9.resolve(rootDir, spec.file)).split(path9.sep).join("/"),
+        file: path10.relative(repoRoot, path10.resolve(rootDir, spec.file)).split(path10.sep).join("/"),
         line: spec.line,
         project: t.projectName,
         status,
@@ -127833,17 +127872,27 @@ function readOutcomes(json, cwd, scrub, repoRoot) {
   }
   return out;
 }
+function bddSpecFor(feature) {
+  return feature.endsWith(".feature") ? `.features-gen/${feature.replace(/^\.\//, "")}.spec.js` : feature;
+}
 async function runPlaywright(store, options, run2 = runCommand) {
-  const argv = ["npx", "playwright", "test", ...options.files];
+  const startedAt = /* @__PURE__ */ new Date();
+  const scrub = secretScrubber(store);
+  if (options.bdd) {
+    const gen = await run2(options.cwd, ["npx", "bddgen"], options.timeoutMs);
+    if (gen.exitCode !== 0) {
+      const stats2 = { total: 0, passed: 0, failed: 0, flaky: 0, skipped: 0, durationMs: Date.now() - startedAt.getTime() };
+      return { startedAt: startedAt.toISOString(), finishedAt: (/* @__PURE__ */ new Date()).toISOString(), command: "npx bddgen", exitCode: gen.exitCode, repeat: options.repeat, stats: stats2, tests: [], byCategory: {}, consoleTail: scrub(gen.tail.replace(ANSI, "")) };
+    }
+  }
+  const argv = ["npx", "playwright", "test", ...options.files.map((f) => options.bdd ? bddSpecFor(f) : f)];
   if (options.grep) argv.push("--grep", options.grep);
   if (options.repeat > 1) argv.push("--repeat-each", String(options.repeat), "--retries", "0");
   if (options.project) argv.push("--project", options.project);
   if (options.workers) argv.push("--workers", String(options.workers));
-  const startedAt = /* @__PURE__ */ new Date();
   const outcome = await run2(options.cwd, argv, options.timeoutMs);
   const finishedAt = /* @__PURE__ */ new Date();
-  const scrub = secretScrubber(store);
-  const reportPath = path9.resolve(options.cwd, options.reportFile);
+  const reportPath = path10.resolve(options.cwd, options.reportFile);
   const fresh = existsSync8(reportPath) && statSync6(reportPath).mtimeMs >= startedAt.getTime() - 1e3;
   const tests = fresh ? parseReport(JSON.parse(readFileSync5(reportPath, "utf8")), options.cwd, scrub, store.root) : [];
   const stats = {
@@ -127859,7 +127908,7 @@ async function runPlaywright(store, options, run2 = runCommand) {
   return {
     startedAt: startedAt.toISOString(),
     finishedAt: finishedAt.toISOString(),
-    command: argv.join(" "),
+    command: `${options.bdd ? "npx bddgen && " : ""}${argv.join(" ")}`,
     exitCode: outcome.exitCode,
     repeat: options.repeat,
     stats,
@@ -127882,7 +127931,7 @@ function readLatestRun(store) {
 
 // src/run/wdio.ts
 import { existsSync as existsSync9, readdirSync as readdirSync5, readFileSync as readFileSync6, statSync as statSync7 } from "node:fs";
-import path10 from "node:path";
+import path11 from "node:path";
 var ANSI2 = /\u001b\[[0-9;]*m/g;
 var APPIUM_RULES = [
   {
@@ -127922,7 +127971,7 @@ function testIdOf(title) {
   return title.match(/^([A-Za-z][\w.]*-\d+|C\d+|TC[-_]?\d+)(?=\s|$)/)?.[1] ?? title.match(/(?:^|\s)@([A-Za-z][\w.]*-\d+)(?=\s|$)/)?.[1] ?? title;
 }
 function toRepoPath(repoRoot, cwd, file) {
-  return path10.relative(repoRoot, path10.resolve(cwd, file)).split(path10.sep).join("/");
+  return path11.relative(repoRoot, path11.resolve(cwd, file)).split(path11.sep).join("/");
 }
 function parseWdioResults(runs, scrub, repoRoot, cwd) {
   const byKey = /* @__PURE__ */ new Map();
@@ -127972,7 +128021,7 @@ function readWdioResults(dir, since) {
   if (!existsSync9(dir)) return [];
   const out = [];
   for (const name of readdirSync5(dir).filter((n) => n.endsWith(".json"))) {
-    const file = path10.join(dir, name);
+    const file = path11.join(dir, name);
     if (statSync7(file).mtimeMs < since - 1e3) continue;
     try {
       out.push(JSON.parse(readFileSync6(file, "utf8")));
@@ -127995,7 +128044,7 @@ async function runWdio(store, options, run2 = runCommand) {
     const outcome = await run2(options.cwd, argv, options.timeoutMs);
     if (outcome.exitCode !== 0) exitCode = outcome.exitCode;
     tail = outcome.tail;
-    runs.push(readWdioResults(path10.resolve(options.cwd, options.resultsDir), began));
+    runs.push(readWdioResults(path11.resolve(options.cwd, options.resultsDir), began));
   }
   const finishedAt = /* @__PURE__ */ new Date();
   const tests = parseWdioResults(runs, scrub, store.root, options.cwd);
@@ -128019,7 +128068,7 @@ async function runWdio(store, options, run2 = runCommand) {
     stats,
     tests,
     byCategory,
-    reportFile: anyResults ? store.relative(path10.resolve(options.cwd, options.resultsDir)) : void 0,
+    reportFile: anyResults ? store.relative(path11.resolve(options.cwd, options.resultsDir)) : void 0,
     // Keep the console output when it holds the only explanation (no session, a crashed worker, a config error).
     consoleTail: anyResults && tests.length && (exitCode === 0 || tests.some((t) => t.status === "failed" || t.status === "flaky")) ? void 0 : scrub(tail.replace(ANSI2, ""))
   };
@@ -128041,7 +128090,7 @@ async function exploreAppiumApp(store, config2, args) {
   }
   const testRoot = inTestRoot(config2, ".") || ".";
   const cwd = store.resolve(testRoot);
-  if (!existsSync10(path11.join(cwd, "node_modules", "webdriverio")) && !store.exists("node_modules/webdriverio")) {
+  if (!existsSync10(path12.join(cwd, "node_modules", "webdriverio")) && !store.exists("node_modules/webdriverio")) {
     return failure2("WebdriverIO is not installed yet. Run npm install in the test folder (scaffold_project with install: true does it), then call explore_app again.");
   }
   const env3 = loadEnvValues(store);
@@ -128176,7 +128225,9 @@ function registerExploreTools(server, options) {
         }
         if (args.storageState && !store.exists(args.storageState)) return failure2(`No file at ${args.storageState}.`);
         const cwd = store.resolve(inTestRoot(config2, ".") || ".");
-        const out = await exploreWeb(store, cwd, { url: url2, maxPages: args.maxPages, screenshots: args.screenshots, storageState: args.storageState, ignoreHttpsErrors: args.ignoreHttpsErrors });
+        const nodeProject = config2.stack.templatePack !== "selenium-java";
+        const toolsHint = nodeProject ? void 0 : "Playwright for exploration is not installed under .testpilot/tools yet. Run: npm install --prefix .testpilot/tools --no-package-lock playwright@1.64.0 && node .testpilot/tools/node_modules/playwright/cli.js install --with-deps chromium (scaffold_project does this for you). The tests themselves use only Selenium.";
+        const out = await exploreWeb(store, cwd, { url: url2, maxPages: args.maxPages, screenshots: args.screenshots, storageState: args.storageState, ignoreHttpsErrors: args.ignoreHttpsErrors, toolsHint });
         if (out.fatal) return failure2(out.fatal);
         const ok = out.pages.filter((p) => !p.error && (p.status ?? 200) < 400);
         const first2 = out.pages[0];
@@ -128337,12 +128388,12 @@ function rowsToDrafts(rows, mapping, refPrefix, firstRowNumber) {
     const ref = `${refPrefix} row ${firstRowNumber + i}`;
     const id = get2(row, "id");
     const title = get2(row, "title");
-    const stepText2 = get2(row, "steps");
+    const stepText3 = get2(row, "steps");
     const expectedText = get2(row, "expected");
     const dataText = get2(row, "data");
     const continues = current && (!id && !title || id && id === current.id && (!title || title === current.title));
     if (continues && current) {
-      const { steps: steps2, overall: overall2 } = pairSteps(stepText2, expectedText, dataText);
+      const { steps: steps2, overall: overall2 } = pairSteps(stepText3, expectedText, dataText);
       if (steps2.length) current.steps.push(...steps2);
       else if (overall2) current.expected = [current.expected, overall2].filter(Boolean).join("\n");
       const pre2 = get2(row, "preconditions");
@@ -128356,7 +128407,7 @@ function rowsToDrafts(rows, mapping, refPrefix, firstRowNumber) {
     current.description = get2(row, "description") || void 0;
     const pre = get2(row, "preconditions");
     if (pre) current.preconditions = splitNumbered(pre);
-    const { steps, overall } = pairSteps(stepText2, expectedText, dataText);
+    const { steps, overall } = pairSteps(stepText3, expectedText, dataText);
     current.steps = steps;
     current.expected = overall;
     current.testData = steps.length ? void 0 : dataText || void 0;
@@ -128365,7 +128416,7 @@ function rowsToDrafts(rows, mapping, refPrefix, firstRowNumber) {
     current.link = get2(row, "link") || void 0;
     const tags = get2(row, "tags");
     current.tags = tags ? tags.split(/[,;\n]+/).map((t) => t.trim()).filter(Boolean) : [];
-    if (!stepText2 && !expectedText && !title) {
+    if (!stepText3 && !expectedText && !title) {
       warnings.push({ ref, message: "Row has an id but no title, steps or expected result; skipped." });
       current = void 0;
       return;
@@ -128441,7 +128492,7 @@ function finalise(drafts, source, idPrefix = "TC") {
 }
 
 // src/generate/playwright.ts
-import path12 from "node:path";
+import path13 from "node:path";
 
 // src/generate/intents.ts
 var THIRD_PERSON = {
@@ -128598,6 +128649,12 @@ function parseCheck(raw) {
 }
 
 // src/generate/playwright.ts
+function cucumberExpression(text2) {
+  return text2.replace(/[\\(){}/]/g, (m) => `\\${m}`);
+}
+function stepText(s) {
+  return clean(s).text.replace(/\s+/g, " ").replace(/^(given|when|then|and|but)\s+/i, "").replace(/[.;]+$/, "").trim().slice(0, 200) || "do nothing";
+}
 var HOME_WORDS = /^(home|homepage|application|app|site|website|web ?site|url|browser|portal|landing|start|main|base url|the application)$/i;
 var SETUP_ONLY = /\b(browser is (open|launched|running)|application is (open|running|launched|installed|available)|app is installed|internet|network connection|test environment is (up|available)|user has access to the (app|application|site))\b/i;
 var LOGGED_IN = /\b(user is |already |is )?(logged|signed) ?in\b/i;
@@ -128626,8 +128683,11 @@ var PlaywrightGenerator = class {
     this.store = store;
     this.config = config2;
     this.exploration = exploration;
+    this.js = config2.stack.templatePack === "playwright-js";
+    this.bdd = config2.stack.pattern === "bdd";
+    this.ext = this.js ? "js" : "ts";
     this.elements = exploration.flatMap((p) => p.elements.map((e) => ({ ...e, page: p })));
-    for (const f of store.list(inTestRoot(config2, "src/pages"), (n) => n.endsWith(".ts"))) this.existingPageFiles.add(path12.posix.basename(f, ".ts"));
+    for (const f of store.list(inTestRoot(config2, "src/pages"), (n) => n.endsWith(`.${this.ext}`))) this.existingPageFiles.add(path13.posix.basename(f, `.${this.ext}`));
   }
   store;
   config;
@@ -128635,6 +128695,18 @@ var PlaywrightGenerator = class {
   pages = /* @__PURE__ */ new Map();
   elements;
   existingPageFiles = /* @__PURE__ */ new Set();
+  /** JavaScript (CommonJS) instead of TypeScript. */
+  js;
+  /** Cucumber features and step definitions instead of specs. */
+  bdd;
+  ext;
+  stepDefs = /* @__PURE__ */ new Map();
+  duplicateSteps = [];
+  /** `import { a } from 'x'` or its CommonJS twin. */
+  importLine(names, from, typeOnly = false) {
+    if (this.js) return typeOnly ? "" : `const { ${names} } = require(${quote(from)});`;
+    return `import ${typeOnly ? "type " : ""}{ ${names} } from ${quote(from)};`;
+  }
   find(name, roles) {
     const n = name.toLowerCase();
     const candidates = this.elements.filter((e) => roles.includes(e.role));
@@ -128653,7 +128725,7 @@ var PlaywrightGenerator = class {
       draft = {
         className,
         fixture: camel(className),
-        file: inTestRoot(this.config, `src/pages/${className}.ts`),
+        file: inTestRoot(this.config, `src/pages/${className}.${this.ext}`),
         path: explored ?? (/^login|sign ?in/i.test(name) ? "/login" : `/${slug(name)}`),
         pathKnown: Boolean(explored),
         locators: /* @__PURE__ */ new Map(),
@@ -128700,7 +128772,7 @@ var PlaywrightGenerator = class {
       const submitProp = submit ? this.clickable(po, submit.name, "button") : this.addLocator(po, "signInButton", `this.page.getByRole('button', { name: /sign in|log ?in/i })`);
       po.methods.set(
         "login",
-        `    async login(username: string, password: string): Promise<void> {
+        `    async login(${this.js ? "username, password" : "username: string, password: string"})${this.js ? "" : ": Promise<void>"} {
         await this.${userProp}.fill(username);
         await this.${pwdProp}.fill(password);
         await this.${submitProp}.click();
@@ -128709,7 +128781,7 @@ var PlaywrightGenerator = class {
       po.methods.set(
         "loginAs",
         `    /** Opens the login page and signs in as a role from test-data/users.json (credentials come from .env). */
-    async loginAs(role = 'standard'): Promise<void> {
+    async loginAs(role = 'standard')${this.js ? "" : ": Promise<void>"} {
         const user = testUser(role);
         await this.open();
         await this.login(user.username, user.password);
@@ -128786,7 +128858,7 @@ var PlaywrightGenerator = class {
             po.methods.set(
               method,
               `    /** The "${comment(intent.name)}" ${seen?.role ?? intent.role ?? "button"} inside the list item or row that contains \`text\`. */
-    ${method}(text: string): Locator {
+    ${method}(${this.js ? "text" : "text: string"})${this.js ? "" : ": Locator"} {
         return this.page
             .getByRole('listitem')
             .or(this.page.getByRole('row'))
@@ -128856,52 +128928,63 @@ var PlaywrightGenerator = class {
         return [`// TODO(testpilot): check that ${comment(intent.text)}`];
     }
   }
-  /** Builds the spec for one case and records what it needs in page objects. */
+  /** Reads one case into Given/When/Then segments with the code each translates to. */
+  segments(tc, ctx) {
+    const out = [];
+    for (const pre of tc.preconditions) {
+      const lines = [`// Precondition: ${comment(pre)}`];
+      if (LOGGED_IN.test(pre) && !/not (logged|signed)/i.test(pre)) lines.push(...this.action({ kind: "login", role: /admin/i.test(pre) ? "admin" : "standard" }, ctx));
+      else if (!SETUP_ONLY.test(pre)) {
+        ctx.todos.push(`set up: ${pre}`);
+        lines.push("// TODO(testpilot): set this up in the test (through the API or a fixture), not by hand.");
+      }
+      out.push({ keyword: "Given", text: stepText(pre), lines });
+    }
+    tc.steps.forEach((step, i) => {
+      const lines = [`// Step ${i + 1}: ${comment(step.action)}${step.data ? ` (data: ${comment(step.data)})` : ""}`];
+      const normalised = normaliseStep(step.action);
+      const isCheck = VERIFY.test(normalised);
+      if (isCheck) lines.push(...parseCheck(step.action).flatMap((c) => this.check(c, ctx)));
+      else lines.push(...parseAction(step.action, step.data ?? tc.testData).flatMap((a) => this.action(a, ctx)));
+      out.push({ keyword: isCheck ? "Then" : "When", text: stepText(step.action), lines });
+      if (step.expected) {
+        out.push({ keyword: "Then", text: stepText(step.expected), lines: [`// Expected: ${comment(step.expected)}`, ...parseCheck(step.expected).flatMap((c) => this.check(c, ctx))] });
+      }
+    });
+    if (tc.expected) {
+      for (const line of tc.expected.split(/\n+/).filter(Boolean)) out.push({ keyword: "Then", text: stepText(line), lines: [`// Expected: ${comment(line)}`, ...parseCheck(line).flatMap((c) => this.check(c, ctx))] });
+    }
+    if (!tc.steps.length && !tc.expected) {
+      ctx.todos.push("write the steps");
+      out.push({ keyword: "When", text: "the steps are written", lines: ["// TODO(testpilot): this case has no steps yet."] });
+    }
+    return out;
+  }
+  /** Builds the spec (or the feature file and its step definitions) for one case and records what it needs in page objects. */
   spec(tc) {
     const area = tc.area ?? "General";
     const home = this.pageObject(/^(general|home|smoke)$/i.test(area) ? "Home" : area);
     const ctx = { current: home, fixtures: /* @__PURE__ */ new Set(), imports: /* @__PURE__ */ new Set(), todos: [] };
+    const tags = [`@${tc.id}`, ...tc.area ? [`@${slug(tc.area)}`] : [], ...tc.priority ? [`@${tc.priority.toLowerCase()}`] : [], ...tc.tags.map((t) => `@${slug(t)}`)].filter((t, i, all) => all.indexOf(t) === i && t.length > 1);
+    const title = `${tc.id} ${clean(tc.title).text.replace(/\s+/g, " ")}`;
+    if (this.bdd) return this.feature(tc, area, title, tags, ctx);
     const body = [];
-    for (const pre of tc.preconditions) {
-      body.push(`// Precondition: ${comment(pre)}`);
-      if (LOGGED_IN.test(pre) && !/not (logged|signed)/i.test(pre)) body.push(...this.action({ kind: "login", role: /admin/i.test(pre) ? "admin" : "standard" }, ctx));
-      else if (!SETUP_ONLY.test(pre)) {
-        ctx.todos.push(`set up: ${pre}`);
-        body.push("// TODO(testpilot): set this up in the test (through the API or a fixture), not by hand.");
-      }
-    }
-    tc.steps.forEach((step, i) => {
+    for (const seg of this.segments(tc, ctx)) {
       if (body.length) body.push("");
-      body.push(`// Step ${i + 1}: ${comment(step.action)}${step.data ? ` (data: ${comment(step.data)})` : ""}`);
-      const normalised = normaliseStep(step.action);
-      if (VERIFY.test(normalised)) body.push(...parseCheck(step.action).flatMap((c) => this.check(c, ctx)));
-      else body.push(...parseAction(step.action, step.data ?? tc.testData).flatMap((a) => this.action(a, ctx)));
-      if (step.expected) {
-        body.push(`// Expected: ${comment(step.expected)}`);
-        body.push(...parseCheck(step.expected).flatMap((c) => this.check(c, ctx)));
-      }
-    });
-    if (tc.expected) {
-      body.push("", `// Expected: ${comment(tc.expected)}`);
-      for (const line of tc.expected.split(/\n+/).filter(Boolean)) body.push(...parseCheck(line).flatMap((c) => this.check(c, ctx)));
+      body.push(...seg.lines);
     }
-    if (!tc.steps.length && !tc.expected) {
-      ctx.todos.push("write the steps");
-      body.push("// TODO(testpilot): this case has no steps yet.");
-    }
-    const file = inTestRoot(this.config, `tests/${slug(area)}/${slugId(tc.id)}.spec.ts`);
+    const file = inTestRoot(this.config, `tests/${slug(area)}/${slugId(tc.id)}.spec.${this.ext}`);
     const fixturesImport = relativeImport(file, inTestRoot(this.config, "src/fixtures/test"));
     const usesExpect = body.some((l2) => l2.includes("expect("));
     const usesPage = body.some((l2) => /\bpage\./.test(l2) || /\(page\)/.test(l2));
     const fixtures = [...usesPage ? ["page"] : [], ...[...ctx.fixtures].sort()];
-    const tags = [`@${tc.id}`, ...tc.area ? [`@${slug(tc.area)}`] : [], ...tc.priority ? [`@${tc.priority.toLowerCase()}`] : [], ...tc.tags.map((t) => `@${slug(t)}`)].filter((t, i, all) => all.indexOf(t) === i && t.length > 1);
-    const title = `${tc.id} ${clean(tc.title).text.replace(/\s+/g, " ")}`;
     const todos = ctx.todos.length;
     const lines = [
+      ...this.js ? ["// @ts-check"] : [],
       `// ${CREATED_HEADER}`,
       `// Generated from test case ${comment(tc.id)} (${comment(tc.source.type)}${tc.source.ref ? `: ${comment(tc.source.ref)}` : ""}).${todos ? ` ${todos} TODO(testpilot) item(s) to finish; the test is marked fixme until then.` : ""}`,
-      `import { ${usesExpect ? "expect, " : ""}test } from ${quote(fixturesImport)};`,
-      ...ctx.imports.has("requireEnv") ? [`import { requireEnv } from ${quote(relativeImport(file, inTestRoot(this.config, "src/utils/env")))};`] : [],
+      this.importLine(`${usesExpect ? "expect, " : ""}test`, fixturesImport),
+      ...ctx.imports.has("requireEnv") ? [this.importLine("requireEnv", relativeImport(file, inTestRoot(this.config, "src/utils/env")))] : [],
       "",
       `test${todos ? ".fixme" : ""}(`,
       `    ${quote(title)},`,
@@ -128914,43 +128997,130 @@ var PlaywrightGenerator = class {
     ];
     return { file, content: lines.join("\n"), todos };
   }
+  /** BDD: a Cucumber scenario per case; each unique step text becomes one step definition. */
+  feature(tc, area, title, tags, ctx) {
+    const steps = [];
+    let last2;
+    for (const seg of this.segments(tc, ctx)) {
+      const before2 = new Set(ctx.fixtures);
+      const text2 = seg.text;
+      const key = text2.toLowerCase();
+      const existing = this.stepDefs.get(key);
+      const usesPage = seg.lines.some((l2) => /\bpage\./.test(l2) || /\(page\)/.test(l2));
+      const fixtures = /* @__PURE__ */ new Set([...usesPage ? ["page"] : [], ...[...ctx.fixtures].filter((f) => !before2.has(f) || seg.lines.some((l2) => l2.includes(`${f}.`)))]);
+      if (!existing) this.stepDefs.set(key, { keyword: seg.keyword, text: text2, lines: seg.lines, fixtures, imports: new Set(ctx.imports) });
+      else if (existing.lines.join("\n") !== seg.lines.join("\n")) this.duplicateSteps.push(`"${text2}" (${tc.id}) reuses the definition first generated for another case; check it does the same thing there.`);
+      steps.push(`    ${seg.keyword === last2 ? "And" : seg.keyword} ${text2}`);
+      last2 = seg.keyword;
+    }
+    const todos = ctx.todos.length;
+    const file = inTestRoot(this.config, `features/${slug(area)}/${slugId(tc.id)}.feature`);
+    const content = [
+      `# ${CREATED_HEADER}`,
+      `# Generated from test case ${comment(tc.id)} (${comment(tc.source.type)}${tc.source.ref ? `: ${comment(tc.source.ref)}` : ""}).${todos ? ` ${todos} TODO(testpilot) item(s) to finish in steps/generated.steps.${this.ext}; the scenario is tagged @fixme until then.` : ""}`,
+      `Feature: ${clean(area).text.replace(/\s+/g, " ")}`,
+      "",
+      `  ${[...tags, ...todos ? ["@fixme"] : []].join(" ")}`,
+      `  Scenario: ${title}`,
+      ...steps,
+      ""
+    ].join("\n");
+    return { file, content, todos };
+  }
+  /** steps/generated.steps.* with one definition per step text; existing definitions are kept and new ones added above the marker. */
+  stepsFile(notes) {
+    if (!this.stepDefs.size) return void 0;
+    const file = inTestRoot(this.config, `steps/generated.steps.${this.ext}`);
+    const current = this.store.read(file);
+    const defs = [...this.stepDefs.values()];
+    const render2 = (d) => [
+      `${d.keyword}(${quote(cucumberExpression(d.text))}, async (${d.fixtures.size ? `{ ${[...d.fixtures].sort().join(", ")} }` : "{}"}) => {`,
+      ...d.lines.map((l2) => l2 ? `    ${l2}` : ""),
+      "});"
+    ].join("\n");
+    const needsEnv = defs.some((d) => d.imports.has("requireEnv"));
+    if (current === void 0) {
+      const content2 = [
+        ...this.js ? ["// @ts-check"] : [],
+        `// ${CREATED_HEADER}`,
+        "// Step definitions generated by TestPilot from test cases. Each step text in features/ maps to one definition here.",
+        this.importLine("createBdd", "playwright-bdd"),
+        "",
+        this.importLine(`expect, test`, relativeImport(file, inTestRoot(this.config, "src/fixtures/test"))),
+        ...needsEnv ? [this.importLine("requireEnv", relativeImport(file, inTestRoot(this.config, "src/utils/env")))] : [],
+        "",
+        "const { Given, When, Then } = createBdd(test);",
+        "",
+        defs.map(render2).join("\n\n"),
+        "// testpilot:steps",
+        ""
+      ].join("\n");
+      return { path: file, status: "new", content: content2 };
+    }
+    const missing = defs.filter((d) => !current.includes(`(${quote(cucumberExpression(d.text))},`));
+    if (!missing.length) return { path: file, status: "unchanged", content: current };
+    if (!current.includes("// testpilot:steps")) {
+      notes.push(`${file} has no // testpilot:steps marker, so it was left alone. Add these step definitions yourself:
+${missing.map(render2).join("\n\n")}`);
+      return { path: file, status: "skip", content: current, note: "No // testpilot:steps marker; add the listed step definitions by hand." };
+    }
+    let content = current.replace(/^([ \t]*)\/\/ testpilot:steps/m, (m, indent, offset) => `${offset > 0 && !/\n\s*\n$/.test(current.slice(0, offset)) ? "\n" : ""}${missing.map(render2).join("\n\n")}
+${indent}// testpilot:steps`);
+    if (needsEnv && !content.includes("requireEnv")) {
+      const line = this.importLine("requireEnv", relativeImport(file, inTestRoot(this.config, "src/utils/env")));
+      const lastImport = [...content.matchAll(this.js ? /^const .+ = require\(.+\);$/gm : /^import .+;$/gm)].pop();
+      content = lastImport ? content.slice(0, lastImport.index + lastImport[0].length) + "\n" + line + content.slice(lastImport.index + lastImport[0].length) : `${line}
+${content}`;
+    }
+    return { path: file, status: "merge", content, note: `Adds ${missing.length} step definition(s) above the TestPilot marker.` };
+  }
   /** Page objects, the users helper and fixture registrations needed by the specs built so far. */
   supportFiles() {
     const files = [];
     const notes = [];
     const used = [...this.pages.values()].filter((po) => po.locators.size || po.methods.size || this.specFixtures.has(po.fixture));
     for (const po of used) files.push(this.pageObjectFile(po, notes));
-    if (used.some((po) => po.usesUsers)) files.push(compareWithDisk(this.store, inTestRoot(this.config, "src/utils/users.ts"), USERS_HELPER, true));
+    if (used.some((po) => po.usesUsers)) files.push(compareWithDisk(this.store, inTestRoot(this.config, `src/utils/users.${this.ext}`), this.js ? USERS_HELPER_JS : USERS_HELPER, true));
     files.push(this.fixturesFile(used, notes));
+    const steps = this.stepsFile(notes);
+    if (steps) files.push(steps);
+    notes.push(...this.duplicateSteps);
     return { files, notes };
   }
   specFixtures = /* @__PURE__ */ new Set();
+  /** Fixtures the generated step definitions use (BDD). */
+  pagesInUse() {
+    return [...this.stepDefs.values()].flatMap((d) => [...d.fixtures]).filter((f) => f !== "page");
+  }
   pageObjectFile(po, notes) {
     const current = this.store.read(po.file);
-    const locatorLines = [...po.locators.entries()].map(([name, expr]) => `    readonly ${name}: Locator = ${expr};`);
+    const field = (name, expr) => this.js ? `    ${name} = ${expr};` : `    readonly ${name}: Locator = ${expr};`;
+    const locatorLines = [...po.locators.entries()].map(([name, expr]) => field(name, expr));
     const methodBlocks = [...po.methods.values()];
     if (current === void 0) {
-      const needsLocator = locatorLines.length > 0 || methodBlocks.some((m) => m.includes("Locator"));
+      const needsLocator = !this.js && (locatorLines.length > 0 || methodBlocks.some((m) => m.includes("Locator")));
       const content2 = [
+        ...this.js ? ["// @ts-check"] : [],
         `// ${CREATED_HEADER}`,
         ...needsLocator ? [`import type { Locator } from '@playwright/test';`, ""] : [],
-        `import { BasePage } from './BasePage';`,
-        ...po.usesUsers ? [`import { testUser } from '../utils/users';`] : [],
+        this.importLine("BasePage", "./BasePage"),
+        ...po.usesUsers ? [this.importLine("testUser", "../utils/users")] : [],
         "",
         `/** Page object for ${comment(po.className.replace(/Page$/, ""))}. TestPilot adds locators and actions above the markers when it generates new tests. */`,
-        `export class ${po.className} extends BasePage {`,
-        `    protected readonly path = ${quote(po.path)};${po.pathKnown ? "" : " // TODO(testpilot): check this path; exploration did not find the page."}`,
+        `${this.js ? "" : "export "}class ${po.className} extends BasePage {`,
+        `    ${this.js ? "path" : "protected readonly path"} = ${quote(po.path)};${po.pathKnown ? "" : " // TODO(testpilot): check this path; exploration did not find the page."}`,
         "",
         ...locatorLines,
         "    // testpilot:locators",
         ...methodBlocks.length ? ["", methodBlocks.join("\n\n")] : [],
         "    // testpilot:actions",
         "}",
+        ...this.js ? ["", `module.exports = { ${po.className} };`] : [],
         ""
       ].join("\n");
       return { path: po.file, status: "new", content: content2 };
     }
-    const missingLocators = [...po.locators.entries()].filter(([name]) => !new RegExp(`\\b${name}\\b`).test(current)).map(([name, expr]) => `    readonly ${name}: Locator = ${expr};`);
+    const missingLocators = [...po.locators.entries()].filter(([name]) => !new RegExp(`\\b${name}\\b`).test(current)).map(([name, expr]) => field(name, expr));
     const missingMethods = [...po.methods.entries()].filter(([name]) => !new RegExp(`\\b${name}\\s*\\(`).test(current)).map(([, block]) => block);
     if (!missingLocators.length && !missingMethods.length) return { path: po.file, status: "unchanged", content: current };
     if (missingLocators.length && !current.includes("// testpilot:locators") || missingMethods.length && !current.includes("// testpilot:actions")) {
@@ -128964,16 +129134,16 @@ $1// testpilot:locators`);
     if (missingMethods.length) content = content.replace(/^([ \t]*)\/\/ testpilot:actions/m, `
 ${missingMethods.join("\n\n")}
 $1// testpilot:actions`);
-    if (po.usesUsers && !content.includes("testUser")) content = content.replace(/(import \{ BasePage \} from '\.\/BasePage';)/, `$1
-import { testUser } from '../utils/users';`);
-    if ((missingLocators.length || missingMethods.some((m) => m.includes("Locator"))) && !/import (type )?\{[^}]*\bLocator\b/.test(content)) {
+    if (po.usesUsers && !content.includes("testUser")) content = content.replace(/(import \{ BasePage \} from '\.\/BasePage';|const \{ BasePage \} = require\('\.\/BasePage'\);)/, `$1
+${this.importLine("testUser", "../utils/users")}`);
+    if (!this.js && (missingLocators.length || missingMethods.some((m) => m.includes("Locator"))) && !/import (type )?\{[^}]*\bLocator\b/.test(content)) {
       content = content.replace(/^(\/\/[^\n]*\n)?/, (m) => `${m}import type { Locator } from '@playwright/test';
 `);
     }
     return { path: po.file, status: "merge", content, note: `Adds ${[...missingLocators, ...missingMethods].length} member(s) above the TestPilot markers.` };
   }
   fixturesFile(pages2, notes) {
-    const file = inTestRoot(this.config, "src/fixtures/test.ts");
+    const file = inTestRoot(this.config, `src/fixtures/test.${this.ext}`);
     const current = this.store.read(file);
     if (current === void 0) {
       notes.push(`${file} is missing. Run scaffold_project first.`);
@@ -128981,18 +129151,18 @@ import { testUser } from '../utils/users';`);
     }
     const missing = pages2.filter((po) => !new RegExp(`\\b${po.fixture}\\s*:`).test(current));
     if (!missing.length) return { path: file, status: "unchanged", content: current };
-    if (!current.includes("// testpilot:fixture-types") || !current.includes("// testpilot:fixtures")) {
+    if (!this.js && !current.includes("// testpilot:fixture-types") || !current.includes("// testpilot:fixtures")) {
       notes.push(`${file} has no TestPilot markers. Register these page objects as fixtures yourself: ${missing.map((po) => po.className).join(", ")}.`);
       return { path: file, status: "skip", content: current, note: "No // testpilot: markers." };
     }
     let content = current;
-    const imports = missing.filter((po) => !content.includes(`{ ${po.className} }`)).map((po) => `import { ${po.className} } from '${relativeImport(file, po.file.replace(/\.ts$/, ""))}';`);
+    const imports = missing.filter((po) => !content.includes(`{ ${po.className} }`)).map((po) => this.importLine(po.className, relativeImport(file, po.file.replace(/\.[jt]s$/, ""))));
     if (imports.length) {
-      const lastImport = [...content.matchAll(/^import .+;$/gm)].pop();
+      const lastImport = [...content.matchAll(this.js ? /^const .+ = require\(.+\);$/gm : /^import .+;$/gm)].pop();
       content = lastImport ? content.slice(0, lastImport.index + lastImport[0].length) + "\n" + imports.join("\n") + content.slice(lastImport.index + lastImport[0].length) : `${imports.join("\n")}
 ${content}`;
     }
-    content = content.replace(/^([ \t]*)\/\/ testpilot:fixture-types/m, `${missing.map((po) => `$1${po.fixture}: ${po.className};`).join("\n")}
+    if (!this.js) content = content.replace(/^([ \t]*)\/\/ testpilot:fixture-types/m, `${missing.map((po) => `$1${po.fixture}: ${po.className};`).join("\n")}
 $1// testpilot:fixture-types`);
     content = content.replace(
       /^([ \t]*)\/\/ testpilot:fixtures/m,
@@ -129008,7 +129178,7 @@ function slugId(id) {
   return id.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 80);
 }
 function relativeImport(fromFile, toModule) {
-  const rel = path12.posix.relative(path12.posix.dirname(fromFile), toModule);
+  const rel = path13.posix.relative(path13.posix.dirname(fromFile), toModule);
   return rel.startsWith(".") ? rel : `./${rel}`;
 }
 function escapeRegExp(s) {
@@ -129041,6 +129211,31 @@ export function testUser(role: string): { username: string; password: string } {
     return { username: requireEnv(entry.usernameEnv ?? entry.emailEnv ?? 'TEST_USER_EMAIL'), password: requireEnv(entry.passwordEnv) };
 }
 `;
+var USERS_HELPER_JS = `// @ts-check
+// ${CREATED_HEADER}
+const { readFileSync } = require('node:fs');
+const path = require('node:path');
+
+const { test } = require('@playwright/test');
+
+const { requireEnv } = require('./env');
+
+/**
+ * Credentials for a role in test-data/users.json. The file holds only the names of
+ * .env keys; the values come from .env locally and from CI secrets in pipelines.
+ * @param {string} role
+ * @returns {{ username: string, password: string }}
+ */
+function testUser(role) {
+    const root = test.info().config.configFile ? path.dirname(test.info().config.configFile) : process.cwd();
+    const users = JSON.parse(readFileSync(path.join(root, 'test-data', 'users.json'), 'utf8'));
+    const entry = users[role];
+    if (!entry) throw new Error(\`No user with role "\${role}" in test-data/users.json. Add it with the names of its .env keys.\`);
+    return { username: requireEnv(entry.usernameEnv ?? entry.emailEnv ?? 'TEST_USER_EMAIL'), password: requireEnv(entry.passwordEnv) };
+}
+
+module.exports = { testUser };
+`;
 function planPlaywrightTests(store, config2, cases, exploration) {
   const gen = new PlaywrightGenerator(store, config2, exploration);
   const files = [];
@@ -129053,6 +129248,7 @@ function planPlaywrightTests(store, config2, cases, exploration) {
     }
     const spec = gen.spec(tc);
     for (const fx of spec.content.match(/async \(\{ ([^}]+) \}\)/)?.[1].split(", ") ?? []) gen.specFixtures.add(fx);
+    if (gen.bdd) for (const po of gen.pagesInUse()) gen.specFixtures.add(po);
     files.push(compareWithDisk(store, spec.file, spec.content));
     out.push({ id: tc.id, spec: spec.file, todos: spec.todos });
   }
@@ -129241,14 +129437,15 @@ function apiSpec(config2, tc) {
     ctx.body.push('// TODO(testpilot): this case does not say which request to send (for example "GET /orders/42").');
   }
   const area = tc.area ?? "api";
-  const file = inTestRoot(config2, `tests/api/${slug(area) || "api"}/${tc.id.replace(/[^A-Za-z0-9._-]+/g, "_")}.spec.ts`);
+  const js = config2.stack.templatePack === "playwright-js";
+  const file = inTestRoot(config2, `tests/api/${slug(area) || "api"}/${tc.id.replace(/[^A-Za-z0-9._-]+/g, "_")}.spec.${js ? "js" : "ts"}`);
   const tags = [`@${tc.id}`, "@api", ...tc.area ? [`@${slug(tc.area)}`] : [], ...tc.priority ? [`@${tc.priority.toLowerCase()}`] : [], ...tc.tags.map((t) => `@${slug(t)}`)].filter((t, i, all) => all.indexOf(t) === i && t.length > 1);
   const fixtures = ["request", ...ctx.usesPlaywright ? ["playwright"] : []];
   const usesExpect = ctx.body.some((l2) => l2.includes("expect("));
   const lines = [
     `// ${CREATED_HEADER}`,
     `// Generated from test case ${tc.id} (${tc.source.type}${tc.source.ref ? `: ${tc.source.ref.replace(/\s+/g, " ")}` : ""}).${ctx.todos ? ` ${ctx.todos} TODO(testpilot) item(s) to finish; the test is marked fixme until then.` : ""}`,
-    `import { ${usesExpect ? "expect, " : ""}test } from '@playwright/test';`,
+    js ? `const { ${usesExpect ? "expect, " : ""}test } = require('@playwright/test');` : `import { ${usesExpect ? "expect, " : ""}test } from '@playwright/test';`,
     "",
     `test${ctx.todos ? ".fixme" : ""}(`,
     `    ${quote(`${tc.id} ${clean(tc.title).text.replace(/\s+/g, " ")}`)},`,
@@ -129278,7 +129475,7 @@ function planApiTests(store, config2, cases) {
 }
 
 // src/generate/appium.ts
-import path13 from "node:path";
+import path14 from "node:path";
 var HOME_WORDS2 = /^(home|homepage|home screen|application|app|mobile app|site|website|start|main|landing|launcher|the application)$/i;
 var SETUP_ONLY2 = /\b(app(lication)? is (installed|open|running|launched|available)|device is (connected|unlocked|online)|emulator is (running|started)|internet|network connection|test environment is (up|available)|user has access to the (app|application))\b/i;
 var LOGGED_IN2 = /\b(user is |already |is )?(logged|signed) ?in\b/i;
@@ -129295,7 +129492,7 @@ function slugId2(id) {
   return id.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 80);
 }
 function relativeImport2(fromFile, toModule) {
-  const rel = path13.posix.relative(path13.posix.dirname(fromFile), toModule);
+  const rel = path14.posix.relative(path14.posix.dirname(fromFile), toModule);
   return rel.startsWith(".") ? rel : `./${rel}`;
 }
 function capitalise2(s) {
@@ -129717,35 +129914,577 @@ function planAppiumTests(store, config2, cases, exploration) {
   return { files: [...support.files, ...specs], cases: out, pageObjects: support.files.filter((f) => f.path.includes("src/screens/")).map((f) => f.path), notes: support.notes };
 }
 
+// src/generate/selenium.ts
+import path15 from "node:path";
+var HOME_WORDS3 = /^(home|homepage|application|app|site|website|web ?site|url|browser|portal|landing|start|main|base url|the application)$/i;
+var SETUP_ONLY3 = /\b(browser is (open|launched|running)|application is (open|running|launched|installed|available)|app is installed|internet|network connection|test environment is (up|available)|user has access to the (app|application|site))\b/i;
+var LOGGED_IN3 = /\b(user is |already |is )?(logged|signed) ?in\b/i;
+var VERIFY3 = /^(verify|check that|check if|ensure|confirm|validate|assert|observe|see that|should|expect)\b/i;
+var ROLE_SUFFIX2 = { button: "Button", link: "Link", textbox: "Field", searchbox: "Field", combobox: "Dropdown", listbox: "List", checkbox: "Checkbox", radio: "Option", option: "Option", tab: "Tab", menuitem: "MenuItem", switch: "Switch", heading: "Heading", spinbutton: "Field", slider: "Slider" };
+var KEYS2 = { Enter: "ENTER", Tab: "TAB", Escape: "ESCAPE", Space: "SPACE", Backspace: "BACK_SPACE", Delete: "DELETE", ArrowUp: "ARROW_UP", ArrowDown: "ARROW_DOWN", ArrowLeft: "ARROW_LEFT", ArrowRight: "ARROW_RIGHT" };
+function jstr(s) {
+  return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ")}"`;
+}
+function comment3(s) {
+  return clean(s).text.replace(/\s+/g, " ").replace(/\*\//g, "* /").slice(0, 200);
+}
+function javaName(s, upper) {
+  const base = (upper ? pascal(s) : camel(s)).replace(/[^A-Za-z0-9_]/g, "");
+  const safe = /^[0-9]/.test(base) ? `_${base}` : base || (upper ? "Generated" : "step");
+  return RESERVED.has(safe) ? `${safe}_` : safe;
+}
+var RESERVED = /* @__PURE__ */ new Set(["abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for", "goto", "if", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "try", "void", "volatile", "while", "record", "var", "yield"]);
+var SeleniumGenerator = class {
+  constructor(store, config2, exploration) {
+    this.store = store;
+    this.config = config2;
+    this.exploration = exploration;
+    this.bdd = config2.stack.pattern === "bdd";
+    this.pkg = javaPackageFor(config2);
+    const pkgPath = this.pkg.replace(/\./g, "/");
+    this.mainDir = inTestRoot(config2, `src/main/java/${pkgPath}`);
+    this.testDir = inTestRoot(config2, `src/test/java/${pkgPath}`);
+    this.elements = exploration.flatMap((p) => p.elements.map((e) => ({ ...e, page: p })));
+  }
+  store;
+  config;
+  exploration;
+  pages = /* @__PURE__ */ new Map();
+  elements;
+  stepDefs = /* @__PURE__ */ new Map();
+  duplicateSteps = [];
+  bdd;
+  pkg;
+  mainDir;
+  testDir;
+  find(name, roles) {
+    const n = name.toLowerCase();
+    const candidates = this.elements.filter((e) => roles.includes(e.role));
+    return candidates.find((e) => e.name.toLowerCase() === n) ?? candidates.find((e) => e.name.toLowerCase().includes(n) && n.length >= 3) ?? candidates.find((e) => n.includes(e.name.toLowerCase()) && e.name.length >= 3);
+  }
+  explorePathFor(name) {
+    const n = name.toLowerCase();
+    return this.exploration.find((p) => !p.error && (p.title.toLowerCase().includes(n) || p.headings.some((h) => h.toLowerCase().includes(n)) || p.path.toLowerCase().includes(slug(n))))?.path;
+  }
+  pageObject(name) {
+    const className = `${javaName(name.replace(/\s*page$/i, ""), true)}Page`;
+    let draft = this.pages.get(className);
+    if (!draft) {
+      const explored = this.explorePathFor(name);
+      draft = {
+        className,
+        varName: javaName(className, false),
+        file: `${this.mainDir}/pages/${className}.java`,
+        path: explored ?? (/^login|sign ?in/i.test(name) ? "/login" : `/${slug(name)}`),
+        pathKnown: Boolean(explored),
+        locators: /* @__PURE__ */ new Map(),
+        methods: /* @__PURE__ */ new Map(),
+        usesUsers: false
+      };
+      this.pages.set(className, draft);
+    }
+    return draft;
+  }
+  addLocator(po, prop, expr) {
+    let name = javaName(prop, false);
+    let i = 2;
+    while (po.locators.has(name) && po.locators.get(name) !== expr) name = `${javaName(prop, false)}${i++}`;
+    po.locators.set(name, expr);
+    return name;
+  }
+  clickable(po, name, role) {
+    const roles = role ? [role] : ["button", "link", "tab", "menuitem", "checkbox", "radio", "option", "switch"];
+    const seen = this.find(name, roles);
+    const r = seen?.role ?? role ?? "button";
+    const label4 = seen?.name ?? name;
+    const expr = seen || role ? `byRole(${jstr(r)}, ${jstr(label4)})` : `By.xpath(byRole("button", ${jstr(label4)}).toString().replaceFirst("^By.xpath: ", "") + " | " + byRole("link", ${jstr(label4)}).toString().replaceFirst("^By.xpath: ", ""))`;
+    return this.addLocator(po, `${label4} ${ROLE_SUFFIX2[r] ?? "Button"}`, expr);
+  }
+  field(po, name) {
+    const seen = this.find(name, ["textbox", "searchbox", "combobox", "spinbutton"]);
+    return this.addLocator(po, `${seen?.name ?? name} ${seen?.role === "combobox" ? "Dropdown" : "Field"}`, `byLabel(${jstr(seen?.name ?? name)})`);
+  }
+  loginPage() {
+    const po = this.pageObject("Login");
+    const pwd = this.elements.find((e) => e.role === "textbox" && /pass ?word/i.test(e.name));
+    if (pwd && !po.pathKnown) {
+      po.path = pwd.page.path;
+      po.pathKnown = true;
+    }
+    if (!po.methods.has("login")) {
+      const user2 = this.elements.find((e) => e.role === "textbox" && /e-?mail|user ?name|login/i.test(e.name));
+      const submit = this.elements.find((e) => e.role === "button" && /sign ?in|log ?in|continue|submit/i.test(e.name));
+      const userProp = user2 ? this.field(po, user2.name) : this.addLocator(po, "usernameField", `By.xpath("//input[@type='email' or @name='email' or @name='username' or @id='email' or @id='username' or contains(translate(@placeholder,'EMAIL','email'),'email')]")`);
+      const pwdProp = pwd ? this.field(po, pwd.name) : this.addLocator(po, "passwordField", `By.cssSelector("input[type='password']")`);
+      const submitProp = submit ? this.clickable(po, submit.name, "button") : this.addLocator(po, "signInButton", `By.xpath("//button[@type='submit'] | //input[@type='submit'] | //button[contains(normalize-space(.), 'Sign in') or contains(normalize-space(.), 'Log in') or contains(normalize-space(.), 'Login')]")`);
+      po.methods.set(
+        "login",
+        `    public void login(String username, String password) {
+        type(${userProp}, username);
+        type(${pwdProp}, password);
+        click(${submitProp});
+    }`
+      );
+      po.methods.set(
+        "loginAs",
+        `    /** Opens the login page and signs in as a role from test-data/users.json (credentials come from .env). */
+    public void loginAs(String role) {
+        TestUsers.User user = TestUsers.forRole(role);
+        open();
+        login(user.username(), user.password());
+    }`
+      );
+      po.usesUsers = true;
+    }
+    return po;
+  }
+  value(v, ctx, field) {
+    if (v.kind === "literal") return jstr(v.value);
+    if (v.kind === "env") {
+      ctx.usesEnv = true;
+      return `Env.require(${jstr(v.name)})`;
+    }
+    ctx.todos.push(`choose the ${field} value`);
+    return `"" /* TODO(testpilot): ${comment3(v.hint)} */`;
+  }
+  use(ctx, po) {
+    ctx.pages.add(po.className);
+    return po.varName;
+  }
+  action(intent, ctx) {
+    const po = ctx.current;
+    switch (intent.kind) {
+      case "open": {
+        if (intent.path) {
+          ctx.usesDriver = true;
+          ctx.usesEnv = true;
+          return [`driver.get(Env.require("APP_BASE_URL").replaceAll("/+$", "") + ${jstr(intent.path.replace(/^https?:\/\/[^/]+/i, "") || "/")});`];
+        }
+        if (!intent.target || HOME_WORDS3.test(intent.target)) {
+          const home = this.pageObject("Home");
+          return [`${this.use(ctx, home)}.open();`];
+        }
+        const target = this.pageObject(intent.target);
+        ctx.current = target;
+        return [`${this.use(ctx, target)}.open();`];
+      }
+      case "login":
+        return [`${this.use(ctx, this.loginPage())}.loginAs(${jstr(intent.role)});`];
+      case "logout": {
+        const prop = this.clickable(po, "Log out");
+        return [`${this.use(ctx, po)}.click(${po.varName}.${prop});`];
+      }
+      case "fill": {
+        const prop = this.field(po, intent.field);
+        return [`${this.use(ctx, po)}.type(${po.varName}.${prop}, ${this.value(intent.value, ctx, intent.field)});`];
+      }
+      case "clear": {
+        const prop = this.field(po, intent.field);
+        return [`${this.use(ctx, po)}.clear(${po.varName}.${prop});`];
+      }
+      case "select": {
+        const seen = this.find(intent.field, ["combobox", "listbox"]);
+        const prop = this.addLocator(po, `${seen?.name ?? intent.field} Dropdown`, `byLabel(${jstr(seen?.name ?? intent.field)})`);
+        return [`${this.use(ctx, po)}.select(${po.varName}.${prop}, ${jstr(intent.option)});`];
+      }
+      case "check": {
+        const seen = this.find(intent.name, ["checkbox", "switch", "radio"]);
+        const prop = this.addLocator(po, `${seen?.name ?? intent.name} Checkbox`, `byRole(${jstr(seen?.role ?? "checkbox")}, ${jstr(seen?.name ?? intent.name)})`);
+        return [`${this.use(ctx, po)}.setChecked(${po.varName}.${prop}, ${intent.checked});`];
+      }
+      case "click": {
+        if (intent.within) {
+          const method = javaName(`${intent.name} ${ROLE_SUFFIX2[intent.role ?? "button"] ?? "Button"} For`, false);
+          if (!po.methods.has(method)) {
+            const seen = this.find(intent.name, intent.role ? [intent.role] : ["button", "link"]);
+            po.methods.set(
+              method,
+              `    /** The "${comment3(intent.name)}" ${seen?.role ?? intent.role ?? "button"} inside the list item, row or card that contains {@code text}. */
+    public By ${method}(String text) {
+        return within(text, byRole(${jstr(seen?.role ?? intent.role ?? "button")}, ${jstr(seen?.name ?? intent.name)}));
+    }`
+            );
+          }
+          return [`${this.use(ctx, po)}.click(${po.varName}.${method}(${jstr(intent.within)}));`];
+        }
+        const prop = this.clickable(po, intent.name, intent.role);
+        return [`${this.use(ctx, po)}.click(${po.varName}.${prop});`];
+      }
+      case "press": {
+        ctx.usesKeys = true;
+        return [`${this.use(ctx, po)}.press(Keys.${KEYS2[intent.key] ?? intent.key.toUpperCase()});`];
+      }
+      case "hover": {
+        const prop = this.clickable(po, intent.name);
+        return [`${this.use(ctx, po)}.hover(${po.varName}.${prop});`];
+      }
+      case "search": {
+        const prop = this.addLocator(po, "searchField", `By.cssSelector("input[type='search'], [role='searchbox'], input[placeholder*='earch'], input[name*='search'], input[name='q']")`);
+        ctx.usesKeys = true;
+        return [`${this.use(ctx, po)}.type(${po.varName}.${prop}, ${jstr(intent.text)});`, `${po.varName}.press(Keys.ENTER);`];
+      }
+      case "reload":
+        ctx.usesDriver = true;
+        return ["driver.navigate().refresh();"];
+      case "back":
+        ctx.usesDriver = true;
+        return ["driver.navigate().back();"];
+      case "wait":
+        return ["// No fixed wait: the next step or expectation waits for its own condition."];
+      case "unknown":
+        ctx.todos.push(intent.text);
+        return [`// TODO(testpilot): ${comment3(intent.text)}`];
+    }
+  }
+  check(intent, ctx) {
+    ctx.usesExpect = true;
+    switch (intent.kind) {
+      case "text":
+        return [`expect.${intent.visible ? "text" : "noText"}(${jstr(intent.text)});`];
+      case "heading": {
+        if (HOME_WORDS3.test(intent.name)) return [`expect.urlContains("/");`];
+        const seen = this.elements.find((e) => e.role === "heading" && e.name.toLowerCase().includes(intent.name.toLowerCase()));
+        return [`expect.heading(${jstr(seen?.name ?? intent.name)});`];
+      }
+      case "title":
+        return [intent.exact ? `expect.title(${jstr(intent.text)});` : `expect.titleContains(${jstr(intent.text)});`];
+      case "url":
+        return [`expect.urlContains(${jstr(intent.part)});`];
+      case "count": {
+        const want = slug(intent.name).split("-");
+        const testId = this.exploration.flatMap((p) => p.testIds).find((t) => want.every((w) => t.value.toLowerCase().includes(w)) || want.length && t.value.toLowerCase().includes(want[0]) && /count|badge|total|qty|quantity/.test(t.value));
+        if (testId) return [`expect.textOf(BasePage.byTestId(${jstr(testId.value)}), ${jstr(intent.value)}, ${jstr(intent.name)});`];
+        ctx.usesExpect = false;
+        ctx.todos.push(`check that the ${intent.name} shows ${intent.value}`);
+        return [`// TODO(testpilot): check that the ${comment3(intent.name)} shows ${comment3(intent.value)} (no element with that name was found during exploration)`];
+      }
+      case "state": {
+        const po = ctx.current;
+        const prop = intent.role === "field" ? this.field(po, intent.name) : this.clickable(po, intent.name, intent.role === "link" || intent.role === "checkbox" ? intent.role : intent.role === "button" ? "button" : void 0);
+        const what = jstr(intent.name);
+        const target = `${this.use(ctx, po)}.${prop}`;
+        switch (intent.state) {
+          case "visible":
+            return [`expect.visible(${target}, ${what});`];
+          case "hidden":
+            return [`expect.hidden(${target}, ${what});`];
+          case "enabled":
+          case "disabled":
+            return [`expect.enabled(${target}, ${intent.state === "enabled"}, ${what});`];
+          default:
+            return [`expect.checked(${target}, ${intent.state === "checked"}, ${what});`];
+        }
+      }
+      case "unknown":
+        ctx.usesExpect = false;
+        ctx.todos.push(`check: ${intent.text}`);
+        return [`// TODO(testpilot): check that ${comment3(intent.text)}`];
+    }
+  }
+  segments(tc, ctx) {
+    const out = [];
+    for (const pre of tc.preconditions) {
+      const lines = [`// Precondition: ${comment3(pre)}`];
+      if (LOGGED_IN3.test(pre) && !/not (logged|signed)/i.test(pre)) lines.push(...this.action({ kind: "login", role: /admin/i.test(pre) ? "admin" : "standard" }, ctx));
+      else if (!SETUP_ONLY3.test(pre)) {
+        ctx.todos.push(`set up: ${pre}`);
+        lines.push("// TODO(testpilot): set this up in the test (through the API or test data), not by hand.");
+      }
+      out.push({ keyword: "Given", text: stepText(pre), lines });
+    }
+    tc.steps.forEach((step, i) => {
+      const lines = [`// Step ${i + 1}: ${comment3(step.action)}${step.data ? ` (data: ${comment3(step.data)})` : ""}`];
+      const isCheck = VERIFY3.test(normaliseStep(step.action));
+      if (isCheck) lines.push(...parseCheck(step.action).flatMap((c) => this.check(c, ctx)));
+      else lines.push(...parseAction(step.action, step.data ?? tc.testData).flatMap((a) => this.action(a, ctx)));
+      out.push({ keyword: isCheck ? "Then" : "When", text: stepText(step.action), lines });
+      if (step.expected) out.push({ keyword: "Then", text: stepText(step.expected), lines: [`// Expected: ${comment3(step.expected)}`, ...parseCheck(step.expected).flatMap((c) => this.check(c, ctx))] });
+    });
+    if (tc.expected) {
+      for (const line of tc.expected.split(/\n+/).filter(Boolean)) out.push({ keyword: "Then", text: stepText(line), lines: [`// Expected: ${comment3(line)}`, ...parseCheck(line).flatMap((c) => this.check(c, ctx))] });
+    }
+    if (!tc.steps.length && !tc.expected) {
+      ctx.todos.push("write the steps");
+      out.push({ keyword: "When", text: "the steps are written", lines: ["// TODO(testpilot): this case has no steps yet."] });
+    }
+    return out;
+  }
+  newCtx(area) {
+    return { current: this.pageObject(/^(general|home|smoke)$/i.test(area) ? "Home" : area), pages: /* @__PURE__ */ new Set(), todos: [], usesDriver: false, usesExpect: false, usesEnv: false, usesKeys: false };
+  }
+  /** The TestNG test class (or the feature file) for one case. */
+  spec(tc) {
+    const area = tc.area ?? "General";
+    const ctx = this.newCtx(area);
+    const title = `${tc.id} ${clean(tc.title).text.replace(/\s+/g, " ")}`;
+    const groups = [tc.id, ...tc.area ? [slug(tc.area)] : [], ...tc.priority ? [tc.priority.toLowerCase()] : [], ...tc.tags.map((t) => slug(t))].filter((t, i, all) => all.indexOf(t) === i && t.length > 1);
+    if (this.bdd) return this.feature(tc, area, title, groups, ctx);
+    const body = [];
+    for (const seg of this.segments(tc, ctx)) {
+      if (body.length) body.push("");
+      body.push(...seg.lines);
+    }
+    const todos = ctx.todos.length;
+    const areaPkg = slug(area).replace(/[^a-z0-9]/g, "") || "general";
+    const className = `${tc.id.replace(/[^A-Za-z0-9]+/g, "_")}Test`;
+    const file = `${this.testDir}/tests/${areaPkg}/${className}.java`;
+    const pages2 = [...ctx.pages].sort();
+    const imports = [
+      ...ctx.usesKeys ? ["import org.openqa.selenium.Keys;"] : [],
+      "import org.testng.annotations.Test;",
+      "",
+      `import ${this.pkg}.BaseTest;`,
+      ...ctx.usesEnv ? [`import ${this.pkg}.config.Env;`] : [],
+      ...body.some((l2) => l2.includes("BasePage.")) ? [`import ${this.pkg}.pages.BasePage;`] : [],
+      ...pages2.map((p) => `import ${this.pkg}.pages.${p};`)
+    ];
+    const lines = [
+      `// ${CREATED_HEADER}`,
+      `// Generated from test case ${comment3(tc.id)} (${comment3(tc.source.type)}${tc.source.ref ? `: ${comment3(tc.source.ref)}` : ""}).${todos ? ` ${todos} TODO(testpilot) item(s) to finish; the test is skipped until then.` : ""}`,
+      `package ${this.pkg}.tests.${areaPkg};`,
+      "",
+      ...imports,
+      "",
+      `public class ${className} extends BaseTest {`,
+      `    @Test(description = ${jstr(title)}, groups = {${groups.map(jstr).join(", ")}})`,
+      `    public void ${javaName(clean(tc.title).text, false).slice(0, 60) || "run"}() {`,
+      ...todos ? [`        skipUntilDone(${jstr(`${todos} TODO(testpilot) step(s) in this test`)});`] : [],
+      ...pages2.map((p) => `        ${p} ${this.pages.get(p).varName} = new ${p}(driver);`),
+      ...pages2.length ? [""] : [],
+      ...body.map((l2) => l2 ? `        ${l2}` : ""),
+      "    }",
+      "}",
+      ""
+    ];
+    return { file, content: lines.join("\n"), todos };
+  }
+  feature(tc, area, title, tags, ctx) {
+    const steps = [];
+    let last2;
+    for (const seg of this.segments(tc, ctx)) {
+      const key = seg.text.toLowerCase();
+      const existing = this.stepDefs.get(key);
+      const pages2 = new Set([...ctx.pages].filter((p) => seg.lines.some((l2) => l2.includes(`${this.pages.get(p).varName}.`))));
+      if (!existing) {
+        this.stepDefs.set(key, {
+          keyword: seg.keyword,
+          text: seg.text,
+          lines: seg.lines,
+          pages: pages2,
+          usesDriver: seg.lines.some((l2) => /\bdriver\./.test(l2)),
+          usesExpect: seg.lines.some((l2) => /\bexpect\./.test(l2)),
+          usesEnv: seg.lines.some((l2) => /\bEnv\./.test(l2)),
+          usesKeys: seg.lines.some((l2) => /\bKeys\./.test(l2))
+        });
+      } else if (existing.lines.join("\n") !== seg.lines.join("\n")) this.duplicateSteps.push(`"${seg.text}" (${tc.id}) reuses the step definition first generated for another case; check it does the same thing there.`);
+      steps.push(`    ${seg.keyword === last2 ? "And" : seg.keyword} ${seg.text}`);
+      last2 = seg.keyword;
+    }
+    const todos = ctx.todos.length;
+    const file = inTestRoot(this.config, `src/test/resources/features/${slug(area)}/${tc.id.replace(/[^A-Za-z0-9._-]+/g, "_")}.feature`);
+    const content = [
+      `# ${CREATED_HEADER}`,
+      `# Generated from test case ${comment3(tc.id)} (${comment3(tc.source.type)}${tc.source.ref ? `: ${comment3(tc.source.ref)}` : ""}).${todos ? ` ${todos} TODO(testpilot) item(s) to finish in GeneratedSteps.java; the scenario is tagged @testpilot-todo (skipped) until then.` : ""}`,
+      `Feature: ${clean(area).text.replace(/\s+/g, " ")}`,
+      "",
+      `  ${[...tags.map((t) => `@${t}`), ...todos ? ["@testpilot-todo"] : []].join(" ")}`,
+      `  Scenario: ${title}`,
+      ...steps,
+      ""
+    ].join("\n");
+    return { file, content, todos };
+  }
+  stepsFile(notes) {
+    if (!this.stepDefs.size) return void 0;
+    const file = `${this.testDir}/bdd/steps/GeneratedSteps.java`;
+    const current = this.store.read(file);
+    const defs = [...this.stepDefs.values()];
+    const used = /* @__PURE__ */ new Set();
+    const render2 = (d) => {
+      let name = javaName(d.text, false).slice(0, 50) || "step";
+      let i = 2;
+      while (used.has(name) || current && new RegExp(`\\b${name}\\s*\\(`).test(current)) name = `${javaName(d.text, false).slice(0, 50)}${i++}`;
+      used.add(name);
+      const locals = [
+        ...[...d.pages].sort().map((p) => `        ${p} ${this.pages.get(p).varName} = context.page(${p}.class);`),
+        ...d.usesDriver ? ["        WebDriver driver = context.driver();"] : [],
+        ...d.usesExpect ? ["        Expect expect = context.expect();"] : []
+      ];
+      return [`    @${d.keyword}(${jstr(cucumberExpression(d.text))})`, `    public void ${name}() {`, ...locals, ...d.lines.map((l2) => l2 ? `        ${l2}` : ""), "    }"].join("\n");
+    };
+    const allPages = [...new Set(defs.flatMap((d) => [...d.pages]))].sort();
+    const imports = [
+      ...defs.some((d) => d.usesDriver) ? ["import org.openqa.selenium.WebDriver;"] : [],
+      ...defs.some((d) => d.usesKeys) ? ["import org.openqa.selenium.Keys;"] : [],
+      "",
+      "import io.cucumber.java.en.Given;",
+      "import io.cucumber.java.en.Then;",
+      "import io.cucumber.java.en.When;",
+      "",
+      ...defs.some((d) => d.usesExpect) ? [`import ${this.pkg}.Expect;`] : [],
+      `import ${this.pkg}.bdd.TestContext;`,
+      ...defs.some((d) => d.usesEnv) ? [`import ${this.pkg}.config.Env;`] : [],
+      ...defs.some((d) => d.lines.some((l2) => l2.includes("BasePage."))) ? [`import ${this.pkg}.pages.BasePage;`] : [],
+      ...allPages.map((p) => `import ${this.pkg}.pages.${p};`)
+    ];
+    if (current === void 0) {
+      const content2 = [
+        `// ${CREATED_HEADER}`,
+        "// Step definitions generated by TestPilot from test cases. Each step text in the features maps to one method here.",
+        `package ${this.pkg}.bdd.steps;`,
+        "",
+        ...imports,
+        "",
+        "public class GeneratedSteps {",
+        "    private final TestContext context;",
+        "",
+        "    public GeneratedSteps(TestContext context) {",
+        "        this.context = context;",
+        "    }",
+        "",
+        defs.map(render2).join("\n\n"),
+        "",
+        "    // testpilot:steps",
+        "}",
+        ""
+      ].join("\n");
+      return { path: file, status: "new", content: content2 };
+    }
+    const missing = defs.filter((d) => !current.includes(`(${jstr(cucumberExpression(d.text))})`));
+    if (!missing.length) return { path: file, status: "unchanged", content: current };
+    if (!current.includes("// testpilot:steps")) {
+      notes.push(`${file} has no // testpilot:steps marker, so it was left alone. Add these step definitions yourself:
+${missing.map(render2).join("\n\n")}`);
+      return { path: file, status: "skip", content: current, note: "No // testpilot:steps marker; add the listed step definitions by hand." };
+    }
+    let content = current.replace(/^([ \t]*)\/\/ testpilot:steps/m, `${missing.map(render2).join("\n\n")}
+
+$1// testpilot:steps`);
+    for (const imp of imports.filter(Boolean)) {
+      if (content.includes(imp)) continue;
+      const lastImport = [...content.matchAll(/^import [^\n]+;$/gm)].pop();
+      content = lastImport ? content.slice(0, lastImport.index + lastImport[0].length) + `
+${imp}` + content.slice(lastImport.index + lastImport[0].length) : content.replace(/^(package [^\n]+\n)/m, `$1
+${imp}`);
+    }
+    return { path: file, status: "merge", content, note: `Adds ${missing.length} step definition(s) above the TestPilot marker.` };
+  }
+  pageObjectFile(po, notes) {
+    const current = this.store.read(po.file);
+    const fieldLines = [...po.locators.entries()].map(([name, expr]) => `    public final By ${name} = ${expr};`);
+    const methodBlocks = [...po.methods.values()];
+    if (current === void 0) {
+      const content2 = [
+        `// ${CREATED_HEADER}`,
+        `package ${this.pkg}.pages;`,
+        "",
+        "import org.openqa.selenium.By;",
+        "import org.openqa.selenium.WebDriver;",
+        ...po.usesUsers ? ["", `import ${this.pkg}.data.TestUsers;`] : [],
+        "",
+        `/** Page object for ${comment3(po.className.replace(/Page$/, ""))}. TestPilot adds locators and actions above the markers when it generates new tests. */`,
+        `public class ${po.className} extends BasePage {`,
+        `    public ${po.className}(WebDriver driver) {`,
+        `        super(driver, ${jstr(po.path)});${po.pathKnown ? "" : " // TODO(testpilot): check this path; exploration did not find the page."}`,
+        "    }",
+        "",
+        ...fieldLines,
+        "    // testpilot:locators",
+        ...methodBlocks.length ? ["", methodBlocks.join("\n\n")] : [],
+        "    // testpilot:actions",
+        "}",
+        ""
+      ].join("\n");
+      return { path: po.file, status: "new", content: content2 };
+    }
+    const missingLocators = [...po.locators.entries()].filter(([name]) => !new RegExp(`\\b${name}\\b`).test(current)).map(([name, expr]) => `    public final By ${name} = ${expr};`);
+    const missingMethods = [...po.methods.entries()].filter(([name]) => !new RegExp(`\\b${name}\\s*\\(`).test(current)).map(([, block]) => block);
+    if (!missingLocators.length && !missingMethods.length) return { path: po.file, status: "unchanged", content: current };
+    if (missingLocators.length && !current.includes("// testpilot:locators") || missingMethods.length && !current.includes("// testpilot:actions")) {
+      notes.push(`${po.file} has no TestPilot markers, so it was left alone. Add these members yourself:
+${[...missingLocators, ...missingMethods].join("\n")}`);
+      return { path: po.file, status: "skip", content: current, note: "No // testpilot: markers; add the listed members by hand." };
+    }
+    let content = current;
+    if (missingLocators.length) content = content.replace(/^([ \t]*)\/\/ testpilot:locators/m, `${missingLocators.join("\n")}
+$1// testpilot:locators`);
+    if (missingMethods.length) content = content.replace(/^([ \t]*)\/\/ testpilot:actions/m, `
+${missingMethods.join("\n\n")}
+$1// testpilot:actions`);
+    if (po.usesUsers && !content.includes("TestUsers")) content = content.replace(/^(import org\.openqa\.selenium\.WebDriver;)/m, `$1
+
+import ${this.pkg}.data.TestUsers;`);
+    return { path: po.file, status: "merge", content, note: `Adds ${[...missingLocators, ...missingMethods].length} member(s) above the TestPilot markers.` };
+  }
+  usedPages = /* @__PURE__ */ new Set();
+  supportFiles() {
+    const files = [];
+    const notes = [];
+    for (const d of this.stepDefs.values()) for (const p of d.pages) this.usedPages.add(p);
+    const used = [...this.pages.values()].filter((po) => po.locators.size || po.methods.size || this.usedPages.has(po.className));
+    for (const po of used) files.push(this.pageObjectFile(po, notes));
+    const steps = this.stepsFile(notes);
+    if (steps) files.push(steps);
+    notes.push(...this.duplicateSteps);
+    return { files, notes };
+  }
+};
+function planSeleniumTests(store, config2, cases, exploration) {
+  const gen = new SeleniumGenerator(store, config2, exploration);
+  const files = [];
+  const out = [];
+  for (const tc of cases) {
+    const text2 = [tc.title, ...tc.preconditions, ...tc.steps.flatMap((s) => [s.action, s.data ?? "", s.expected ?? ""]), tc.expected ?? ""].join("\n");
+    if (clean(text2).suspicious) {
+      out.push({ id: tc.id, spec: "", todos: 0, skipped: "Contains text written as instructions to an AI. A person should check the case first." });
+      continue;
+    }
+    const spec = gen.spec(tc);
+    for (const m of spec.content.matchAll(/^\s+(\w+Page) \w+ = new \1\(driver\);$/gm)) gen.usedPages.add(m[1]);
+    files.push(compareWithDisk(store, spec.file, spec.content));
+    out.push({ id: tc.id, spec: spec.file, todos: spec.todos });
+  }
+  const support = gen.supportFiles();
+  return { files: [...support.files, ...files], cases: out, pageObjects: support.files.filter((f) => f.path.includes("/pages/")).map((f) => f.path), notes: support.notes };
+}
+function javaClassPath(config2, className) {
+  return inTestRoot(config2, path15.posix.join("src/test/java", `${className.replace(/\./g, "/")}.java`));
+}
+
 // src/knowledge/generate.ts
 var import_handlebars2 = __toESM(require_lib(), 1);
 import { readFileSync as readFileSync7 } from "node:fs";
-import path14 from "node:path";
-var KNOWLEDGE_DIR = path14.join(TEMPLATES_DIR, "knowledge");
+import path16 from "node:path";
+var KNOWLEDGE_DIR = path16.join(TEMPLATES_DIR, "knowledge");
 var hb = import_handlebars2.default.create();
 hb.registerHelper("inc", (n) => n + 1);
 function loadClientMap() {
-  return JSON.parse(readFileSync7(path14.join(KNOWLEDGE_DIR, "client-map.json"), "utf8"));
+  return JSON.parse(readFileSync7(path16.join(KNOWLEDGE_DIR, "client-map.json"), "utf8"));
 }
 function render(file, ctx) {
-  return hb.compile(readTemplate(path14.join(KNOWLEDGE_DIR, file)), { noEscape: true })(ctx);
+  return hb.compile(readTemplate(path16.join(KNOWLEDGE_DIR, file)), { noEscape: true })(ctx);
 }
 var label2 = (options, value, fallback = "not chosen yet") => value ? options.find((o) => o.value === value)?.label ?? value : fallback;
 function knowledgeContext(config2, packageName) {
   const fw = config2.stack.framework ?? "";
   const isPlaywright = fw.startsWith("playwright");
   const isAppium = fw.startsWith("appium") || fw === "webdriverio-appium";
+  const isSelenium = config2.stack.templatePack === "selenium-java";
+  const isBdd = config2.stack.pattern === "bdd";
   const lang = config2.stack.language ?? "typescript";
   const ext = { typescript: "ts", javascript: "js", java: "java", python: "py", csharp: "cs", kotlin: "kt", swift: "swift" }[lang] ?? "ts";
-  const pagesDir = inTestRoot(config2, isAppium ? "src/screens" : "src/pages");
-  const testsDir = inTestRoot(config2, isAppium ? "test/specs" : "tests");
-  const runCommand2 = isPlaywright ? "npx playwright test" : isAppium ? "npx wdio run wdio.conf.ts" : "see the framework docs";
+  const javaPkg = javaPackageFor(config2).replace(/\./g, "/");
+  const pagesDir = inTestRoot(config2, isSelenium ? `src/main/java/${javaPkg}/pages` : isAppium ? "src/screens" : "src/pages");
+  const testsDir = inTestRoot(config2, isSelenium ? isBdd ? "src/test/resources/features" : `src/test/java/${javaPkg}/tests` : isAppium ? "test/specs" : isBdd ? "features" : "tests");
+  const bddPrefix = isPlaywright && isBdd ? "npx bddgen && " : "";
+  const runCommand2 = isPlaywright ? `${bddPrefix}npx playwright test` : isSelenium ? "mvn test" : isAppium ? "npx wdio run wdio.conf.ts" : "see the framework docs";
   const frameworkLabel = config2.appType && findFramework(config2.appType, fw)?.label || fw || "the chosen framework";
   const testIdAttribute = isAppium ? "accessibility id (testID / contentDescription)" : "data-testid";
-  const locatorOrder = isAppium ? "accessibility id (`~id`) \u2192 resource-id / name \u2192 class chain or UiAutomator selector \u2192 XPath (last resort)" : "getByRole \u2192 getByLabel \u2192 getByTestId \u2192 getByText \u2192 CSS (last resort); never XPath";
+  const locatorOrder = isAppium ? "accessibility id (`~id`) \u2192 resource-id / name \u2192 class chain or UiAutomator selector \u2192 XPath (last resort)" : isSelenium ? "byRole \u2192 byLabel \u2192 byTestId \u2192 byText (BasePage helpers) \u2192 By.cssSelector (last resort); hand-written XPath only inside a page object" : "getByRole \u2192 getByLabel \u2192 getByTestId \u2192 getByText \u2192 CSS (last resort); never XPath";
   const reporting = new Set(config2.integrations.reporting ?? []);
+  const selectOne = isSelenium ? isBdd ? "mvn test -Dcucumber.filter.tags=@SHOP-123" : "mvn test -Dgroups=SHOP-123" : `${bddPrefix}npx playwright test --grep SHOP-123`;
   const rules = [
-    `Use the ${config2.stack.pattern === "bdd" ? "feature files plus step definitions with page objects" : "page objects"} in \`${pagesDir}\`; tests never use raw selectors.`,
+    `Use the ${isBdd ? "feature files plus step definitions with page objects" : "page objects"} in \`${pagesDir}\`; tests never use raw selectors.`,
     'Name each test "<test-case id> <title>" and tag it with the id so results trace back to the source.',
     "One behaviour per test; every expected result becomes an assertion.",
     "Test data from test-data/, secrets from environment variables (.env). Nothing hard-coded.",
@@ -129753,11 +130492,17 @@ function knowledgeContext(config2, packageName) {
     "A new or changed test is done after it passes twice in a row."
   ];
   const commands = isPlaywright ? [
-    { what: "Everything", cmd: "npx playwright test" },
-    { what: "Smoke tests", cmd: "npx playwright test --grep @smoke" },
-    { what: "One test case", cmd: "npx playwright test --grep SHOP-123" },
-    { what: "Watch it run", cmd: "npx playwright test --headed" },
+    { what: "Everything", cmd: `${bddPrefix}npx playwright test` },
+    { what: "Smoke tests", cmd: `${bddPrefix}npx playwright test --grep @smoke` },
+    { what: "One test case", cmd: selectOne },
+    { what: "Watch it run", cmd: `${bddPrefix}npx playwright test --headed` },
     { what: "Open the report", cmd: "npx playwright show-report" }
+  ] : isSelenium ? [
+    { what: "Everything", cmd: "mvn test" },
+    { what: "Smoke tests", cmd: isBdd ? "mvn test -Dcucumber.filter.tags=@smoke" : "mvn test -Dgroups=smoke" },
+    { what: "One test case", cmd: selectOne },
+    { what: "Watch it run", cmd: "HEADLESS=false mvn test (or set HEADLESS=false in .env)" },
+    { what: "Results", cmd: `target/testpilot/results.json, target/surefire-reports/${isBdd ? ", target/cucumber-report.html" : ""}` }
   ] : isAppium ? [
     { what: "Start Appium (local runs)", cmd: "npx appium" },
     { what: "Everything", cmd: "npx wdio run wdio.conf.ts" },
@@ -129767,7 +130512,8 @@ function knowledgeContext(config2, packageName) {
   ] : [{ what: "Run tests", cmd: "see the framework documentation" }];
   const folders = [
     { path: pagesDir, what: isAppium ? "screen objects, one per app screen" : "page objects, one per screen" },
-    { path: testsDir, what: "test specs, one file per test case, named after its id" },
+    { path: testsDir, what: isBdd ? "feature files, one scenario per test case, tagged with its id" : "test specs, one file per test case, named after its id" },
+    ...isBdd ? [{ path: inTestRoot(config2, isSelenium ? `src/test/java/${javaPkg}/bdd/steps` : "steps"), what: "step definitions; generated ones live in the generated steps file above the testpilot:steps marker" }] : [],
     { path: inTestRoot(config2, "test-data"), what: "test data as JSON (no secrets)" },
     { path: "plans/automation-plan.md", what: "what is automated, in which wave, and why" },
     { path: ".testpilot/", what: "TestPilot state: choices, progress, imported test cases, reviews, run summaries" },
@@ -129780,7 +130526,8 @@ function knowledgeContext(config2, packageName) {
     appRef: config2.app.ref,
     frameworkLabel,
     languageLabel: LANGUAGE_LABELS[lang] ?? lang,
-    buildTool: config2.stack.buildTool ?? "npm",
+    buildTool: config2.stack.buildTool ?? (isSelenium ? "maven" : "npm"),
+    envHelper: isSelenium ? '`Env.require("KEY")`' : isAppium ? "`src/utils/env`" : `\`src/utils/env.${ext}\``,
     patternLabel: label2(PATTERN_OPTIONS, config2.stack.pattern, "Page Object Model"),
     targetLabel: label2(EXECUTION_OPTIONS, config2.execution.target, "this computer"),
     sourceLabel: label2(TEST_CASE_SOURCE_OPTIONS, config2.integrations.testCaseSource, "not chosen yet"),
@@ -129794,10 +130541,18 @@ function knowledgeContext(config2, packageName) {
     pagesDir,
     testsDir,
     runCommand: runCommand2,
-    reportCommand: isPlaywright ? "npx playwright show-report" : "npx allure open",
-    runOneCommand: isPlaywright ? "`npx playwright test --grep <ID>`" : isAppium ? "`npx wdio run wdio.conf.ts --mochaOpts.grep <ID>`" : "your runner's filter option",
-    repeatCommand: isPlaywright ? "`npx playwright test --grep <ID> --repeat-each 10`" : "run it 10 times in a loop",
-    sleepName: isPlaywright ? "page.waitForTimeout" : isAppium ? "browser.pause" : "Thread.sleep / time.sleep",
+    reportCommand: isPlaywright ? "npx playwright show-report" : isSelenium ? isBdd ? "open target/cucumber-report.html" : "open target/surefire-reports/index.html (or emailable-report.html)" : "npx allure open",
+    runOneCommand: isPlaywright ? `\`${bddPrefix}npx playwright test --grep <ID>\`` : isSelenium ? `\`${selectOne.replace("SHOP-123", "<ID>")}\`` : isAppium ? "`npx wdio run wdio.conf.ts --mochaOpts.grep <ID>`" : "your runner's filter option",
+    repeatCommand: isPlaywright ? `\`${bddPrefix}npx playwright test --grep <ID> --repeat-each 10\`` : isSelenium ? `run \`${selectOne.replace("SHOP-123", "<ID>")}\` 10 times in a loop (or TestPilot's run_tests with stabilityRuns)` : "run it 10 times in a loop",
+    sleepName: isPlaywright ? "page.waitForTimeout" : isAppium ? "browser.pause" : isSelenium ? "Thread.sleep" : "Thread.sleep / time.sleep",
+    isSelenium,
+    isBdd,
+    isWebApp: config2.appType === "web",
+    isJs: lang === "javascript",
+    frameworkSlug: frameworkSlug(config2),
+    sourceSlug: slug2(config2.integrations.testCaseSource ?? "none"),
+    targetPhrase: (config2.execution.target ?? "local") === "local" ? "on this computer" : `on ${config2.execution.target}`,
+    resultsWhere: isPlaywright ? "HTML report in playwright-report/, JSON in test-results/results.json, JUnit in test-results/junit.xml" : isSelenium ? `target/testpilot/results.json (one entry per test with cause and screenshot), JUnit XML in target/surefire-reports/, failure screenshots in target/screenshots/${isBdd ? ", target/cucumber-report.html" : ""}` : isAppium ? "JSON in test-results/testpilot/, JUnit in test-results/junit-*.xml, failure screenshots in test-results/screenshots/" : "the reporter output configured in the runner",
     stableRuns: "two",
     testIdAttribute,
     locatorOrder,
@@ -129807,6 +130562,9 @@ function knowledgeContext(config2, packageName) {
     folders,
     globs: `${testsDir}/**,${pagesDir}/**,${inTestRoot(config2, "test-data")}/**`
   };
+}
+function frameworkSlug(config2) {
+  return slug2((config2.stack.framework ?? "framework").replace(/^appium-.*/, "appium").replace(/^playwright-.*/, "playwright").replace(/-appium$/, ""));
 }
 var SOURCE_HOWTO = {
   jira: { howTo: "Write the JQL that selects the cases, e.g. `project = SHOP AND labels = regression`. Credentials: JIRA_BASE_URL, JIRA_EMAIL, JIRA_API_TOKEN in .env.", needsLocation: true },
@@ -129836,26 +130594,23 @@ function planKnowledge(store, config2, packageName) {
       files.push(ownedMarkdown(store, `${dir}/${skill.name}/SKILL.md`, skill.content));
     }
   }
-  for (const mcp of map2.mcpConfigs) files.push(planMcpConfig(store, mcp, packageName));
+  for (const agent of AGENTS) {
+    const content = render(`agents/${agent}.md.hbs`, ctx);
+    for (const dir of Object.keys(map2.agents).filter((d) => !d.startsWith("$"))) files.push(ownedMarkdown(store, `${dir}/${agent}.md`, content));
+  }
+  const extra = (map2.extraServers ?? []).filter((s) => !s.when || s.when === config2.appType);
+  for (const mcp of map2.mcpConfigs) files.push(planMcpConfig(store, mcp, packageName, extra));
   return files;
 }
+var AGENTS = ["qa-test-writer", "qa-test-runner", "qa-page-object-curator", "qa-test-case-reviewer", "qa-framework-guide"];
 function skillsFor(config2, ctx) {
-  const fw = (config2.stack.framework ?? "framework").replace(/^appium-.*/, "appium").replace(/^playwright-.*/, "playwright").replace(/-appium$/, "");
   const target = config2.execution.target ?? "local";
   const skills = [
-    { name: `write-${slug2(fw)}-test`, file: "write-test.md.hbs" },
+    { name: `write-${ctx.frameworkSlug}-test`, file: "write-test.md.hbs" },
     { name: "create-page-object", file: "create-page-object.md.hbs" },
     { name: "add-test-data", file: "add-test-data.md.hbs" },
     { name: "debug-flaky-test", file: "debug-flaky-test.md.hbs" },
-    {
-      name: `run-tests-${slug2(target)}`,
-      file: "run-tests.md.hbs",
-      extra: {
-        targetPhrase: target === "local" ? "on this computer" : `on ${target}`,
-        isBrowserStack: target === "browserstack",
-        resultsWhere: ctx.isPlaywright ? "HTML report in playwright-report/, JSON in test-results/results.json, JUnit in test-results/junit.xml" : ctx.isAppium ? "JSON in test-results/testpilot/, JUnit in test-results/junit-*.xml, failure screenshots in test-results/screenshots/" : "the reporter output configured in the runner"
-      }
-    },
+    { name: `run-tests-${slug2(target)}`, file: "run-tests.md.hbs", extra: { isBrowserStack: target === "browserstack" } },
     { name: "review-test-case", file: "review-test-case.md.hbs" },
     { name: "update-automation-plan", file: "update-automation-plan.md.hbs" }
   ];
@@ -129887,7 +130642,7 @@ function planClaudeMd(store) {
 @AGENTS.md
 `, note: "Adds an import of AGENTS.md (Claude Code ignores AGENTS.md when CLAUDE.md exists)." };
 }
-function planMcpConfig(store, mcp, packageName) {
+function planMcpConfig(store, mcp, packageName, extra = []) {
   const current = store.read(mcp.file);
   let json = {};
   if (current) {
@@ -129898,10 +130653,20 @@ function planMcpConfig(store, mcp, packageName) {
     }
   }
   json[mcp.key] ??= {};
-  if (json[mcp.key].testpilot) return { path: mcp.file, status: "unchanged", content: current };
-  json[mcp.key].testpilot = JSON.parse(JSON.stringify(mcp.entry).replace(/\{\{package\}\}/g, packageName));
+  const added = [];
+  if (!json[mcp.key].testpilot) {
+    json[mcp.key].testpilot = JSON.parse(JSON.stringify(mcp.entry).replace(/\{\{package\}\}/g, packageName));
+    added.push("testpilot");
+  }
+  for (const server of extra) {
+    if (json[mcp.key][server.name]) continue;
+    json[mcp.key][server.name] = { ...mcp.entry.type ? { type: mcp.entry.type } : {}, ...server.entry };
+    added.push(server.name);
+  }
+  if (!added.length) return { path: mcp.file, status: "unchanged", content: current };
   const content = JSON.stringify(json, null, 2) + "\n";
-  return current ? { path: mcp.file, status: "merge", content, note: `Adds the testpilot server for ${mcp.clients.join(", ")}.` } : { path: mcp.file, status: "new", content, note: `So ${mcp.clients.join(", ")} start TestPilot in this repo.` };
+  const what = added.map((n) => n === "testpilot" ? "testpilot" : `${n} (${extra.find((e) => e.name === n)?.why ?? ""})`).join(" and ");
+  return current ? { path: mcp.file, status: "merge", content, note: `Adds ${what} for ${mcp.clients.join(", ")}.` } : { path: mcp.file, status: "new", content, note: `So ${mcp.clients.join(", ")} start ${what} in this repo.` };
 }
 
 // src/plan/plan.ts
@@ -130100,13 +130865,13 @@ function select(store, wave, ids, includeGenerated) {
 }
 function buildGeneration(store, config2, cases) {
   const pack = config2.stack.templatePack;
-  if (pack !== "playwright-ts" && pack !== "appium-ts") {
+  if (pack !== "playwright-ts" && pack !== "playwright-js" && pack !== "appium-ts" && pack !== "selenium-java") {
     return {
-      error: `TestPilot generates code for Playwright + TypeScript (web, API, Electron) and Appium + WebdriverIO + TypeScript (mobile and desktop) today. For ${config2.stack.framework ?? "this framework"}, write the tests with the write-*-test skill in .agents/skills, one per case, using the plan and the normalized cases in .testpilot/test-cases/.`,
+      error: `TestPilot generates code for Playwright (TypeScript or JavaScript: web, API, Electron), Selenium + Java (web) and Appium + WebdriverIO + TypeScript (mobile and desktop) today. For ${config2.stack.framework ?? "this framework"} in ${config2.stack.language ?? "this language"}, write the tests with the write-*-test skill in .agents/skills, one per case, using the plan and the normalized cases in .testpilot/test-cases/.`,
       token: ""
     };
   }
-  const plan = pack === "appium-ts" ? planAppiumTests(store, config2, cases, readMobileExploration(store)) : config2.appType === "api" ? planApiTests(store, config2, cases) : planPlaywrightTests(store, config2, cases, readExploration(store));
+  const plan = pack === "appium-ts" ? planAppiumTests(store, config2, cases, readMobileExploration(store)) : pack === "selenium-java" ? planSeleniumTests(store, config2, cases, readExploration(store)) : config2.appType === "api" ? planApiTests(store, config2, cases) : planPlaywrightTests(store, config2, cases, readExploration(store));
   const fingerprint = plan.files.map((f) => [f.path, f.status, createHash3("sha256").update(f.content).digest("hex").slice(0, 16)]);
   return { plan, token: `tests-${digestOf(fingerprint).slice(0, 20)}` };
 }
@@ -130140,7 +130905,7 @@ function registerGenerateTools(server, options) {
     "preview_tests",
     {
       title: "Preview generated tests",
-      description: "Shows the test files, page or screen objects and fixture changes TestPilot would write for a wave of the approved plan (Playwright + TypeScript for web; Appium + WebdriverIO + TypeScript screen objects for mobile and desktop; locators from exploration), without writing anything. Show the list to the user, then call generate_tests with the confirmToken after they agree.",
+      description: "Shows the test files, page or screen objects and fixture changes TestPilot would write for a wave of the approved plan (Playwright in TypeScript or JavaScript, Selenium + Java with TestNG, or Appium + WebdriverIO screen objects for mobile and desktop; Cucumber features and step definitions with the BDD pattern; locators from exploration), without writing anything. Show the list to the user, then call generate_tests with the confirmToken after they agree.",
       inputSchema: object(selectionArgs),
       annotations: READ_ONLY
     },
@@ -130217,7 +130982,7 @@ Ask the user to go ahead, then call generate_tests with this confirmToken.`, {
         const partial3 = specs.filter((c) => c.todos);
         const summary = [
           `Wrote ${written.length} file(s)${kept.length ? `; kept ${kept.length} existing file(s)` : ""}.`,
-          partial3.length ? config2.stack.templatePack === "appium-ts" ? `${partial3.length} test(s) have TODO(testpilot) steps and stay pending: ${partial3.map((c) => `${c.id} (${c.todos})`).join(", ")}. Finish each TODO using the screen objects and the selectors in .testpilot/exploration/README.md (follow the write-appium-test skill), then delete the pendingUntilDone line. Getters marked "Not seen during exploration" are guesses to confirm with explore_app or Appium Inspector.` : `${partial3.length} test(s) have TODO(testpilot) steps and are marked fixme: ${partial3.map((c) => `${c.id} (${c.todos})`).join(", ")}. Finish each TODO using the page objects and the locators in .testpilot/exploration/README.md (follow the write-playwright-test skill), then change test.fixme to test.` : "Every test was translated completely.",
+          partial3.length ? config2.stack.templatePack === "appium-ts" ? `${partial3.length} test(s) have TODO(testpilot) steps and stay pending: ${partial3.map((c) => `${c.id} (${c.todos})`).join(", ")}. Finish each TODO using the screen objects and the selectors in .testpilot/exploration/README.md (follow the write-appium-test skill), then delete the pendingUntilDone line. Getters marked "Not seen during exploration" are guesses to confirm with explore_app or Appium Inspector.` : config2.stack.templatePack === "selenium-java" ? `${partial3.length} test(s) have TODO(testpilot) steps and are skipped: ${partial3.map((c) => `${c.id} (${c.todos})`).join(", ")}. Finish each TODO using the page objects and the locators in .testpilot/exploration/README.md (follow the write-selenium-test skill), then remove the skipUntilDone line${config2.stack.pattern === "bdd" ? " and the @testpilot-todo tag" : ""}.` : `${partial3.length} test(s) have TODO(testpilot) steps and are marked fixme: ${partial3.map((c) => `${c.id} (${c.todos})`).join(", ")}. Finish each TODO using the page objects and the locators in .testpilot/exploration/README.md (follow the write-playwright-test skill), then ${config2.stack.pattern === "bdd" ? "remove the @fixme tag from the scenario" : "change test.fixme to test"}.` : "Every test was translated completely.",
           "Then run them with run_tests (stabilityRuns: 2 to confirm they pass twice).",
           built.plan.notes.length ? `
 ${built.plan.notes.join("\n")}` : ""
@@ -130230,7 +130995,7 @@ ${built.plan.notes.join("\n")}` : ""
 
 // src/tools/hosted.ts
 import { createHash as createHash4 } from "node:crypto";
-import path15 from "node:path";
+import path17 from "node:path";
 
 // src/remote/zip.ts
 import { crc32, deflateRawSync } from "node:zlib";
@@ -130332,10 +131097,10 @@ function registerHostedTools(server, options) {
 ${all.map((w) => `- ${w.name} (changed ${w.modified.slice(0, 16).replace("T", " ")})`).join("\n")}` : 'No workspaces yet. Any tool call with projectRoot set to a short name (e.g. "shop-web") creates one; the default is "default".', { workspaces: all });
       }
       const { store } = openProject(options, args.projectRoot);
-      const workspace = path15.basename(store.root);
+      const workspace = path17.basename(store.root);
       if (args.action === "add-file") {
-        const name = path15.basename((args.path ?? "").trim());
-        const ext = path15.extname(name).toLowerCase();
+        const name = path17.basename((args.path ?? "").trim());
+        const ext = path17.extname(name).toLowerCase();
         if (!name || !INPUT_TYPES.includes(ext)) return failure2(`Give a file name ending in ${INPUT_TYPES.join(", ")}.`);
         if (/^\.env/i.test(name)) return failure2("Secrets files cannot be uploaded. Secrets stay in .env on the machine that runs the tests.");
         if (args.content === void 0 === (args.contentBase64 === void 0)) return failure2("Pass either content (text) or contentBase64 (binary).");
@@ -130358,7 +131123,7 @@ ${all.map((w) => `- ${w.name} (changed ${w.modified.slice(0, 16).replace("T", " 
         const rel = `${DELIVERIES}/${workspace}-${stamp}.zip`;
         store.write(rel, createZip(collected.files.map((f) => ({ path: `${workspace}/${f.path}`, data: f.data, modified: f.modified }))));
         for (const old of store.list(DELIVERIES, (n) => n.endsWith(".zip")).sort().slice(0, -3)) store.remove(old);
-        const fromBase = path15.relative(hosted.workspacesDir, store.resolve(rel)).split(path15.sep).join("/");
+        const fromBase = path17.relative(hosted.workspacesDir, store.resolve(rel)).split(path17.sep).join("/");
         const url2 = `${hosted.publicOrigin}${hosted.signer.sign(fromBase)}`;
         return result(`Packed ${collected.files.length} file(s) (${Math.ceil(collected.bytes / 1024)} KB) from workspace ${workspace}.
 Download (valid for one hour): ${url2}
@@ -130879,7 +131644,7 @@ async function azureDevOps(run2, options, env3, doFetch) {
 
 // src/report/ci.ts
 var import_handlebars3 = __toESM(require_lib(), 1);
-import path16 from "node:path";
+import path18 from "node:path";
 var CI_FILES2 = {
   "github-actions": { template: "github-actions.yml.hbs", target: ".github/workflows/ui-tests.yml", where: "GitHub: Settings \u2192 Secrets and variables \u2192 Actions" },
   "azure-devops": { template: "azure-devops.yml.hbs", target: "azure-pipelines.yml", where: 'Azure DevOps: Pipelines \u2192 Library \u2192 variable group "testpilot"' },
@@ -130892,13 +131657,14 @@ function planCi(store, config2, providerOverride) {
   const spec = CI_FILES2[provider];
   if (!spec) return { error: `TestPilot has no pipeline template for ${provider} yet.` };
   const appium = config2.stack.templatePack === "appium-ts";
+  const maven = config2.stack.templatePack === "selenium-java";
   const mobile = appium && ["android", "ios", "android-ios", "hybrid"].includes(config2.appType ?? "");
   if (appium && !mobile) {
     return {
       error: "Desktop app tests need the app installed on the machine that runs them, so hosted CI runners cannot run them. Use a self-hosted Windows or macOS runner that has the app and Appium installed, and run `npm test` there."
     };
   }
-  if (!appium && !config2.stack.framework?.startsWith("playwright")) return { error: `Pipeline templates cover Playwright and Appium today. For ${config2.stack.framework}, adapt the run command from AGENTS.md.` };
+  if (!appium && !maven && !config2.stack.framework?.startsWith("playwright")) return { error: `Pipeline templates cover Playwright, Selenium + Java and Appium today. For ${config2.stack.framework}, adapt the run command from AGENTS.md.` };
   const groups = integrationsFor(config2);
   if (mobile && !groups.includes("browserstack")) groups.push("browserstack");
   const localOnly = ["APPIUM_SERVER_URL", "APP_PATH", "APP_ID", ...mobile && config2.appType !== "hybrid" ? ["APP_BASE_URL"] : []];
@@ -130916,7 +131682,20 @@ function planCi(store, config2, providerOverride) {
   } catch {
   }
   const testRootPrefix = testRoot === "." ? "" : `${testRoot}/`;
-  const tool = appium ? {
+  const bdd = config2.stack.pattern === "bdd";
+  const tool = maven ? {
+    title: "Selenium",
+    workflowName: "UI tests",
+    // Maven plus a JDK; Chromium is installed by the setup command (hosted GitHub and Azure runners already have Chrome).
+    dockerImage: "maven:3.9-eclipse-temurin-21",
+    dockerArgs: "",
+    setupName: "Install Chromium",
+    setupCommand: "apt-get update -qq && apt-get install -y -qq chromium > /dev/null",
+    runCommand: `mvn -B test -DHEADLESS=true${bdd ? "" : ""}`,
+    junitFiles: `${testRootPrefix}target/surefire-reports/TEST-*.xml`,
+    reportName: "test-results",
+    reportPaths: [`${testRootPrefix}target/testpilot/`, `${testRootPrefix}target/screenshots/`, `${testRootPrefix}target/surefire-reports/`, ...bdd ? [`${testRootPrefix}target/cucumber-report.html`] : []]
+  } : appium ? {
     title: "Appium",
     workflowName: "Mobile tests",
     dockerImage: "node:22-bookworm",
@@ -130952,9 +131731,12 @@ function planCi(store, config2, providerOverride) {
     browserList: browsers.join(" "),
     playwrightVersion,
     isAppium: appium,
+    isMaven: maven,
+    // Containers have no Chrome; point Selenium at the Chromium the setup command installs.
+    dockerRunCommand: maven ? "mvn -B test -DHEADLESS=true -DBROWSER_BINARY=/usr/bin/chromium" : tool.runCommand,
     ...tool
   };
-  const content = import_handlebars3.default.compile(readTemplate(path16.join(TEMPLATES_DIR, "ci", spec.template)), { noEscape: true })(ctx);
+  const content = import_handlebars3.default.compile(readTemplate(path18.join(TEMPLATES_DIR, "ci", spec.template)), { noEscape: true })(ctx);
   return { provider, file: compareWithDisk(store, spec.target, content), secrets, variables, where: spec.where };
 }
 
@@ -131082,6 +131864,135 @@ This changes data in ${target}. Ask the user explicitly, then call again with th
   );
 }
 
+// src/run/maven.ts
+import { existsSync as existsSync11, readFileSync as readFileSync8, rmSync as rmSync2 } from "node:fs";
+import path19 from "node:path";
+var RULES3 = [
+  {
+    category: "environment",
+    test: /SessionNotCreatedException|NoSuchDriverException|Unable to obtain|selenium-manager|Could not start a new session|ERR_CONNECTION_REFUSED|ERR_NAME_NOT_RESOLVED|UnknownHostException|ConnectException|Missing [A-Z][A-Z0-9_]+\. Copy \.env\.example|cannot find Chrome binary|not recognized as an internal|command not found|No plugin found|Could not resolve dependencies|BUILD FAILURE.*compil/is,
+    advice: "The browser, driver, build or app could not be reached. Check that the test environment is up, APP_BASE_URL is right, .env has every key, Java and Maven are installed, and the browser is installed (BROWSER_BINARY / CHROMEDRIVER_PATH when downloads are blocked)."
+  },
+  {
+    category: "script",
+    test: /NullPointerException|ClassCastException|NoSuchMethodError|ClassNotFoundException|IllegalArgumentException: (?!No user)|compilation (error|failure)|cannot find symbol|UnsupportedOperationException|NumberFormatException/i,
+    advice: "The test code itself is broken (a null page object, a wrong type or a compile error). Fix the code; the app is not at fault."
+  },
+  {
+    category: "data",
+    test: /No user with role|Could not read test-data|\b401\b|\b403\b|Unauthori[sz]ed|Forbidden|already exists|invalid credentials|Invalid (email|user ?name) or password|account (is )?locked/i,
+    advice: "Test data or accounts are wrong: check the test user in .env and test-data/, or create the data the test needs in the test itself."
+  },
+  {
+    category: "locator",
+    test: /NoSuchElementException|visibilityOfElementLocated|elementToBeClickable|Expected condition failed|StaleElementReferenceException|ElementNotInteractableException|ElementClickInterceptedException|no such element|invalid selector|InvalidSelectorException|should be visible: By\./i,
+    advice: "An element could not be found or used. Compare the locator with the page (TestPilot's exploration in .testpilot/exploration/ lists what is there); prefer byRole and byLabel, and ask developers for a data-testid when nothing stable exists."
+  },
+  {
+    category: "timing",
+    test: /TimeoutException|timed out|Timed out|ScriptTimeoutException|page load/i,
+    advice: "Something took longer than allowed. Wait for a specific condition in the page object (the BasePage helpers already do) instead of a fixed time, and check the app's speed in the test environment."
+  },
+  {
+    category: "assertion",
+    test: /AssertionError|expected \[|but found \[|Assert\.|should (contain|be|not)/i,
+    advice: "The app did something different from the expected result. Check the screenshot: either the expectation is outdated or this is a real bug to report."
+  }
+];
+function categoriseJava(message) {
+  for (const rule of RULES3) if (rule.test.test(message)) return { category: rule.category, advice: rule.advice };
+  return { category: "unknown", advice: "Open the screenshot and the stack trace in target/surefire-reports to see what happened." };
+}
+function parseMavenResults(runs, config2, scrub, repoRoot, cwd) {
+  const byKey = /* @__PURE__ */ new Map();
+  for (const entries of runs) {
+    for (const t of entries) {
+      const key = `${t.className ?? ""}|${t.title}`;
+      let outcome = byKey.get(key);
+      if (!outcome) {
+        const file = t.className ? javaClassPath(config2, t.className) : "";
+        outcome = { id: testIdOf(t.title), title: t.title, file, status: "skipped", runs: 0, passes: 0, durationMs: 0, attachments: [] };
+        byKey.set(key, outcome);
+      }
+      const status = t.error && /PendingException|SkipException/.test(t.error) ? "skipped" : t.status;
+      if (status === "skipped") continue;
+      outcome.runs += 1;
+      if (status === "passed") outcome.passes += 1;
+      outcome.durationMs += t.durationMs ?? 0;
+      if (status === "failed" && !outcome.error) {
+        outcome.error = scrub(t.error ?? "Test failed").split("\n").slice(0, 12).join("\n").slice(0, 1500);
+        const triage = categoriseJava(outcome.error);
+        outcome.category = triage.category;
+        outcome.advice = triage.advice;
+      }
+      if (t.screenshot) {
+        const file = path19.relative(repoRoot, path19.resolve(cwd, t.screenshot)).split(path19.sep).join("/");
+        if (!outcome.attachments.some((a) => a.path === file)) outcome.attachments.push({ name: "screenshot", path: file });
+      }
+    }
+  }
+  const out = [...byKey.values()];
+  for (const o of out) {
+    o.status = !o.runs ? "skipped" : o.passes === o.runs ? "passed" : o.passes === 0 ? "failed" : "flaky";
+    if (o.status === "passed" || o.status === "skipped") {
+      delete o.error;
+      delete o.category;
+      delete o.advice;
+    }
+  }
+  return out;
+}
+function mavenArgs(options) {
+  const argv = ["mvn", "-B", "test"];
+  const tag = options.tag?.replace(/^@/, "");
+  if (options.bdd) {
+    const parts = [];
+    if (options.ids.length) parts.push(`(${options.ids.map((id) => `@${id}`).join(" or ")})`);
+    if (tag) parts.push(`@${tag}`);
+    if (parts.length) argv.push(`-Dcucumber.filter.tags=${parts.join(" and ")}`);
+  } else {
+    const groups = [...options.ids, ...tag ? [tag] : []];
+    if (groups.length) argv.push(`-Dgroups=${groups.join(",")}`);
+  }
+  return argv;
+}
+function readResults(cwd) {
+  const file = path19.join(cwd, "target", "testpilot", "results.json");
+  if (!existsSync11(file)) return [];
+  try {
+    return JSON.parse(readFileSync8(file, "utf8"));
+  } catch {
+    return [];
+  }
+}
+async function runMaven(store, config2, options, run2 = runCommand) {
+  const startedAt = (/* @__PURE__ */ new Date()).toISOString();
+  const scrub = secretScrubber(store);
+  const argv = mavenArgs(options);
+  const runs = [];
+  let last2;
+  for (let i = 0; i < options.repeat; i++) {
+    rmSync2(path19.join(options.cwd, "target", "testpilot", "results.json"), { force: true });
+    last2 = await run2(options.cwd, argv, options.timeoutMs);
+    runs.push(readResults(options.cwd));
+  }
+  const tests = parseMavenResults(runs, config2, scrub, store.root, options.cwd);
+  const stats = { total: tests.length, passed: 0, failed: 0, flaky: 0, skipped: 0, durationMs: tests.reduce((a, t) => a + t.durationMs, 0) };
+  for (const t of tests) stats[t.status] += 1;
+  return {
+    startedAt,
+    finishedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    command: argv.join(" "),
+    exitCode: last2?.exitCode ?? null,
+    repeat: options.repeat,
+    stats,
+    tests,
+    byCategory: tests.reduce((acc, t) => t.category ? { ...acc, [t.category]: (acc[t.category] ?? 0) + 1 } : acc, {}),
+    reportFile: existsSync11(path19.join(options.cwd, "target", "surefire-reports")) ? store.relative(path19.join(options.cwd, "target", "surefire-reports")) : void 0,
+    consoleTail: last2 && !tests.length ? scrub(last2.tail) : void 0
+  };
+}
+
 // src/tools/run.ts
 function escapeRegExp2(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -131090,7 +132001,7 @@ function describeRun(run2, saved, runner = "playwright") {
   const s = run2.stats;
   if (!s.total) {
     const triage = runner === "wdio" && run2.consoleTail ? categoriseAppium(run2.consoleTail) : void 0;
-    const reporterHint = runner === "wdio" ? "If the results are missing, make sure the wdio config still lists TestPilotReporter (writing test-results/testpilot/)." : "If the report is missing, make sure playwright.config.ts still has the json reporter writing test-results/results.json.";
+    const reporterHint = runner === "wdio" ? "If the results are missing, make sure the wdio config still lists TestPilotReporter (writing test-results/testpilot/)." : runner === "maven" ? "If the results are missing, make sure TestPilotListener is still registered (testng.xml or @Listeners) so target/testpilot/results.json is written, and that `mvn -v` works." : "If the report is missing, make sure playwright.config.ts still has the json reporter writing test-results/results.json.";
     return `No test results were produced (exit code ${run2.exitCode}).${triage && triage.category !== "unknown" ? `
 Likely cause: ${triage.category}. ${triage.advice}` : ""}${run2.consoleTail ? `
 
@@ -131108,6 +132019,7 @@ If no tests matched, check the ids or wave. ${reporterHint}`;
     const trace = t.attachments.find((a) => a.name === "trace");
     const shot = t.attachments.find((a) => a.name === "screenshot");
     if (trace) lines.push(`Trace: npx playwright show-trace ${trace.path}`);
+    else if (runner === "maven" && run2.reportFile) lines.push(`Details: ${run2.reportFile}/`);
     else if (shot) lines.push(`Screenshot: ${shot.path}`);
   }
   if (bad.length > 15) lines.push("", `\u2026and ${bad.length - 15} more in ${saved}.`);
@@ -131123,7 +132035,7 @@ function registerRunTools(server, options) {
     "run_tests",
     {
       title: "Run tests",
-      description: "Runs the tests (Playwright for web, WebdriverIO + Appium for mobile and desktop apps): all, a plan wave, specific test-case ids, files or @tags. Reports each failure with its likely cause (environment, locator, assertion, timing, data, script), advice, and the trace or screenshot to open. stabilityRuns: 2 runs each test twice without retries to prove it is stable; flaky tests are flagged. Results go to .testpilot/runs/ and update each case's status. Refuses production-looking addresses unless the user explicitly allows it. Appium runs need the Appium server running (npm run appium) or, for BrowserStack, the bs:// app id in .env.",
+      description: "Runs the tests (Playwright for web, Selenium + Java through Maven, WebdriverIO + Appium for mobile and desktop apps): all, a plan wave, specific test-case ids, files or @tags. Reports each failure with its likely cause (environment, locator, assertion, timing, data, script), advice, and the trace or screenshot to open. stabilityRuns: 2 runs each test twice without retries to prove it is stable; flaky tests are flagged. Results go to .testpilot/runs/ and update each case's status. Refuses production-looking addresses unless the user explicitly allows it. Appium runs need the Appium server running (npm run appium) or, for BrowserStack, the bs:// app id in .env.",
       inputSchema: object({
         projectRoot: projectRootArg,
         ids: array(string2()).optional().describe("Test-case ids to run"),
@@ -131147,12 +132059,15 @@ function registerRunTools(server, options) {
         const { store } = openProject(options, args.projectRoot);
         const config2 = store.readConfig();
         const wdio = usesAppium(config2) && config2.stack.language === "typescript";
-        if (!config2.stack.framework?.startsWith("playwright") && !wdio) {
-          return failure2(`run_tests drives Playwright and the TypeScript Appium template today. For ${config2.stack.framework ?? "this framework"}, run the command from AGENTS.md ("How to run tests") in a terminal and share the output.`);
+        const maven = config2.stack.templatePack === "selenium-java";
+        if (!config2.stack.framework?.startsWith("playwright") && !wdio && !maven) {
+          return failure2(`run_tests drives Playwright, the Selenium + Java template and the TypeScript Appium template today. For ${config2.stack.framework ?? "this framework"}, run the command from AGENTS.md ("How to run tests") in a terminal and share the output.`);
         }
         const testRoot = inTestRoot(config2, ".") || ".";
         let wdioConfig = "wdio.conf.ts";
-        if (wdio) {
+        if (maven) {
+          if (!store.exists(inTestRoot(config2, "pom.xml"))) return failure2(`${inTestRoot(config2, "pom.xml")} is missing. Run preview_scaffold and scaffold_project to create the Maven project.`);
+        } else if (wdio) {
           if (!store.exists(`${testRoot}/node_modules/@wdio/cli`) && !store.exists("node_modules/@wdio/cli")) {
             return failure2("WebdriverIO is not installed yet. Run npm install in the test folder (check_prerequisites lists anything else missing).");
           }
@@ -131185,7 +132100,8 @@ function registerRunTools(server, options) {
           return f;
         });
         const grep = grepParts.length ? grepParts.join("|") : void 0;
-        const run2 = wdio ? await runWdio(store, { cwd: store.resolve(testRoot), configFile: wdioConfig, specs: files, grep, repeat: args.stabilityRuns, timeoutMs: args.timeoutMinutes * 6e4, resultsDir: "test-results/testpilot" }) : await runPlaywright(store, {
+        if (maven && files.length) return failure2("Maven runs select tests by id or tag (groups and Cucumber tags), not by file. Pass ids, wave or tag instead.");
+        const run2 = maven ? await runMaven(store, config2, { cwd: store.resolve(testRoot), ids, tag: args.tag, bdd: config2.stack.pattern === "bdd", repeat: args.stabilityRuns, timeoutMs: args.timeoutMinutes * 6e4 }) : wdio ? await runWdio(store, { cwd: store.resolve(testRoot), configFile: wdioConfig, specs: files, grep, repeat: args.stabilityRuns, timeoutMs: args.timeoutMinutes * 6e4, resultsDir: "test-results/testpilot" }) : await runPlaywright(store, {
           cwd: store.resolve(testRoot),
           files,
           grep,
@@ -131193,7 +132109,8 @@ function registerRunTools(server, options) {
           project: args.project,
           workers: args.workers,
           timeoutMs: args.timeoutMinutes * 6e4,
-          reportFile: "test-results/results.json"
+          reportFile: "test-results/results.json",
+          bdd: config2.stack.pattern === "bdd"
         });
         run2.baseUrl = baseUrl;
         const saved = saveRun(store, run2);
@@ -131215,7 +132132,7 @@ function registerRunTools(server, options) {
         });
         const allGood = run2.stats.total > 0 && run2.stats.failed === 0 && run2.stats.flaky === 0;
         if (allGood && run2.repeat >= 2 && store.hasConfig()) completeActionStep(store, "RUN", `${run2.stats.passed} test(s) passed ${run2.repeat} times in a row`);
-        return result(describeRun(run2, saved, wdio ? "wdio" : "playwright"), { run: { ...run2, tests: run2.tests.slice(0, 100) }, saved });
+        return result(describeRun(run2, saved, maven ? "maven" : wdio ? "wdio" : "playwright"), { run: { ...run2, tests: run2.tests.slice(0, 100) }, saved });
       }
     )
   );
@@ -131225,9 +132142,9 @@ function registerRunTools(server, options) {
 import { createHash as createHash6 } from "node:crypto";
 
 // src/version.ts
-import { readFileSync as readFileSync8 } from "node:fs";
-import path17 from "node:path";
-var pkg = JSON.parse(readFileSync8(path17.join(PACKAGE_ROOT, "package.json"), "utf8"));
+import { readFileSync as readFileSync9 } from "node:fs";
+import path20 from "node:path";
+var pkg = JSON.parse(readFileSync9(path20.join(PACKAGE_ROOT, "package.json"), "utf8"));
 var VERSION = pkg.version;
 var PACKAGE_NAME = process.env.TESTPILOT_PACKAGE ?? pkg.testpilot?.install ?? pkg.name;
 
@@ -131406,10 +132323,10 @@ function regenerateKnowledge(store) {
 }
 
 // src/testcases/import.ts
-import path23 from "node:path";
+import path26 from "node:path";
 
 // src/testcases/importers/csv.ts
-import path18 from "node:path";
+import path21 from "node:path";
 
 // node_modules/csv-parse/lib/api/CsvError.js
 var CsvError = class _CsvError extends Error {
@@ -132358,7 +133275,7 @@ var transform2 = function(original_options = {}) {
         to,
         to_line
       } = this.options;
-      let { comment: comment3, escape: escape2, quote: quote2, record_delimiter } = this.options;
+      let { comment: comment4, escape: escape2, quote: quote2, record_delimiter } = this.options;
       const {
         bomSkipped,
         delimiterDiscovered,
@@ -132425,7 +133342,7 @@ var transform2 = function(original_options = {}) {
               for (const key in options2) {
                 this.options[key] = options2[key];
               }
-              ({ comment: comment3, escape: escape2, quote: quote2 } = this.options);
+              ({ comment: comment4, escape: escape2, quote: quote2 } = this.options);
               break;
             }
           }
@@ -132483,7 +133400,7 @@ var transform2 = function(original_options = {}) {
             if (this.state.quoting === true) {
               const nextChr = buf[pos + quote2.length];
               const isNextChrTrimable = rtrim && this.__isCharTrimable(buf, pos + quote2.length);
-              const isNextChrComment = comment3 !== null && this.__compareBytes(comment3, buf, pos + quote2.length, nextChr);
+              const isNextChrComment = comment4 !== null && this.__compareBytes(comment4, buf, pos + quote2.length, nextChr);
               const isNextChrDelimiter = this.__isDelimiter(
                 buf,
                 pos + quote2.length,
@@ -132592,8 +133509,8 @@ var transform2 = function(original_options = {}) {
             if (this.state.commenting) {
               continue;
             }
-            if (comment3 !== null && (comment_no_infix === false || this.state.record.length === 0 && this.state.field.length === 0)) {
-              const commentCount = this.__compareBytes(comment3, buf, pos, chr);
+            if (comment4 !== null && (comment_no_infix === false || this.state.record.length === 0 && this.state.field.length === 0)) {
+              const commentCount = this.__compareBytes(comment4, buf, pos, chr);
               if (commentCount !== 0) {
                 this.state.commenting = true;
                 continue;
@@ -133150,14 +134067,14 @@ var importCsv = async ({ store, location }) => {
   }
   const header = findHeaderRow(rows);
   if (!header) throw new ImportError(`Could not find a header row in ${location}. The first line should contain column names such as ID, Title, Steps, Expected Result.`);
-  const out = rowsToDrafts(rows.slice(header.index + 1), header.mapping, path18.basename(location), header.index + 2);
+  const out = rowsToDrafts(rows.slice(header.index + 1), header.mapping, path21.basename(location), header.index + 2);
   const warnings = header.mapping.unmapped.length ? [{ ref: location, message: `Columns not used: ${header.mapping.unmapped.join(", ")}.` }, ...out.warnings] : out.warnings;
-  return { drafts: out.drafts, warnings, ref: path18.basename(location), raw: { name: path18.basename(location), content: text2 } };
+  return { drafts: out.drafts, warnings, ref: path21.basename(location), raw: { name: path21.basename(location), content: text2 } };
 };
 
 // src/testcases/importers/excel.ts
 var import_exceljs = __toESM(require_excel(), 1);
-import path19 from "node:path";
+import path22 from "node:path";
 var importExcel = async ({ store, location, sheet }) => {
   if (!/\.xlsx$/i.test(location)) {
     throw new ImportError(/\.xls$/i.test(location) ? "Old .xls files are not supported. Open it in Excel and save as .xlsx (or export as CSV)." : "Give the path of an .xlsx file inside the repository.");
@@ -133196,18 +134113,18 @@ var importExcel = async ({ store, location, sheet }) => {
       warnings.push({ ref: ws.name, message: "No Steps or Expected Result column found; cases will have titles only." });
     }
     if (header.mapping.unmapped.length) warnings.push({ ref: ws.name, message: `Columns not used: ${header.mapping.unmapped.join(", ")}.` });
-    const out = rowsToDrafts(dense.slice(header.index + 1), header.mapping, `${path19.basename(location)} \u203A ${ws.name}`, header.index + 2);
+    const out = rowsToDrafts(dense.slice(header.index + 1), header.mapping, `${path22.basename(location)} \u203A ${ws.name}`, header.index + 2);
     for (const d of out.drafts) d.area ??= candidates.length > 1 ? ws.name : void 0;
     drafts.push(...out.drafts);
     warnings.push(...out.warnings);
     used++;
   }
   if (!used) throw new ImportError(`None of the sheets in ${location} has test-case columns (ID, Title, Steps, Expected Result). Sheets: ${sheets.map((ws) => ws.name).join(", ")}.`);
-  return { drafts, warnings, ref: path19.basename(location), raw: { name: path19.basename(location), content: buffer } };
+  return { drafts, warnings, ref: path22.basename(location), raw: { name: path22.basename(location), content: buffer } };
 };
 
 // src/testcases/importers/gherkin.ts
-import path20 from "node:path";
+import path23 from "node:path";
 
 // node_modules/@cucumber/gherkin/dist/AstNode.js
 var AstNode = class {
@@ -141884,7 +142801,7 @@ var pickleStepTypeFromKeyword = {
 
 // src/testcases/importers/gherkin.ts
 var ID_TAG = /^@?([A-Z][A-Z0-9_]*-\d+|TC[-_]?\d+)$/i;
-function stepText(step) {
+function stepText2(step) {
   let text2 = step.text;
   if (step.docString) text2 += `
 ${step.docString.content}`;
@@ -141902,7 +142819,7 @@ function toSteps(steps) {
     if (type === "Context") mode = "context";
     else if (type === "Action") mode = "action";
     else if (type === "Outcome") mode = "outcome";
-    const text2 = stepText(step);
+    const text2 = stepText2(step);
     if (mode === "context" && !out.length) preconditions.push(text2);
     else if (mode === "outcome") {
       const last2 = out[out.length - 1];
@@ -141920,7 +142837,7 @@ function scenarioBodySteps(body, outline = /^\s*Examples\s*:/m.test(body)) {
 ${text2.split("\n").map((l2) => `    ${l2}`).join("\n")}`;
   try {
     const doc = new Parser(new AstBuilder(IdGenerator_exports.incrementing()), new GherkinClassicTokenMatcher()).parse(source);
-    const background = doc.feature?.children.flatMap((c) => c.background?.steps.map(stepText) ?? []) ?? [];
+    const background = doc.feature?.children.flatMap((c) => c.background?.steps.map(stepText2) ?? []) ?? [];
     const scenario = doc.feature?.children.find((c) => c.scenario)?.scenario;
     if (scenario?.steps.length) {
       const out = toSteps(scenario.steps);
@@ -141954,11 +142871,11 @@ ${text2}`);
     const backgrounds = [];
     const scenarios = [];
     for (const child of feature.children) {
-      if (child.background) backgrounds.push(...child.background.steps.map(stepText));
+      if (child.background) backgrounds.push(...child.background.steps.map(stepText2));
       if (child.scenario) scenarios.push({ scenario: child.scenario });
       if (child.rule) {
         for (const rc of child.rule.children) {
-          if (rc.background) backgrounds.push(...rc.background.steps.map(stepText));
+          if (rc.background) backgrounds.push(...rc.background.steps.map(stepText2));
           if (rc.scenario) scenarios.push({ scenario: rc.scenario, rule: child.rule.name });
         }
       }
@@ -141979,15 +142896,15 @@ ${text2}`);
         testData: examples || void 0,
         area: rule ?? feature.name,
         tags: tags.filter((t) => t !== idTag).map((t) => t.replace(/^@/, "")),
-        sourceRef: `${path20.basename(file)} line ${scenario.location.line}`
+        sourceRef: `${path23.basename(file)} line ${scenario.location.line}`
       });
     }
   }
-  return { drafts, warnings, ref: location, raw: { name: `${path20.basename(location)}.features.txt`, content: raw.join("\n\n") } };
+  return { drafts, warnings, ref: location, raw: { name: `${path23.basename(location)}.features.txt`, content: raw.join("\n\n") } };
 };
 
 // src/testcases/importers/markdown.ts
-import path21 from "node:path";
+import path24 from "node:path";
 
 // src/testcases/importers/text.ts
 var LABELS = [
@@ -142199,7 +143116,7 @@ function verticalTable(rows, ref) {
 var importMarkdown = async ({ store, location }) => {
   if (!store.exists(location)) throw new ImportError(`No file at ${location}.`);
   const text2 = store.read(location);
-  const ref = path21.basename(location);
+  const ref = path24.basename(location);
   const tables = tablesToDrafts(pipeTables(text2), ref);
   if (tables.drafts.length) return { drafts: tables.drafts, warnings: tables.warnings, ref, raw: { name: ref, content: text2 } };
   const parsed = parseLabelledText(text2, ref);
@@ -142208,7 +143125,7 @@ var importMarkdown = async ({ store, location }) => {
 
 // src/testcases/importers/word.ts
 var import_mammoth = __toESM(require_lib8(), 1);
-import path22 from "node:path";
+import path25 from "node:path";
 var ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", "#39": "'" };
 function decode3(text2) {
   return text2.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => {
@@ -142283,7 +143200,7 @@ var importWord = async ({ store, location }) => {
   if (!/\.docx$/i.test(location)) throw new ImportError(/\.doc$/i.test(location) ? "Old .doc files are not supported. Open it in Word and save as .docx." : "Give the path of a .docx file inside the repository.");
   if (!store.exists(location)) throw new ImportError(`No file at ${location}. Copy the document into the repository (for example test-cases/) and try again.`);
   const buffer = store.readBuffer(location);
-  const ref = path22.basename(location);
+  const ref = path25.basename(location);
   let html;
   try {
     html = (await import_mammoth.default.convertToHtml({ buffer })).value;
@@ -142957,17 +143874,17 @@ async function pagesOf(api, root2, first2, listKey, limit, maxPages) {
   const method = first2.split("/")[0];
   const items = [];
   const raw = [];
-  let path26 = first2;
-  for (let page = 0; path26 && page < maxPages; page++) {
-    const res = await api.json(`${root2}/index.php?/api/v2/${path26}`);
+  let path29 = first2;
+  for (let page = 0; path29 && page < maxPages; page++) {
+    const res = await api.json(`${root2}/index.php?/api/v2/${path29}`);
     raw.push(res);
     if (Array.isArray(res)) return { items: res.slice(0, limit), more: res.length > limit, raw };
     items.push(...res?.[listKey] ?? []);
     const next = res?._links?.next;
-    path26 = typeof next === "string" && next.startsWith(`/api/v2/${method}/`) ? next.slice("/api/v2/".length) : void 0;
-    if (items.length >= limit) return { items: items.slice(0, limit), more: Boolean(path26) || items.length > limit, raw };
+    path29 = typeof next === "string" && next.startsWith(`/api/v2/${method}/`) ? next.slice("/api/v2/".length) : void 0;
+    if (items.length >= limit) return { items: items.slice(0, limit), more: Boolean(path29) || items.length > limit, raw };
   }
-  return { items, more: Boolean(path26), raw };
+  return { items, more: Boolean(path29), raw };
 }
 var safeName = (value) => {
   const c = clean(value);
@@ -143353,7 +144270,7 @@ var IMPORTERS = {
   "azure-devops": importAzureDevOps
 };
 function sourceFromPath(location) {
-  const ext = path23.extname(location).toLowerCase();
+  const ext = path26.extname(location).toLowerCase();
   return { ".xlsx": "excel", ".xls": "excel", ".csv": "csv", ".tsv": "csv", ".docx": "word", ".doc": "word", ".md": "markdown", ".markdown": "markdown", ".feature": "gherkin" }[ext];
 }
 function contentDigest(tc) {
@@ -144162,7 +145079,7 @@ function createHttpApp(options) {
       headers: {
         "Content-Type": "application/zip",
         "Content-Length": String(statSync8(file).size),
-        "Content-Disposition": `attachment; filename="${path24.basename(file).replace(/[^\w.-]/g, "_")}"`,
+        "Content-Disposition": `attachment; filename="${path27.basename(file).replace(/[^\w.-]/g, "_")}"`,
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff"
       }
@@ -144285,7 +145202,7 @@ async function hostedOptions(host) {
   } else {
     fail("Hosted mode needs sign-in: set TESTPILOT_OAUTH_ISSUER (recommended) or TESTPILOT_HTTP_TOKEN.");
   }
-  const workspacesDir = path25.resolve(values2.workspaces ?? env2.TESTPILOT_WORKSPACES ?? "testpilot-workspaces");
+  const workspacesDir = path28.resolve(values2.workspaces ?? env2.TESTPILOT_WORKSPACES ?? "testpilot-workspaces");
   mkdirSync3(workspacesDir, { recursive: true, mode: 448 });
   let github;
   if (env2.TESTPILOT_GITHUB_TOKEN) {

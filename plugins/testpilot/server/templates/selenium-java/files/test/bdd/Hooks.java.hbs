@@ -1,0 +1,35 @@
+// {{header}}
+package {{javaPackage}}.bdd;
+
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+
+/** Browser per scenario; the screenshot of a failed scenario lands in the Cucumber report. */
+public class Hooks {
+    private final TestContext context;
+
+    public Hooks(TestContext context) {
+        this.context = context;
+    }
+
+    @Before
+    public void start(Scenario scenario) {
+        if (scenario.getSourceTagNames().contains("@testpilot-todo")) {
+            throw new io.cucumber.java.PendingException("This scenario still has TODO(testpilot) steps; finish them in the step definitions and remove the @testpilot-todo tag.");
+        }
+    }
+
+    @After
+    public void stop(Scenario scenario) {
+        if (scenario.isFailed()) {
+            try {
+                byte[] png = ((org.openqa.selenium.TakesScreenshot) context.driver()).getScreenshotAs(org.openqa.selenium.OutputType.BYTES);
+                scenario.attach(png, "image/png", scenario.getName());
+            } catch (Exception ignored) {
+                // no browser to capture
+            }
+        }
+        context.quit();
+    }
+}

@@ -13,6 +13,9 @@ description: Add or extend a page object (screen object) in {{pagesDir}} with st
 {{#if isPlaywright}}
 6. Extend `BasePage`, set `path`, and register the class as a fixture in `src/fixtures/test.ts` (look for the `testpilot:fixtures` marker).
 {{/if}}
+{{#if isSelenium}}
+6. Extend `BasePage` with a constructor `(WebDriver driver)` that calls `super(driver, "/path")`; declare locators as `public final By name = byRole("button", "Sign in");` above the `// testpilot:locators` marker.
+{{/if}}
 {{#if isAppium}}
 6. Extend `BaseScreen`. Use accessibility ids (`~id`) first; keep platform-specific selectors in one place per screen.
 {{/if}}

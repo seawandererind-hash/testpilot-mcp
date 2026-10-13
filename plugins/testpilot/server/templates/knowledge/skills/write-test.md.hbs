@@ -7,10 +7,55 @@ description: Turn a test case from .testpilot/test-cases/normalized into a {{fra
 
 1. Read `.testpilot/test-cases/normalized/<ID>.json` and `.testpilot/config.yaml`. Skip cases whose review verdict is MANUAL; ask before automating NEEDS-REWORK cases.
 2. For each step, reuse a method or locator from `{{pagesDir}}`. If none exists, add it with the `create-page-object` skill. Locator order: {{locatorOrder}}.
-3. Create or update `{{testsDir}}/<area>/<ID>.spec.{{ext}}`:
-{{#if isPlaywright}}
+3. Create or update the test in `{{testsDir}}/<area>/`{{#if isBdd}} (a feature file; its step definitions go next to the generated ones, above the `// testpilot:steps` marker){{/if}}:
+{{#if isBdd}}
+   ```gherkin
+   @<ID> @<area> @<priority>
+   Scenario: <ID> <title>
+     Given <precondition, matched by one step definition>
+     When <action>
+     Then <expected result, an assertion in its step definition>
+   ```
+{{#if isSelenium}}
+   ```java
+   @When("<action text exactly as in the feature>")
+   public void actionText() {
+       LoginPage loginPage = context.page(LoginPage.class);
+       loginPage.click(loginPage.signInButton);
+   }
+
+   @Then("<expected result text>")
+   public void expectedResultText() {
+       context.expect().heading("Products");
+   }
+   ```
+   Step classes take a `TestContext` in their constructor (PicoContainer); `context.page(X.class)` returns the page object for the scenario. A scenario with TODO(testpilot) steps carries the `@testpilot-todo` tag (skipped by default); remove it once the steps are written.
+{{else}}
    ```ts
-   import { test, expect } from '../../src/fixtures/test';
+   import { createBdd } from 'playwright-bdd';
+   import { test } from '../src/fixtures/test';
+   const { Given, When, Then } = createBdd(test);
+
+   When('<action text exactly as in the feature>', async ({ loginPage }) => { await loginPage.signInButton.click(); });
+   Then('<expected result text>', async ({ page }) => { await expect(page.getByRole('heading', { name: 'Products' })).toBeVisible(); });
+   ```
+   Page objects come in as fixtures. A scenario with TODO(testpilot) steps carries the `@fixme` tag; remove it once the steps are written. Run `npx bddgen` before `npx playwright test`.
+{{/if}}
+{{else if isSelenium}}
+   ```java
+   public class <ID>Test extends BaseTest {
+       @Test(description = "<ID> <title>", groups = {"<ID>", "<area>", "<priority>"})
+       public void <titleInCamelCase>() {
+           LoginPage loginPage = new LoginPage(driver);
+           loginPage.loginAs("standard");
+           expect.heading("Products");
+       }
+   }
+   ```
+   Page objects extend `BasePage` (`byRole`, `byLabel`, `byTestId`, `byText`, `type`, `click`, `select`); `expect` waits before it judges. A test with TODO(testpilot) steps calls `skipUntilDone("...")` first; delete that line once the steps are written.
+{{else if isPlaywright}}
+   ```{{ext}}
+   {{#if isJs}}const { test, expect } = require('../../src/fixtures/test');{{else}}import { test, expect } from '../../src/fixtures/test';{{/if}}
 
    test('<ID> <title>', { tag: ['@<ID>', '@<priority>'], annotation: { type: 'test_key', description: '<ID>' } }, async ({ page }) => {
        await test.step('<step 1 action>', async () => { /* page object calls */ });
@@ -36,7 +81,7 @@ description: Turn a test case from .testpilot/test-cases/normalized into a {{fra
 {{else}}
    Follow the existing tests' structure. Name the test `<ID> <title>` and tag it with the id so results trace back.
 {{/if}}
-4. Data comes from `test-data/` and secrets from environment variables via `src/utils/env`. Never hard-code either.
+4. Data comes from `test-data/` and secrets from environment variables via {{envHelper}}. Never hard-code either.
 5. One behaviour per test. Every expected result becomes an assertion. No fixed sleeps.
 6. Run only this test ({{runOneCommand}}) and make it pass twice in a row.
 7. Update the case's row in `plans/automation-plan.md` (status: automated) or call TestPilot's `generate_tests`/`run_tests` tools, which do it for you.

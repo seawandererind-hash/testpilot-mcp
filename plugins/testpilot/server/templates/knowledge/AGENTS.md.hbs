@@ -44,6 +44,10 @@ TestPilot's MCP tools keep the setup consistent. In an AI tool with TestPilot co
 - `/qa-import` imports and reviews test cases; `/qa-plan` builds `plans/automation-plan.md`.
 - `/qa-generate` writes tests for the next wave; `/qa-run` runs and triages them.
 - Skills in `.agents/skills/` (mirrored to `.claude/skills/`) describe each task step by step.
+- Repository agents in `.claude/agents/` (Claude Code) and `.cursor/agents/` (Cursor), generated from this setup: `qa-test-writer`, `qa-test-runner`, `qa-page-object-curator`, `qa-test-case-reviewer` and `qa-framework-guide`. Hand each task to the matching agent.
+{{#if isWebApp}}
+- The `playwright` MCP server in the client configs opens the real page in a browser: use it to confirm a locator or finish a TODO(testpilot) step by looking, never to skip the page objects.
+{{/if}}
 
 State and history: `.testpilot/state.json` (progress), `.testpilot/decisions.md` (why things are the way they are), `.testpilot/test-cases/normalized/` (test cases in a common format), `.testpilot/audit.log.jsonl` (every TestPilot action, secrets redacted).
 

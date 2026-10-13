@@ -1,0 +1,15 @@
+// {{header}}
+// Step definitions for features/smoke.feature. TestPilot adds generated steps in steps/generated.steps.ts.
+import { createBdd } from 'playwright-bdd';
+
+import { test } from '../src/fixtures/test';
+
+const { Given, Then } = createBdd(test);
+
+Given('I open the home page', async ({ homePage }) => {
+    await homePage.open();
+});
+
+Then('the home page is visible', async ({ homePage }) => {
+    await homePage.expectVisible();
+});

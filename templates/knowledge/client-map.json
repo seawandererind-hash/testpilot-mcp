@@ -2,22 +2,112 @@
   "$comment": "Where each AI tool reads MCP config, instructions and skills. Checked against vendor docs on 2026-10-12 (see docs/research.md). Edit this file when a vendor moves a folder; no code change needed.",
   "skills": {
     "canonical": ".agents/skills",
-    "mirrors": [".claude/skills"],
+    "mirrors": [
+      ".claude/skills"
+    ],
     "readers": {
-      ".agents/skills": ["Cursor", "VS Code / GitHub Copilot", "Antigravity", "Codex", "Devin Desktop", "Gemini CLI"],
-      ".claude/skills": ["Claude Code"]
+      ".agents/skills": [
+        "Cursor",
+        "VS Code / GitHub Copilot",
+        "Antigravity",
+        "Codex",
+        "Devin Desktop",
+        "Gemini CLI"
+      ],
+      ".claude/skills": [
+        "Claude Code"
+      ]
     }
   },
   "instructions": {
-    "AGENTS.md": ["Cursor", "Antigravity", "VS Code / GitHub Copilot", "Codex", "Devin Desktop", "Claude Code (via CLAUDE.md import)"],
-    "CLAUDE.md": ["Claude Code"],
-    ".cursor/rules/testpilot.mdc": ["Cursor"],
-    ".agents/rules/testpilot.md": ["Antigravity"],
-    ".github/copilot-instructions.md": ["VS Code / GitHub Copilot"]
+    "AGENTS.md": [
+      "Cursor",
+      "Antigravity",
+      "VS Code / GitHub Copilot",
+      "Codex",
+      "Devin Desktop",
+      "Claude Code (via CLAUDE.md import)"
+    ],
+    "CLAUDE.md": [
+      "Claude Code"
+    ],
+    ".cursor/rules/testpilot.mdc": [
+      "Cursor"
+    ],
+    ".agents/rules/testpilot.md": [
+      "Antigravity"
+    ],
+    ".github/copilot-instructions.md": [
+      "VS Code / GitHub Copilot"
+    ]
   },
   "mcpConfigs": [
-    { "file": ".mcp.json", "key": "mcpServers", "clients": ["Claude Code", "VS Code / GitHub Copilot"], "entry": { "type": "stdio", "command": "npx", "args": ["-y", "{{package}}"] } },
-    { "file": ".cursor/mcp.json", "key": "mcpServers", "clients": ["Cursor"], "entry": { "command": "npx", "args": ["-y", "{{package}}"] } },
-    { "file": ".agents/mcp_config.json", "key": "mcpServers", "clients": ["Antigravity"], "entry": { "command": "npx", "args": ["-y", "{{package}}"] } }
+    {
+      "file": ".mcp.json",
+      "key": "mcpServers",
+      "clients": [
+        "Claude Code",
+        "VS Code / GitHub Copilot"
+      ],
+      "entry": {
+        "type": "stdio",
+        "command": "npx",
+        "args": [
+          "-y",
+          "{{package}}"
+        ]
+      }
+    },
+    {
+      "file": ".cursor/mcp.json",
+      "key": "mcpServers",
+      "clients": [
+        "Cursor"
+      ],
+      "entry": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "{{package}}"
+        ]
+      }
+    },
+    {
+      "file": ".agents/mcp_config.json",
+      "key": "mcpServers",
+      "clients": [
+        "Antigravity"
+      ],
+      "entry": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "{{package}}"
+        ]
+      }
+    }
+  ],
+  "agents": {
+    "$comment": "Repository-specific subagents generated from the wizard answers. Claude Code reads .claude/agents; Cursor reads .cursor/agents.",
+    ".claude/agents": [
+      "Claude Code"
+    ],
+    ".cursor/agents": [
+      "Cursor"
+    ]
+  },
+  "extraServers": [
+    {
+      "name": "playwright",
+      "when": "web",
+      "why": "Lets the agent open the real page in a browser to confirm a locator or finish a TODO step. Official Microsoft server.",
+      "entry": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@playwright/mcp@0.0.83"
+        ]
+      }
+    }
   ]
 }

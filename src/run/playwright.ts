@@ -201,19 +201,33 @@ export interface RunOptions {
     workers?: number;
     timeoutMs: number;
     reportFile: string;
+    /** Cucumber project (playwright-bdd): features are compiled with bddgen before Playwright runs. */
+    bdd?: boolean;
+}
+
+/** Where playwright-bdd writes the spec it compiles from a feature file. */
+export function bddSpecFor(feature: string): string {
+    return feature.endsWith('.feature') ? `.features-gen/${feature.replace(/^\.\//, '')}.spec.js` : feature;
 }
 
 /** Runs Playwright and summarises the JSON report the TestPilot config writes. */
 export async function runPlaywright(store: ProjectStore, options: RunOptions, run: (cwd: string, argv: string[], timeout: number) => Promise<CommandOutcome> = runCommand): Promise<RunSummary> {
-    const argv = ['npx', 'playwright', 'test', ...options.files];
+    const startedAt = new Date();
+    const scrub = secretScrubber(store);
+    if (options.bdd) {
+        const gen = await run(options.cwd, ['npx', 'bddgen'], options.timeoutMs);
+        if (gen.exitCode !== 0) {
+            const stats = { total: 0, passed: 0, failed: 0, flaky: 0, skipped: 0, durationMs: Date.now() - startedAt.getTime() };
+            return { startedAt: startedAt.toISOString(), finishedAt: new Date().toISOString(), command: 'npx bddgen', exitCode: gen.exitCode, repeat: options.repeat, stats, tests: [], byCategory: {}, consoleTail: scrub(gen.tail.replace(ANSI, '')) };
+        }
+    }
+    const argv = ['npx', 'playwright', 'test', ...options.files.map(f => (options.bdd ? bddSpecFor(f) : f))];
     if (options.grep) argv.push('--grep', options.grep);
     if (options.repeat > 1) argv.push('--repeat-each', String(options.repeat), '--retries', '0');
     if (options.project) argv.push('--project', options.project);
     if (options.workers) argv.push('--workers', String(options.workers));
-    const startedAt = new Date();
     const outcome = await run(options.cwd, argv, options.timeoutMs);
     const finishedAt = new Date();
-    const scrub = secretScrubber(store);
     const reportPath = path.resolve(options.cwd, options.reportFile);
     const fresh = existsSync(reportPath) && statSync(reportPath).mtimeMs >= startedAt.getTime() - 1000;
     const tests = fresh ? parseReport(JSON.parse(readFileSync(reportPath, 'utf8')), options.cwd, scrub, store.root) : [];
@@ -230,7 +244,7 @@ export async function runPlaywright(store: ProjectStore, options: RunOptions, ru
     return {
         startedAt: startedAt.toISOString(),
         finishedAt: finishedAt.toISOString(),
-        command: argv.join(' '),
+        command: `${options.bdd ? 'npx bddgen && ' : ''}${argv.join(' ')}`,
         exitCode: outcome.exitCode,
         repeat: options.repeat,
         stats,

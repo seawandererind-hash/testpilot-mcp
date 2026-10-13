@@ -1,0 +1,79 @@
+// {{header}}
+package {{javaPackage}};
+
+import java.util.function.Function;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.WebDriver;
+import org.testng.Assert;
+
+import {{javaPackage}}.pages.BasePage;
+
+/**
+ * Expectations that wait (up to 15 s) before they judge, so tests never need Thread.sleep.
+ * Used by every test through BaseTest.expect and by Cucumber steps through TestContext.expect().
+ */
+public class Expect extends BasePage {
+    public Expect(WebDriver driver) {
+        super(driver, "/");
+    }
+
+    public void visible(By by, String what) {
+        Assert.assertTrue(isVisible(by), what + " should be visible: " + by);
+    }
+
+    public void hidden(By by, String what) {
+        Assert.assertTrue(isHidden(by), what + " should not be visible: " + by);
+    }
+
+    public void text(String text) {
+        visible(byText(text), "text \"" + text + "\"");
+    }
+
+    public void noText(String text) {
+        hidden(byText(text), "text \"" + text + "\"");
+    }
+
+    public void heading(String name) {
+        visible(byRole("heading", name), "heading \"" + name + "\"");
+    }
+
+    public void title(String title) {
+        waitFor(d -> d.getTitle().equals(title));
+        Assert.assertEquals(driver.getTitle(), title, "page title");
+    }
+
+    public void titleContains(String part) {
+        waitFor(d -> d.getTitle().contains(part));
+        Assert.assertTrue(driver.getTitle().contains(part), "page title should contain \"" + part + "\" but was \"" + driver.getTitle() + "\"");
+    }
+
+    public void urlContains(String part) {
+        waitFor(d -> d.getCurrentUrl().contains(part));
+        Assert.assertTrue(driver.getCurrentUrl().contains(part), "URL should contain \"" + part + "\" but was " + driver.getCurrentUrl());
+    }
+
+    public void enabled(By by, boolean enabled, String what) {
+        waitFor(d -> d.findElement(by).isEnabled() == enabled);
+        Assert.assertEquals(driver.findElement(by).isEnabled(), enabled, what + " enabled state");
+    }
+
+    public void checked(By by, boolean checked, String what) {
+        waitFor(d -> d.findElement(by).isSelected() == checked);
+        Assert.assertEquals(driver.findElement(by).isSelected(), checked, what + " checked state");
+    }
+
+    public void textOf(By by, String expected, String what) {
+        waitFor(d -> d.findElement(by).getText().trim().equals(expected));
+        Assert.assertEquals(driver.findElement(by).getText().trim(), expected, what);
+    }
+
+    private void waitFor(Function<WebDriver, Boolean> condition) {
+        try {
+            wait.until(condition::apply);
+        } catch (TimeoutException | org.openqa.selenium.NoSuchElementException ignored) {
+            // the assertion that follows reports the actual value
+        }
+    }
+}

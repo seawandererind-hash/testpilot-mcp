@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- {{header}} -->
+<!-- Selenium 4 + TestNG{{#if isBdd}} + Cucumber{{/if}} with the Page Object Model. Run everything: mvn test. One case: mvn test -Dgroups=SHOP-123 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>{{javaPackage}}</groupId>
+  <artifactId>{{artifactId}}</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  <name>{{projectName}} UI tests</name>
+
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <selenium.version>4.51.0</selenium.version>
+    <testng.version>7.12.0</testng.version>
+    <cucumber.version>8.0.4</cucumber.version>
+    <!-- Overridden from the command line: mvn test -Dgroups=SHOP-123{{#if isBdd}} or -Dcucumber.filter.tags=@SHOP-123{{/if}} -->
+    <groups></groups>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>${selenium.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>${testng.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <!-- Reads .env (git-ignored secrets) and .env.example (shared defaults). -->
+      <groupId>io.github.cdimascio</groupId>
+      <artifactId>dotenv-java</artifactId>
+      <version>3.2.0</version>
+    </dependency>
+    <dependency>
+      <!-- test-data/*.json -->
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.22.3</version>
+    </dependency>
+{{#if isBdd}}
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-java</artifactId>
+      <version>${cucumber.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-testng</artifactId>
+      <version>${cucumber.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <!-- Cucumber writes its reports with Jackson. -->
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jdk8</artifactId>
+      <version>2.22.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <!-- Shares one TestContext (driver, page objects) between the step classes of a scenario. -->
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-picocontainer</artifactId>
+      <version>${cucumber.version}</version>
+      <scope>test</scope>
+    </dependency>
+{{/if}}
+{{#if reporting.allure}}
+    <dependency>
+      <groupId>io.qameta.allure</groupId>
+      <artifactId>allure-testng</artifactId>
+      <version>3.0.0</version>
+      <scope>test</scope>
+    </dependency>
+{{/if}}
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.16.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.6</version>
+        <configuration>
+{{#if isBdd}}
+          <includes>
+            <include>**/CucumberTestRunner.java</include>
+          </includes>
+{{else}}
+          <suiteXmlFiles>
+            <suiteXmlFile>testng.xml</suiteXmlFile>
+          </suiteXmlFiles>
+          <groups>${groups}</groups>
+{{/if}}
+          <!-- Failures are reported by TestPilotListener (target/testpilot/results.json) and the JUnit XML in target/surefire-reports. -->
+          <testFailureIgnore>false</testFailureIgnore>
+          <trimStackTrace>true</trimStackTrace>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

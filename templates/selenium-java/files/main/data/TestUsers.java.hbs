@@ -1,0 +1,33 @@
+// {{header}}
+package {{javaPackage}}.data;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import {{javaPackage}}.config.Env;
+
+/**
+ * Credentials for a role in test-data/users.json. The file holds only the names of .env keys;
+ * the values come from .env locally and from CI secrets in pipelines.
+ */
+public final class TestUsers {
+    public record User(String username, String password) {}
+
+    private TestUsers() {}
+
+    public static User forRole(String role) {
+        try {
+            Map<String, Map<String, String>> users = new ObjectMapper().readValue(Files.readString(Path.of("test-data", "users.json")), new com.fasterxml.jackson.core.type.TypeReference<>() {});
+            Map<String, String> entry = users.get(role);
+            if (entry == null) throw new IllegalArgumentException("No user with role \"" + role + "\" in test-data/users.json. Add it with the names of its .env keys.");
+            String userKey = entry.getOrDefault("usernameEnv", entry.getOrDefault("emailEnv", "TEST_USER_EMAIL"));
+            return new User(Env.require(userKey), Env.require(entry.get("passwordEnv")));
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read test-data/users.json", e);
+        }
+    }
+}

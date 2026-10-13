@@ -1,0 +1,155 @@
+{
+  "id": "playwright-js",
+  "title": "Playwright + JavaScript",
+  "appTypes": [
+    "web",
+    "api",
+    "electron"
+  ],
+  "patterns": [
+    "pom",
+    "hybrid",
+    "keyword",
+    "screenplay",
+    "bdd"
+  ],
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@types/node": "^22.20.0",
+    "dotenv": "^17.2.0"
+  },
+  "optionalDevDependencies": {
+    "allure": {
+      "allure-playwright": "3.13.0"
+    },
+    "accessibility": {
+      "@axe-core/playwright": "^4.11.0"
+    },
+    "bdd": {
+      "playwright-bdd": "9.2.1"
+    }
+  },
+  "scripts": {
+    "test": [
+      {
+        "run": "bddgen && playwright test",
+        "when": "bdd"
+      },
+      {
+        "run": "playwright test"
+      }
+    ],
+    "test:smoke": [
+      {
+        "run": "bddgen && playwright test --grep @smoke",
+        "when": "bdd"
+      },
+      {
+        "run": "playwright test --grep @smoke"
+      }
+    ],
+    "test:headed": [
+      {
+        "run": "bddgen && playwright test --headed",
+        "when": "bdd"
+      },
+      {
+        "run": "playwright test --headed"
+      }
+    ],
+    "test:ui": [
+      {
+        "run": "bddgen && playwright test --ui",
+        "when": "bdd"
+      },
+      {
+        "run": "playwright test --ui"
+      }
+    ],
+    "bddgen": {
+      "run": "bddgen",
+      "when": "bdd"
+    },
+    "report": "playwright show-report"
+  },
+  "install": [
+    [
+      "npm",
+      "install"
+    ],
+    [
+      "npx",
+      "playwright",
+      "install",
+      "--with-deps",
+      "chromium"
+    ]
+  ],
+  "files": [
+    {
+      "from": "playwright.config.js.hbs",
+      "to": "playwright.config.js"
+    },
+    {
+      "from": "src/utils/env.js.hbs",
+      "to": "src/utils/env.js"
+    },
+    {
+      "from": "src/pages/BasePage.js.hbs",
+      "to": "src/pages/BasePage.js",
+      "when": "ui"
+    },
+    {
+      "from": "src/pages/HomePage.js.hbs",
+      "to": "src/pages/HomePage.js",
+      "when": "web"
+    },
+    {
+      "from": "src/fixtures/test.js.hbs",
+      "to": "src/fixtures/test.js"
+    },
+    {
+      "from": "tests/smoke/home.spec.js.hbs",
+      "to": "tests/smoke/home.spec.js",
+      "when": [
+        "web",
+        "notbdd"
+      ]
+    },
+    {
+      "from": "tests/smoke/electron.spec.js.hbs",
+      "to": "tests/smoke/app-launch.spec.js",
+      "when": "electron"
+    },
+    {
+      "from": "tests/api/health.spec.js.hbs",
+      "to": "tests/api/health.spec.js",
+      "when": "api"
+    },
+    {
+      "from": "features/smoke.feature.hbs",
+      "to": "features/smoke.feature",
+      "when": [
+        "web",
+        "bdd"
+      ]
+    },
+    {
+      "from": "steps/home.steps.js.hbs",
+      "to": "steps/home.steps.js",
+      "when": [
+        "web",
+        "bdd"
+      ]
+    },
+    {
+      "from": "test-data/README.md.hbs",
+      "to": "test-data/README.md"
+    },
+    {
+      "from": "test-data/users.json.hbs",
+      "to": "test-data/users.json",
+      "when": "ui"
+    }
+  ]
+}

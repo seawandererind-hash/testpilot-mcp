@@ -23,7 +23,12 @@ export function readTemplate(file: string): string {
 }
 
 /** Conditions a pack entry can depend on; a list means all of them must hold. */
-export type When = 'ui' | 'web' | 'api' | 'electron' | 'mobile' | 'android' | 'ios' | 'desktop' | 'windows' | 'macos' | 'wincore' | 'novawindows' | 'local' | 'cloud';
+export type When = 'ui' | 'web' | 'api' | 'electron' | 'mobile' | 'android' | 'ios' | 'desktop' | 'windows' | 'macos' | 'wincore' | 'novawindows' | 'local' | 'cloud' | 'bdd' | 'notbdd';
+
+interface ScriptVariant {
+    run: string;
+    when?: When | When[];
+}
 
 interface PackFile {
     from: string;
@@ -37,10 +42,13 @@ export interface PackManifest {
     title: string;
     appTypes: string[];
     patterns: string[];
+    /** False for packs that are not npm projects (Maven for Java): no package.json is written. */
+    packageJson?: boolean;
     devDependencies: Record<string, string>;
     /** Extra packages keyed by a reporting choice, an extra, or the execution target (e.g. "browserstack"). */
     optionalDevDependencies?: Record<string, Record<string, string>>;
-    scripts: Record<string, string | { run: string; when: When | When[] }>;
+    /** A script, one that applies under a condition, or variants of which the first applicable one is used. */
+    scripts: Record<string, string | ScriptVariant | ScriptVariant[]>;
     install: Array<string[] | { argv: string[]; when?: When | When[] }>;
     /** Steps TestPilot cannot do for the user (SDKs, drivers, devices), shown in the scaffold preview. */
     manualSetup?: Array<{ text: string; when?: When | When[] }>;
@@ -88,9 +96,20 @@ export function renderContext(config: Config): Record<string, unknown> {
         browsers,
         reporting: { html: reporting.has('html'), junit: reporting.has('junit'), allure: reporting.has('allure') },
         cloud: config.execution.target === 'browserstack',
+        isBdd: config.stack.pattern === 'bdd',
+        isJs: config.stack.language === 'javascript',
+        javaPackage: javaPackageFor(config),
+        javaPackagePath: javaPackageFor(config).replace(/\./g, '/'),
+        artifactId: `${(config.project.name ?? 'app').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '') || 'app'}-tests`,
         projectName: config.project.name ?? 'app',
         projectNameJson: JSON.stringify(config.project.name ?? 'app')
     };
+}
+
+/** Java package for generated code, derived from the project name (e.g. "Demo Shop" → com.demoshop.tests). */
+export function javaPackageFor(config: Config): string {
+    const name = (config.project.name ?? 'app').toLowerCase().replace(/[^a-z0-9]+/g, '');
+    return `com.${/^[a-z]/.test(name) ? name : `app${name}`}.tests`;
 }
 
 function automationNameFor(config: Config): string {
@@ -139,6 +158,10 @@ function applies(when: When | When[] | undefined, ctx: Record<string, unknown>):
             return !ctx.cloud;
         case 'cloud':
             return Boolean(ctx.cloud);
+        case 'bdd':
+            return Boolean(ctx.isBdd);
+        case 'notbdd':
+            return !ctx.isBdd;
     }
 }
 
@@ -180,11 +203,12 @@ export function planPack(store: ProjectStore, config: Config, packId: string): {
     const files: PlannedFile[] = [];
     for (const f of pack.files) {
         if (!applies(f.when, ctx)) continue;
-        const target = inTestRoot(config, f.to);
+        // Targets may carry template expressions, e.g. the Java package path.
+        const target = inTestRoot(config, f.to.includes('{{') ? Handlebars.compile(f.to, { noEscape: true })(ctx) : f.to);
         const content = renderTemplate(packId, f.from, ctx);
         files.push(compareWithDisk(store, target, content, f.ifMissing));
     }
-    files.push(planPackageJson(store, config, pack, ctx));
+    if (pack.packageJson !== false) files.push(planPackageJson(store, config, pack, ctx));
     return { pack, files };
 }
 
@@ -206,7 +230,7 @@ export function planPackageJson(store: ProjectStore, config: Config, pack: PackM
     const added: string[] = [];
     const deps = { ...pack.devDependencies };
     for (const [feature, extra] of Object.entries(pack.optionalDevDependencies ?? {})) {
-        if (config.integrations.reporting?.includes(feature) || config.extras.includes(feature) || config.execution.target === feature) Object.assign(deps, extra);
+        if (config.integrations.reporting?.includes(feature) || config.extras.includes(feature) || config.execution.target === feature || config.stack.pattern === feature) Object.assign(deps, extra);
     }
     for (const [name, version] of Object.entries(deps)) {
         if (!pkg.devDependencies[name] && !pkg.dependencies?.[name]) {
@@ -215,8 +239,9 @@ export function planPackageJson(store: ProjectStore, config: Config, pack: PackM
         }
     }
     for (const [name, entry] of Object.entries(pack.scripts)) {
-        if (typeof entry !== 'string' && !applies(entry.when, ctx)) continue;
-        const script = typeof entry === 'string' ? entry : entry.run;
+        const variant = typeof entry === 'string' ? { run: entry } : Array.isArray(entry) ? entry.find(v => applies(v.when, ctx)) : applies(entry.when, ctx) ? entry : undefined;
+        if (!variant) continue;
+        const script = variant.run;
         const key = pkg.scripts[name] && pkg.scripts[name] !== script ? `tp:${name}` : name;
         if (!pkg.scripts[key]) {
             pkg.scripts[key] = script;
