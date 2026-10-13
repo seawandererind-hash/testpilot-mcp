@@ -70,7 +70,7 @@ if (target === 'local') {
     const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
     const driver = spawnSync(npx, ['appium', 'driver', 'install', 'uiautomator2'], { cwd: testRoot, stdio: 'inherit', shell: process.platform === 'win32' });
     if (driver.status !== 0) console.log('(uiautomator2 may already be installed)');
-    appium = spawn(npx, ['appium', '--port', '4723', '--log-level', 'warn'], { cwd: testRoot, stdio: 'inherit', shell: process.platform === 'win32' });
+    appium = spawn(npx, ['appium', '--port', '4723', '--log-level', 'warn'], { cwd: testRoot, stdio: 'inherit', shell: process.platform === 'win32', detached: process.platform !== 'win32' });
     let up = false;
     for (let i = 0; i < 60 && !up; i++) {
         await new Promise(r => setTimeout(r, 1000));
@@ -80,7 +80,12 @@ if (target === 'local') {
 }
 
 const explored = await call('explore_app', { useBrowserStack: target === 'browserstack', screenshots: true });
-appium?.kill();
+// Stop Appium and its children (npx starts it in its own process group).
+if (appium) {
+    try {
+        process.platform === 'win32' ? appium.kill() : process.kill(-appium.pid);
+    } catch {}
+}
 await client.close();
 await handler.close();
 const screen = explored.structuredContent?.screen;
