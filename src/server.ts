@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/server';
 
 import { registerPrompts } from './prompts.js';
 import { registerResources } from './resources.js';
+import { registerCapabilityTools } from './tools/capabilities.js';
 import type { ServerOptions } from './tools/common.js';
 import { registerDemoTools } from './tools/demo.js';
 import { registerEnvTools } from './tools/env.js';
@@ -46,6 +47,7 @@ export function createServer(options: Partial<ServerOptions> = {}): McpServer {
     registerPublishTools(server, opts);
     registerInsightsTools(server, opts);
     registerQualityTools(server, opts);
+    registerCapabilityTools(server, opts);
     registerHostedTools(server, opts);
     registerDemoTools(server, opts);
     registerPrompts(server);
