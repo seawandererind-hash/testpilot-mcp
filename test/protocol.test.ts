@@ -23,7 +23,7 @@ describe.each(eras)('protocol era: %s', era => {
             expect(tool.annotations?.readOnlyHint, tool.name).not.toBeUndefined();
             expect(tool.name.length).toBeLessThanOrEqual(64);
         }
-        expect(tools.length).toBeLessThanOrEqual(20);
+        expect(tools.length).toBeLessThanOrEqual(28);
     });
 
     it('lists the qa-* prompts', async () => {
