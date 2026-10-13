@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { APP_TYPE_OPTIONS, BUILD_TOOLS, CI_OPTIONS, EXECUTION_OPTIONS, EXTRA_OPTIONS, FRAMEWORKS, findFramework, LANGUAGE_LABELS, type Option, PATTERN_OPTIONS, recommendStack, REPORTING_OPTIONS, TEST_CASE_SOURCE_OPTIONS, templatePackFor } from '../catalog/frameworks.js';
 import { classifyAppRef } from './app-target.js';
 import { type RepoDetection, uiFrameworksIn } from './detect.js';
@@ -59,6 +61,19 @@ export const STEPS: StepDef[] = [
         apply: (config, answer) => {
             config.appType = answer as AppType;
             return `App type: ${label(APP_TYPE_OPTIONS, answer as string)}`;
+        },
+        // The project name feeds package names (Java), artifact ids and report titles; the folder name is the default.
+        after: (store, config) => {
+            if (config.project.name) return;
+            const pkg = store.read('package.json');
+            let name: string | undefined;
+            try {
+                name = pkg ? (JSON.parse(pkg) as { name?: string }).name?.replace(/^@[^/]+\//, '') : undefined;
+            } catch {
+                name = undefined;
+            }
+            config.project.name = (name || path.basename(store.root)).replace(/[^A-Za-z0-9 _-]+/g, ' ').trim() || 'app';
+            store.writeConfig(config);
         }
     },
     {
@@ -101,12 +116,12 @@ export const STEPS: StepDef[] = [
         title: 'Language',
         kind: 'choice',
         allowFreeText: true,
-        question: () => 'Which programming language should the tests be written in?',
-        why: 'Pick the language your team already knows; it matters more than any other choice for long-term maintenance.',
+        question: () => 'Which programming language should the tests be written in? This is your team\'s choice; every option works.',
+        why: 'Pick the language your team already knows; it matters more than any other choice for long-term maintenance. TestPilot never forces a language: it scaffolds TypeScript, JavaScript and Java (Selenium) itself and guides the others.',
         options: ctx => {
             const fw = ctx.config.appType && ctx.config.stack.framework ? findFramework(ctx.config.appType, ctx.config.stack.framework) : undefined;
             const langs = fw?.languages ?? Object.keys(LANGUAGE_LABELS);
-            return langs.map(l => ({ value: l, label: LANGUAGE_LABELS[l] ?? l, description: fw?.packs?.[l] ? 'TestPilot can scaffold this combination.' : 'TestPilot will guide you, without a ready-made template yet.' }));
+            return langs.map(l => ({ value: l, label: LANGUAGE_LABELS[l] ?? l, description: fw?.packs?.[l] ? 'TestPilot scaffolds the framework, generates the tests and runs them for this combination.' : 'TestPilot writes the plan, skills and agents and guides you; the framework itself follows the official getting-started steps.' }));
         },
         recommended: ctx => {
             const fw = ctx.config.appType && ctx.config.stack.framework ? findFramework(ctx.config.appType, ctx.config.stack.framework) : undefined;
@@ -127,7 +142,7 @@ export const STEPS: StepDef[] = [
         title: 'Design pattern',
         kind: 'choice',
         question: () => 'Which design pattern should the framework follow?',
-        why: 'The pattern decides how tests are organised. The Page Object Model is the safest default for most teams.',
+        why: 'The pattern decides how tests are organised. The Page Object Model is the safest default for most teams; BDD (Cucumber) adds Given/When/Then feature files on top of the same page objects.',
         options: () => PATTERN_OPTIONS,
         recommended: () => 'pom',
         apply: (config, answer) => {

@@ -5,7 +5,7 @@ export const ENV_FILE = '.env';
 export const ENV_EXAMPLE_FILE = '.env.example';
 
 /** Lines TestPilot makes sure are in .gitignore. */
-export const GITIGNORE_LINES = ['.env', '.env.*', '!.env.example', 'apps/', 'test-results/', 'playwright-report/', 'allure-results/', 'allure-report/', '.testpilot/tmp/'];
+export const GITIGNORE_LINES = ['.env', '.env.*', '!.env.example', 'apps/', 'test-results/', 'playwright-report/', 'allure-results/', 'allure-report/', '.features-gen/', 'target/', '.testpilot/tmp/', '.testpilot/tools/'];
 
 /** Minimal dotenv parser: KEY=value, optional quotes, # comments, `export` prefix. */
 export function parseDotenv(content: string): Map<string, string> {
