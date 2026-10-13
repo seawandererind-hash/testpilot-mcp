@@ -26,14 +26,14 @@ flowchart LR
 | Step | What you are asked | What TestPilot does |
 |---|---|---|
 | 1. App type | Web, Android, iOS, both, Windows, macOS, Electron, API or hybrid | Detects what the repository already has and suggests the best fit |
-| 2. Framework | Framework, language, design pattern (Page Object Model by default), where tests run, CI, reports | Explains the pros and cons of each option and records the choice in `.testpilot/decisions.md` |
+| 2. Framework | Framework, language, design pattern (Page Object Model by default), where tests run, CI, reports | Explains the pros and cons of each option and records the choice in `.testpilot/decisions.md`. The language is yours to pick: Playwright in **TypeScript** or **JavaScript**, or **Selenium with Java** (Maven + TestNG), each with the Page Object Model or **Cucumber BDD** |
 | 3. Credentials | Nothing in chat | Writes `.env.example`, adds `.env` to `.gitignore`, and checks which keys are filled in without ever reading their values back |
 | 4. Framework | "Can I create the project framework?" | Shows every file it will write, waits for your yes, then scaffolds the project and the AI instructions |
 | 5. App | The test environment URL, APK, IPA or app path, and extras (exploration, accessibility, visual, API layer, test data, parallel runs) | Refuses production-looking URLs unless you confirm, and can explore the app to record stable locators |
 | 6. Test cases | "Do you have the test cases in Jira, BrowserStack, Excel, Word…?" | Imports them into one common format, keeping links back to the source |
 | 7. Review and plan | Which suggestions to accept | Scores each case (clarity, completeness, atomicity, determinism, automatability), marks AUTOMATE / MANUAL / NEEDS-REWORK, finds duplicates and gaps, and writes `plans/automation-plan.md` in waves for a named person to approve |
-| Generate | "Shall I write the tests for the first wave?" | Writes page objects and tests named and tagged with the test-case id, with no fixed waits and no secrets in code |
-| Run | "Shall I run them?" | Runs them, repeats them to catch flaky tests, and sorts each failure into locator, timing, data, environment, assertion or script, with advice |
+| Generate | "Shall I write the tests for the first wave?" | Writes page objects and tests named and tagged with the test-case id, with no fixed waits and no secrets in code. With BDD it writes Gherkin feature files plus step definitions (`playwright-bdd` or Cucumber-JVM) |
+| Run | "Shall I run them?" | Runs them (`playwright test`, `bddgen`, `mvn test` or WebdriverIO, whichever the project uses), repeats them to catch flaky tests, and sorts each failure into locator, timing, data, environment, assertion or script, with advice |
 | Report | CI system and where results go | Writes the HTML report and the pipeline, and sends results to your test-management tool after you approve |
 
 You can stop at any point. `testpilot_status` (or `/qa-status`) tells anyone where the repository is and what comes next.
@@ -53,11 +53,12 @@ You can stop at any point. `testpilot_status` (or `/qa-status`) tells anyone whe
 plans/automation-plan.md
 AGENTS.md  CLAUDE.md  .cursor/rules/  .agents/rules/  .github/copilot-instructions.md
 .agents/skills/  .claude/skills/      skills every AI tool can use
-.mcp.json  .cursor/mcp.json  .agents/mcp_config.json
+.claude/agents/  .cursor/agents/      repo-specific QA agents (test writer, runner, page-object curator, case reviewer, framework guide)
+.mcp.json  .cursor/mcp.json  .agents/mcp_config.json   (TestPilot, plus the Playwright MCP for web apps)
 .env.example                          (your .env stays on your machine)
 ```
 
-The AI instructions and skills are regenerated from your choices whenever they change. Anything you write between `<!-- keep -->` and `<!-- /keep -->` in those files is preserved.
+The AI instructions, skills and agents are regenerated from your choices whenever they change: each agent knows this repository's framework, language, pattern, folders and commands, so a teammate can ask `@qa-test-writer` for a test or `@qa-test-runner` for a triaged run months later without TestPilot re-explaining the stack. Anything you write between `<!-- keep -->` and `<!-- /keep -->` in those files is preserved.
 
 ## Install
 

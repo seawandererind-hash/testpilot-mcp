@@ -21,8 +21,8 @@ Then the questions begin, one at a time, each with a recommended answer and a sh
 |---|---|
 | What kind of application are you testing? | Web app |
 | Which framework? | Playwright (recommended for web) |
-| Which language? | TypeScript |
-| Which design pattern? | Page Object Model: one class per screen holds where things are, so tests read like the test case |
+| Which language? | TypeScript (JavaScript and Selenium with Java are equally supported; the choice is your team's) |
+| Which design pattern? | Page Object Model: one class per screen holds where things are, so tests read like the test case. Teams that write Gherkin pick BDD (Cucumber) instead |
 | Where should the tests run? | This computer (later CI) |
 | Where are your test cases saved today? | Excel |
 | Which CI system? | GitHub Actions |
@@ -38,9 +38,9 @@ TestPilot writes `.env.example`, a list of the keys the project needs with a not
 
 ## 3. "Can I create the project framework?"
 
-TestPilot shows every file it will create: the Playwright configuration, a `BasePage` and a first page object, a smoke test, test-data files, `AGENTS.md` and the rules and skills for each AI tool. Nothing is written until you say yes. If a file already exists with different content, it is kept unless you ask to replace it.
+TestPilot shows every file it will create: the Playwright configuration (or `pom.xml` and `testng.xml` for Selenium with Java), a `BasePage` and a first page object, a smoke test (a feature file with BDD), test-data files, `AGENTS.md`, the rules and skills for each AI tool, and five QA agents in `.claude/agents/` and `.cursor/agents/` that know this repository's stack. Web projects also get the Playwright MCP in their MCP configs so the AI tool can open the app itself. Nothing is written until you say yes. If a file already exists with different content, it is kept unless you ask to replace it.
 
-Afterwards it can install the tools (`npm install` and the browser). If something is missing on your machine, `check_prerequisites` tells you exactly what to install.
+Afterwards it can install the tools (`npm install` and the browser; `mvn test-compile` for Java). If something is missing on your machine, `check_prerequisites` tells you exactly what to install.
 
 ## 4. The app
 
@@ -68,7 +68,9 @@ Then it writes `plans/automation-plan.md`: which cases are automated in which **
 
 ## 7. Generate
 
-"Shall I write the tests for the first wave?" TestPilot shows the files first: page objects with the locators it found during exploration, and one test per case named and tagged with the case id (`TC-001 user can log in @TC-001`). Steps it could not turn into code become clear TODOs, and such tests are marked `fixme` so they never pass by accident. Passwords come from `.env`, never from the code.
+"Shall I write the tests for the first wave?" TestPilot shows the files first: page objects with the locators it found during exploration, and one test per case named and tagged with the case id (`TC-001 user can log in @TC-001`). Steps it could not turn into code become clear TODOs, and such tests are marked `fixme` (Playwright), `skipUntilDone` (TestNG) or `@testpilot-todo` (Cucumber) so they never pass by accident. Passwords come from `.env`, never from the code.
+
+With the BDD pattern each case becomes a Gherkin scenario (`features/<area>/<ID>.feature`, or `src/test/resources/features/` in Java) and every step text gets one step definition in `steps/generated.steps.ts` (or `.js`) or `GeneratedSteps.java`. With Selenium the page objects land in `src/main/java/<package>/pages/` and the tests in `src/test/java/<package>/tests/<area>/`.
 
 ## 8. Run
 
@@ -83,7 +85,7 @@ Then it writes `plans/automation-plan.md`: which cases are automated in which **
 | assertion | The app did something different from the expected result | Possibly a real bug: check the screenshot and trace |
 | script | The test code itself is broken | Fix the code |
 
-The full Playwright report opens with `npx playwright show-report`; every failure has a screenshot, a video and a trace.
+The full Playwright report opens with `npx playwright show-report`; every failure has a screenshot, a video and a trace. Java projects run with `mvn test` (`-Dgroups=<ID>` or `-Dcucumber.filter.tags=@<ID>` for one case); their screenshots are under `target/screenshots/` and the reports under `target/surefire-reports/`.
 
 ## 9. Report and CI
 

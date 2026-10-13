@@ -168,6 +168,7 @@ In hosted mode TestPilot works in a named workspace on the server. Share test ca
 - In JSON, write paths with double backslashes (`"C:\\code\\shop-web"`) or forward slashes (`"C:/code/shop-web"`).
 - Behind a company proxy, set `HTTPS_PROXY` and, if your company uses its own certificates, `NODE_EXTRA_CA_CERTS=C:\path\to\company-ca.pem` in the server's `env` block.
 - Playwright installs browsers into your user profile; if that is blocked, set `PLAYWRIGHT_BROWSERS_PATH` to a folder you can write to.
+- Selenium with Java needs a JDK 17 or newer and Maven on `PATH` (`java -version`, `mvn -v`). If Selenium cannot download a driver through the proxy, put `CHROMEDRIVER_PATH` (and, if Chrome is not where Selenium expects, `BROWSER_BINARY`) in `.env`.
 
 ## Checking it works
 
