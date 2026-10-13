@@ -50,6 +50,7 @@ const HOSTED_UNAVAILABLE: Record<string, string> = {
     run_tests: 'A hosted TestPilot does not run tests. Deliver the project (hosted_workspace, action "zip" or "pull-request"), then run the tests on your machine or in CI with the pipeline from publish_results.',
     explore_app: 'A hosted TestPilot does not open browsers or apps. Exploration runs in a local TestPilot (Cursor, Claude Code, VS Code, Antigravity) against your test environment.',
     live_test: 'A hosted TestPilot does not open browsers. Live testing runs in a local TestPilot (Cursor, Claude Code, VS Code, Antigravity) against your test environment.',
+    heal_tests: 'A hosted TestPilot has no test runs or traces to work from. Run a local TestPilot (Cursor, Claude Code, VS Code) next to your tests to heal, explain or quarantine them.',
     check_prerequisites: 'A hosted TestPilot cannot see your machine. Once the project is delivered, run a local TestPilot and call check_prerequisites there.'
 };
 
