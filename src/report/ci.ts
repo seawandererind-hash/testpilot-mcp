@@ -29,13 +29,14 @@ export function planCi(store: ProjectStore, config: Config, providerOverride?: s
     const spec = CI_FILES[provider];
     if (!spec) return { error: `TestPilot has no pipeline template for ${provider} yet.` };
     const appium = config.stack.templatePack === 'appium-ts';
+    const maven = config.stack.templatePack === 'selenium-java';
     const mobile = appium && ['android', 'ios', 'android-ios', 'hybrid'].includes(config.appType ?? '');
     if (appium && !mobile) {
         return {
             error: 'Desktop app tests need the app installed on the machine that runs them, so hosted CI runners cannot run them. Use a self-hosted Windows or macOS runner that has the app and Appium installed, and run `npm test` there.'
         };
     }
-    if (!appium && !config.stack.framework?.startsWith('playwright')) return { error: `Pipeline templates cover Playwright and Appium today. For ${config.stack.framework}, adapt the run command from AGENTS.md.` };
+    if (!appium && !maven && !config.stack.framework?.startsWith('playwright')) return { error: `Pipeline templates cover Playwright, Selenium + Java and Appium today. For ${config.stack.framework}, adapt the run command from AGENTS.md.` };
     // Hosted CI runners have no phones, so mobile pipelines run on BrowserStack App Automate real devices.
     const groups = integrationsFor(config);
     if (mobile && !groups.includes('browserstack')) groups.push('browserstack');
@@ -55,7 +56,22 @@ export function planCi(store: ProjectStore, config: Config, providerOverride?: s
         // keep the defaults
     }
     const testRootPrefix = testRoot === '.' ? '' : `${testRoot}/`;
-    const tool = appium
+    const bdd = config.stack.pattern === 'bdd';
+    const tool = maven
+        ? {
+              title: 'Selenium',
+              workflowName: 'UI tests',
+              // Maven plus a JDK; Chromium is installed by the setup command (hosted GitHub and Azure runners already have Chrome).
+              dockerImage: 'maven:3.9-eclipse-temurin-21',
+              dockerArgs: '',
+              setupName: 'Install Chromium',
+              setupCommand: 'apt-get update -qq && apt-get install -y -qq chromium > /dev/null',
+              runCommand: `mvn -B test -DHEADLESS=true${bdd ? '' : ''}`,
+              junitFiles: `${testRootPrefix}target/surefire-reports/TEST-*.xml`,
+              reportName: 'test-results',
+              reportPaths: [`${testRootPrefix}target/testpilot/`, `${testRootPrefix}target/screenshots/`, `${testRootPrefix}target/surefire-reports/`, ...(bdd ? [`${testRootPrefix}target/cucumber-report.html`] : [])]
+          }
+        : appium
         ? {
               title: 'Appium',
               workflowName: 'Mobile tests',
@@ -93,6 +109,9 @@ export function planCi(store: ProjectStore, config: Config, providerOverride?: s
         browserList: browsers.join(' '),
         playwrightVersion,
         isAppium: appium,
+        isMaven: maven,
+        // Containers have no Chrome; point Selenium at the Chromium the setup command installs.
+        dockerRunCommand: maven ? 'mvn -B test -DHEADLESS=true -DBROWSER_BINARY=/usr/bin/chromium' : tool.runCommand,
         ...tool
     };
     const content = Handlebars.compile(readTemplate(path.join(TEMPLATES_DIR, 'ci', spec.template)), { noEscape: true })(ctx);

@@ -33,9 +33,13 @@ pipeline {
         stage('Install') {
             steps {
                 dir('{{testRoot}}') {
+{{#if isMaven}}
+                    sh '{{setupCommand}}'
+{{else}}
                     sh 'npm ci'
 {{#if setupCommand}}
                     sh '{{setupCommand}}'
+{{/if}}
 {{/if}}
                 }
             }
@@ -43,7 +47,7 @@ pipeline {
         stage('Test') {
             steps {
                 dir('{{testRoot}}') {
-                    sh '{{runCommand}}'
+                    sh '{{dockerRunCommand}}'
                 }
             }
         }

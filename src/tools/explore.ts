@@ -192,7 +192,9 @@ export function registerExploreTools(server: McpServer, options: ServerOptions):
                 }
                 if (args.storageState && !store.exists(args.storageState)) return failure(`No file at ${args.storageState}.`);
                 const cwd = store.resolve(inTestRoot(config, '.') || '.');
-                const out = await exploreWeb(store, cwd, { url, maxPages: args.maxPages, screenshots: args.screenshots, storageState: args.storageState, ignoreHttpsErrors: args.ignoreHttpsErrors });
+                const nodeProject = config.stack.templatePack !== 'selenium-java';
+                const toolsHint = nodeProject ? undefined : 'Playwright for exploration is not installed under .testpilot/tools yet. Run: npm install --prefix .testpilot/tools --no-package-lock playwright@1.64.0 && node .testpilot/tools/node_modules/playwright/cli.js install --with-deps chromium (scaffold_project does this for you). The tests themselves use only Selenium.';
+                const out = await exploreWeb(store, cwd, { url, maxPages: args.maxPages, screenshots: args.screenshots, storageState: args.storageState, ignoreHttpsErrors: args.ignoreHttpsErrors, toolsHint });
                 if (out.fatal) return failure(out.fatal);
                 const ok = out.pages.filter(p => !p.error && (p.status ?? 200) < 400);
                 const first = out.pages[0];

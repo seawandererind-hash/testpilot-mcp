@@ -13,8 +13,10 @@ import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 const require = createRequire(path.join(process.cwd(), 'package.json'));
+// Projects without Node dependencies (Selenium + Java) keep a small Playwright under .testpilot/tools for exploration only.
+const toolsRequire = process.env.TESTPILOT_TOOLS ? createRequire(path.join(process.env.TESTPILOT_TOOLS, 'package.json')) : require;
 let pw;
-try { pw = require('@playwright/test'); } catch { try { pw = require('playwright'); } catch { console.log('__TESTPILOT__' + JSON.stringify({ fatal: 'Playwright is not installed in this project. Run npm install, then npx playwright install chromium.' })); process.exit(0); } }
+try { pw = require('@playwright/test'); } catch { try { pw = require('playwright'); } catch { try { pw = toolsRequire('playwright'); } catch { console.log('__TESTPILOT__' + JSON.stringify({ fatal: process.env.TESTPILOT_TOOLS_HINT || 'Playwright is not installed in this project. Run npm install, then npx playwright install chromium.' })); process.exit(0); } } }
 const args = JSON.parse(process.env.TESTPILOT_EXPLORE);
 const launch = {};
 if (process.env.BROWSER_CHANNEL) launch.channel = process.env.BROWSER_CHANNEL;
@@ -108,8 +110,13 @@ export function quote(s: string): string {
     return `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ')}'`;
 }
 
+/** Where projects without Node dependencies keep the explorer's Playwright (git-ignored). */
+export const TOOLS_DIR = '.testpilot/tools';
+
 export interface ExploreOptions {
     url: string;
+    /** Shown when no Playwright is found, for projects that install it under .testpilot/tools. */
+    toolsHint?: string;
     maxPages: number;
     screenshots: boolean;
     storageState?: string;
@@ -128,7 +135,12 @@ export async function exploreWeb(store: ProjectStore, cwd: string, options: Expl
     const scriptRel = '.testpilot/tmp/explore.mjs';
     store.write(scriptRel, EXPLORE_SCRIPT);
     const outDir = store.resolve(`${EXPLORATION_DIR}/screenshots`);
-    const env = { ...process.env, TESTPILOT_EXPLORE: JSON.stringify({ url: options.url, maxPages: options.maxPages, screenshots: options.screenshots, outDir, storageState: options.storageState ? store.resolve(options.storageState) : undefined, ignoreHttpsErrors: options.ignoreHttpsErrors }) };
+    const env = {
+        ...process.env,
+        TESTPILOT_EXPLORE: JSON.stringify({ url: options.url, maxPages: options.maxPages, screenshots: options.screenshots, outDir, storageState: options.storageState ? store.resolve(options.storageState) : undefined, ignoreHttpsErrors: options.ignoreHttpsErrors }),
+        TESTPILOT_TOOLS: store.resolve(TOOLS_DIR),
+        TESTPILOT_TOOLS_HINT: options.toolsHint ?? ''
+    };
     const stdout = await new Promise<string>((resolve, reject) => {
         const child = spawn(process.execPath, [store.resolve(scriptRel)], { cwd, env, windowsHide: true });
         let out = '';

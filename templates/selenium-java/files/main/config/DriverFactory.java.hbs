@@ -1,0 +1,128 @@
+// {{header}}
+package {{javaPackage}}.config;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.openqa.selenium.MutableCapabilities;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
+/**
+ * Creates one WebDriver per test. Selenium Manager downloads the matching browser driver, so nothing
+ * else needs installing. Settings (all optional, in .env or .env.example):
+ *   BROWSER=chrome|firefox|edge   HEADLESS=true|false   SELENIUM_REMOTE_URL=http://grid:4444
+ *   BROWSER_BINARY=/path/to/chrome: use that browser build instead of the one Selenium Manager finds.
+ *   CHROMEDRIVER_PATH / GECKODRIVER_PATH / EDGEDRIVER_PATH: a driver you downloaded yourself (locked-down networks).
+ *   BROWSERSTACK_USERNAME + BROWSERSTACK_ACCESS_KEY: run on BrowserStack Automate instead of a local browser.
+ */
+public final class DriverFactory {
+    private static final ThreadLocal<WebDriver> CURRENT = new ThreadLocal<>();
+
+    private DriverFactory() {}
+
+    /** The driver of the running test, for listeners that take screenshots. */
+    public static WebDriver current() {
+        return CURRENT.get();
+    }
+
+    public static WebDriver create() {
+        String browser = Env.optional("BROWSER", "chrome").toLowerCase();
+        boolean headless = Env.flag("HEADLESS", System.getenv("CI") != null);
+        MutableCapabilities options = optionsFor(browser, headless);
+        WebDriver driver = remoteUrl() != null ? new RemoteWebDriver(remoteUrl(), options) : localDriver(browser, options);
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
+        driver.manage().window().setSize(new org.openqa.selenium.Dimension(1280, 800));
+        CURRENT.set(driver);
+        return driver;
+    }
+
+    public static void quit() {
+        WebDriver driver = CURRENT.get();
+        if (driver != null) {
+            try {
+                driver.quit();
+            } finally {
+                CURRENT.remove();
+            }
+        }
+    }
+
+    private static MutableCapabilities optionsFor(String browser, boolean headless) {
+        String binary = Env.optional("BROWSER_BINARY", "");
+        switch (browser) {
+            case "firefox": {
+                FirefoxOptions o = new FirefoxOptions();
+                if (headless) o.addArguments("-headless");
+                if (!binary.isEmpty()) o.setBinary(binary);
+                return withCloud(o);
+            }
+            case "edge": {
+                EdgeOptions o = new EdgeOptions();
+                if (headless) o.addArguments("--headless=new");
+                if (!binary.isEmpty()) o.setBinary(binary);
+                return withCloud(o);
+            }
+            default: {
+                ChromeOptions o = new ChromeOptions();
+                if (headless) o.addArguments("--headless=new");
+                o.addArguments("--window-size=1280,800", "--disable-gpu", "--no-sandbox");
+                if (!binary.isEmpty()) o.setBinary(binary);
+                return withCloud(o);
+            }
+        }
+    }
+
+    private static WebDriver localDriver(String browser, MutableCapabilities options) {
+        switch (browser) {
+            case "firefox":
+                driverPath("GECKODRIVER_PATH", "webdriver.gecko.driver");
+                return new FirefoxDriver((FirefoxOptions) options);
+            case "edge":
+                driverPath("EDGEDRIVER_PATH", "webdriver.edge.driver");
+                return new EdgeDriver((EdgeOptions) options);
+            default:
+                driverPath("CHROMEDRIVER_PATH", "webdriver.chrome.driver");
+                return new ChromeDriver((ChromeOptions) options);
+        }
+    }
+
+    /** A driver you downloaded yourself skips Selenium Manager (useful behind a proxy that blocks it). */
+    private static void driverPath(String envName, String property) {
+        String path = Env.optional(envName, "");
+        if (!path.isEmpty() && System.getProperty(property) == null) System.setProperty(property, path);
+    }
+
+    private static URL remoteUrl() {
+        String user = Env.optional("BROWSERSTACK_USERNAME", "");
+        String key = Env.optional("BROWSERSTACK_ACCESS_KEY", "");
+        String url = !user.isEmpty() && !key.isEmpty() ? "https://" + user + ":" + key + "@hub-cloud.browserstack.com/wd/hub" : Env.optional("SELENIUM_REMOTE_URL", "");
+        if (url.isEmpty()) return null;
+        try {
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException("SELENIUM_REMOTE_URL is not a valid URL", e);
+        }
+    }
+
+    /** BrowserStack reads these capabilities; other grids ignore them. */
+    private static MutableCapabilities withCloud(MutableCapabilities options) {
+        if (Env.optional("BROWSERSTACK_USERNAME", "").isEmpty()) return options;
+        Map<String, Object> bstack = new HashMap<>();
+        bstack.put("projectName", "{{projectName}}");
+        bstack.put("buildName", Env.optional("BUILD_NAME", "local"));
+        bstack.put("os", Env.optional("BROWSERSTACK_OS", "Windows"));
+        bstack.put("osVersion", Env.optional("BROWSERSTACK_OS_VERSION", "11"));
+        options.setCapability("bstack:options", bstack);
+        return options;
+    }
+}

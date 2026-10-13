@@ -44,6 +44,14 @@ jobs:
 {{/if}}
     steps:
       - uses: actions/checkout@v5
+{{#if isMaven}}
+      # Chrome is preinstalled on hosted runners; Selenium Manager fetches the matching driver.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+{{else}}
       - uses: actions/setup-node@v5
         with:
           node-version: 22
@@ -59,6 +67,7 @@ jobs:
 {{else}}
       - name: Install browsers
         run: npx playwright install --with-deps {{browserList}}
+{{/if}}
 {{/if}}
       - name: Run tests
         run: {{runCommand}}
