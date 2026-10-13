@@ -53,9 +53,17 @@ Keep `trace: 'retain-on-failure'` (the TestPilot template does) so `explain` has
 
 ## Add-ons: `add_capability`
 
-See the section below for each capability; every one previews the files first.
+Ask in plain words ("log in once and reuse it", "run only what changed in CI", "generate API tests from our OpenAPI file"). The first call returns a preview: every file marked new or changed, with diffs of patched files. Nothing is written until you approve; files that already exist and differ are only replaced when listed in `overwrite`.
 
-<!-- add_capability details are added when that tool lands -->
+| Capability | What you get |
+|---|---|
+| `login-once` | A Playwright setup project that signs each role in `test-data/users.json` in once and saves the session to `playwright/.auth/` (git-ignored), so every test starts signed in. TestPilot's own `playwright.config` is patched (diff shown); other configs get a snippet to paste. For SSO or one-time codes, use test accounts with MFA off or a TOTP secret in `.env`. |
+| `test-data` | `test-data/factory.ts` (or `.js`) with builders that make unique data per run using Faker, and a fixture that creates data through the API and deletes it after the test. It also scans imported test cases for real personal data (emails, phone numbers, card numbers checked with Luhn, IBANs, national ids) and reports them masked. `install: true` adds Faker. |
+| `ci-speed` | GitHub Actions: on pull requests, only the tests affected by the changed files (`--only-changed`) plus `@smoke`; on main and nightly, the full suite split across `shards` machines (default 4) with one merged report. Other CI systems get the commands to paste. |
+| `cloud-grid` | Run web tests on BrowserStack (`browserstack.yml` and `npm run test:browserstack`), Sauce Labs or LambdaTest (`provider`). Keys stay in `.env`; config files only name the variables. |
+| `openapi` | API tests from an OpenAPI 3 or Swagger 2 file (`spec`): every GET is called and its status, content type and required fields are checked; POST, PUT, PATCH and DELETE start as `test.fixme` with an example body, because they change data. |
+| `companions` | Adds companion MCP servers next to TestPilot, chosen from your setup: Playwright MCP, Appium MCP, BrowserStack MCP, Atlassian (Jira) and GitHub. Versions are pinned and servers you already have are never removed. Pick a subset with `servers`. |
+| `org-policy` | A company rule pack (`policy`: a file in the repo or an https URL; example in [examples/org-policy/testpilot.org.yaml](../examples/org-policy/testpilot.org.yaml)): allowed frameworks, languages and patterns, required tags, test-name pattern, CI and forbidden code. TestPilot saves a copy in `.testpilot/org-policy.yaml`, checks the repository and writes `.testpilot/reports/policy.md` with how to fix each rule. Calling it again without `policy` re-checks. |
 
 ## Proof
 

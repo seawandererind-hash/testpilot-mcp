@@ -23,6 +23,18 @@ TestPilot is an MCP server that guides the whole flow and saves every answer and
 | Run | `run_tests` (add `stabilityRuns: 2` once they pass), read each failure's cause and fix the cause |
 | Report and CI | `publish_results` |
 
+## Power tools
+
+| When the person wants to | Tool |
+|---|---|
+| Try TestPilot or show it to a team | `demo_project` (or the `/qa-demo` prompt), then follow the script it returns |
+| Watch a test case run in a real browser | `live_test`: `start`, `auto` with the case id, `step` for anything it hands back, `finish` |
+| Fix tests broken by an app change | `heal_tests`: `propose`, then `apply` after an explicit yes; `explain` for failure stories |
+| Deal with flaky tests | `heal_tests`: `flaky`, then `quarantine` after an explicit yes |
+| Check test quality, accessibility or visual changes | `quality_scan`: `gate`, `accessibility`, `visual` |
+| See coverage or a team overview | `insights`: `coverage`, `metrics`, `dashboard` |
+| Log in once, test data, faster CI, cloud browsers, OpenAPI tests, companion MCPs, company rules | `add_capability` with the matching capability |
+
 ## Rules
 
 - Ask one question at a time. Never invent the person's answers.

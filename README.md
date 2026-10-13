@@ -6,7 +6,12 @@ It asks one question at a time, explains every choice in plain language, preview
 
 - **Web** with Playwright, **Android and iOS** with Appium, **Windows and macOS desktop** with Appium, **Electron** and **API** with Playwright.
 - **Test cases from** Jira, Xray, Zephyr Scale, TestRail, BrowserStack Test Management, Azure Test Plans, Excel, CSV, Word, Gherkin and Markdown.
+- **Power features**: watch it test a case live in a real browser, self-healing locators with your approval, failure stories from traces, flaky-test quarantine, a quality gate for test code, explained accessibility checks, visual checks that hide changing areas, a coverage and traceability map, a team dashboard, and one-request add-ons (log in once, test-data factory, faster CI, cloud browsers, API tests from OpenAPI, companion MCP servers, company rules). See [docs/power-features.md](docs/power-features.md).
 - **Results back to** Xray, Zephyr Scale, TestRail, BrowserStack Test Management and Azure Test Plans, plus HTML and Markdown reports and CI pipelines for GitHub Actions, Azure DevOps, GitLab and Jenkins.
+
+**Try it in five minutes:** say "give me the TestPilot demo" (or use `/qa-demo`). TestPilot sets up a practice shop on your computer and walks you through the whole story: create the framework, watch it test live, generate and run tests, break the app, heal the test, and show the coverage map.
+
+[![CI](https://github.com/seawandererind-hash/testpilot-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/seawandererind-hash/testpilot-mcp/actions/workflows/ci.yml) [![Device check](https://github.com/seawandererind-hash/testpilot-mcp/actions/workflows/device-check.yml/badge.svg)](https://github.com/seawandererind-hash/testpilot-mcp/actions/workflows/device-check.yml) [![Scorecard](https://github.com/seawandererind-hash/testpilot-mcp/actions/workflows/scorecard.yml/badge.svg)](https://github.com/seawandererind-hash/testpilot-mcp/actions/workflows/scorecard.yml)
 
 ## How it works
 
@@ -123,9 +128,15 @@ More in [docs/security.md](docs/security.md).
 | `preview_tests`, `generate_tests` | Show, then write page objects and tests for planned cases |
 | `run_tests` | Run with stability repeats and failure triage |
 | `publish_results` | Reports, CI pipelines and result sync |
+| `live_test` | Drive a real browser through a test case while you watch, and record the locators that worked |
+| `heal_tests` | Propose and apply locator fixes after your yes, explain failures from traces, score and quarantine flaky tests |
+| `quality_scan` | Quality gate for test code, explained accessibility checks (WCAG 2.2), visual checks with smart masks |
+| `insights` | Coverage and traceability map, metrics, team dashboard (shown as an interactive view where MCP Apps are supported) |
+| `add_capability` | Log in once, test-data factory, faster CI, cloud browsers, API tests from OpenAPI, companion MCP servers, company rule pack |
+| `demo_project` | A practice shop with the wizard filled in, for demos and first tries |
 | `hosted_workspace` | Hosted mode only: add shared files, download a zip, open a pull request |
 
-Prompts: `/qa-setup`, `/qa-import`, `/qa-plan`, `/qa-generate`, `/qa-run`, `/qa-status`. Resources: `testpilot://state`, `testpilot://config`, `testpilot://plan`, `testpilot://reports/latest`.
+Prompts: `/qa-setup`, `/qa-import`, `/qa-plan`, `/qa-generate`, `/qa-run`, `/qa-status`, `/qa-demo`. Resources: `testpilot://state`, `testpilot://config`, `testpilot://plan`, `testpilot://reports/latest`.
 
 TestPilot speaks both MCP protocol generations (2025-era clients such as Cursor, and 2026-07-28 clients) from one server.
 

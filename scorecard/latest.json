@@ -1,0 +1,175 @@
+{
+  "version": "0.1.2",
+  "date": "2026-10-13T06:15:00.883Z",
+  "node": "v22.22.0",
+  "platform": "linux",
+  "setupSeconds": 2,
+  "liveAutoSteps": 5,
+  "generatedTests": 2,
+  "todosLeft": 0,
+  "firstRun": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "firstRunPassRate": 100,
+  "flakyAfterTwoRuns": 0,
+  "qualityGate": "ready",
+  "failuresAfterBreak": 2,
+  "healProposals": 1,
+  "healedAndPassing": 0,
+  "totalSeconds": 45,
+  "steps": [
+    {
+      "step": "Start the demo",
+      "tool": "demo_project",
+      "ok": true,
+      "ms": 107
+    },
+    {
+      "step": "Preview the framework",
+      "tool": "preview_scaffold",
+      "ok": true,
+      "ms": 58
+    },
+    {
+      "step": "Create the framework",
+      "tool": "scaffold_project",
+      "ok": true,
+      "ms": 44
+    },
+    {
+      "step": "Explore",
+      "tool": "explore_app",
+      "ok": true,
+      "ms": 2393
+    },
+    {
+      "step": "Import test cases",
+      "tool": "import_test_cases",
+      "ok": true,
+      "ms": 39
+    },
+    {
+      "step": "Review",
+      "tool": "review_test_cases",
+      "ok": true,
+      "ms": 32
+    },
+    {
+      "step": "Watch it test (start)",
+      "tool": "live_test",
+      "ok": true,
+      "ms": 1557
+    },
+    {
+      "step": "Watch it test (auto)",
+      "tool": "live_test",
+      "ok": true,
+      "ms": 941
+    },
+    {
+      "step": "Watch it test (finish)",
+      "tool": "live_test",
+      "ok": true,
+      "ms": 127
+    },
+    {
+      "step": "Plan",
+      "tool": "automation_plan",
+      "ok": true,
+      "ms": 28
+    },
+    {
+      "step": "Approve the plan",
+      "tool": "automation_plan",
+      "ok": true,
+      "ms": 16
+    },
+    {
+      "step": "Preview tests",
+      "tool": "preview_tests",
+      "ok": true,
+      "ms": 19
+    },
+    {
+      "step": "Generate tests",
+      "tool": "generate_tests",
+      "ok": true,
+      "ms": 20
+    },
+    {
+      "step": "First run",
+      "tool": "run_tests",
+      "ok": true,
+      "ms": 4102
+    },
+    {
+      "step": "Stability run (x2)",
+      "tool": "run_tests",
+      "ok": true,
+      "ms": 5572
+    },
+    {
+      "step": "Accessibility scan",
+      "tool": "quality_scan",
+      "ok": true,
+      "ms": 3296
+    },
+    {
+      "step": "Quality gate",
+      "tool": "quality_scan",
+      "ok": true,
+      "ms": 1969
+    },
+    {
+      "step": "Break the app",
+      "tool": "demo_project",
+      "ok": true,
+      "ms": 12
+    },
+    {
+      "step": "Run after the break",
+      "tool": "run_tests",
+      "ok": true,
+      "ms": 19491
+    },
+    {
+      "step": "Propose heals",
+      "tool": "heal_tests",
+      "ok": true,
+      "ms": 23
+    },
+    {
+      "step": "Apply heals",
+      "tool": "heal_tests",
+      "ok": true,
+      "ms": 3499
+    },
+    {
+      "step": "Coverage map",
+      "tool": "insights",
+      "ok": true,
+      "ms": 26
+    },
+    {
+      "step": "Report",
+      "tool": "publish_results",
+      "ok": true,
+      "ms": 21
+    },
+    {
+      "step": "Put the app back",
+      "tool": "demo_project",
+      "ok": true,
+      "ms": 11
+    },
+    {
+      "step": "Stop the shop",
+      "tool": "demo_project",
+      "ok": true,
+      "ms": 12
+    }
+  ]
+}
