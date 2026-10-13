@@ -239,14 +239,15 @@ export function apiSpec(config: Config, tc: TestCase): { file: string; content: 
         ctx.body.push('// TODO(testpilot): this case does not say which request to send (for example "GET /orders/42").');
     }
     const area = tc.area ?? 'api';
-    const file = inTestRoot(config, `tests/api/${slug(area) || 'api'}/${tc.id.replace(/[^A-Za-z0-9._-]+/g, '_')}.spec.ts`);
+    const js = config.stack.templatePack === 'playwright-js';
+    const file = inTestRoot(config, `tests/api/${slug(area) || 'api'}/${tc.id.replace(/[^A-Za-z0-9._-]+/g, '_')}.spec.${js ? 'js' : 'ts'}`);
     const tags = [`@${tc.id}`, '@api', ...(tc.area ? [`@${slug(tc.area)}`] : []), ...(tc.priority ? [`@${tc.priority.toLowerCase()}`] : []), ...tc.tags.map(t => `@${slug(t)}`)].filter((t, i, all) => all.indexOf(t) === i && t.length > 1);
     const fixtures = ['request', ...(ctx.usesPlaywright ? ['playwright'] : [])];
     const usesExpect = ctx.body.some(l => l.includes('expect('));
     const lines = [
         `// ${CREATED_HEADER}`,
         `// Generated from test case ${tc.id} (${tc.source.type}${tc.source.ref ? `: ${tc.source.ref.replace(/\s+/g, ' ')}` : ''}).${ctx.todos ? ` ${ctx.todos} TODO(testpilot) item(s) to finish; the test is marked fixme until then.` : ''}`,
-        `import { ${usesExpect ? 'expect, ' : ''}test } from '@playwright/test';`,
+        js ? `const { ${usesExpect ? 'expect, ' : ''}test } = require('@playwright/test');` : `import { ${usesExpect ? 'expect, ' : ''}test } from '@playwright/test';`,
         '',
         `test${ctx.todos ? '.fixme' : ''}(`,
         `    ${quote(`${tc.id} ${clean(tc.title).text.replace(/\s+/g, ' ')}`)},`,
