@@ -49,7 +49,8 @@ export function projectRootFor(options: ServerOptions, explicit?: string, create
 const HOSTED_UNAVAILABLE: Record<string, string> = {
     run_tests: 'A hosted TestPilot does not run tests. Deliver the project (hosted_workspace, action "zip" or "pull-request"), then run the tests on your machine or in CI with the pipeline from publish_results.',
     explore_app: 'A hosted TestPilot does not open browsers or apps. Exploration runs in a local TestPilot (Cursor, Claude Code, VS Code, Antigravity) against your test environment.',
-    check_prerequisites: 'A hosted TestPilot cannot see your machine. Once the project is delivered, run a local TestPilot and call check_prerequisites there.'
+    check_prerequisites: 'A hosted TestPilot cannot see your machine. Once the project is delivered, run a local TestPilot and call check_prerequisites there.',
+    quality_scan: 'A hosted TestPilot does not run compilers, browsers or tests. Run quality_scan (gate, accessibility, visual) in a local TestPilot against your checked-out project.'
 };
 
 export interface ProjectContext {

@@ -9,6 +9,7 @@ import { registerGenerateTools } from './tools/generate.js';
 import { registerHostedTools } from './tools/hosted.js';
 import { registerPlanTools } from './tools/plan.js';
 import { registerPublishTools } from './tools/publish.js';
+import { registerQualityTools } from './tools/quality.js';
 import { registerRunTools } from './tools/run.js';
 import { registerScaffoldTools } from './tools/scaffold.js';
 import { registerTestCaseTools } from './tools/testcases.js';
@@ -37,6 +38,7 @@ export function createServer(options: Partial<ServerOptions> = {}): McpServer {
     registerGenerateTools(server, opts);
     registerRunTools(server, opts);
     registerPublishTools(server, opts);
+    registerQualityTools(server, opts);
     registerHostedTools(server, opts);
     registerPrompts(server);
     registerResources(server, opts);
