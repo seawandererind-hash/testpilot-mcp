@@ -13,6 +13,7 @@ import { registerInsightsTools } from './tools/insights.js';
 import { registerLiveTools } from './tools/live.js';
 import { registerPlanTools } from './tools/plan.js';
 import { registerPublishTools } from './tools/publish.js';
+import { registerQualityTools } from './tools/quality.js';
 import { registerRunTools } from './tools/run.js';
 import { registerScaffoldTools } from './tools/scaffold.js';
 import { registerTestCaseTools } from './tools/testcases.js';
@@ -44,6 +45,7 @@ export function createServer(options: Partial<ServerOptions> = {}): McpServer {
     registerHealTools(server, opts);
     registerPublishTools(server, opts);
     registerInsightsTools(server, opts);
+    registerQualityTools(server, opts);
     registerHostedTools(server, opts);
     registerDemoTools(server, opts);
     registerPrompts(server);

@@ -52,6 +52,8 @@ const HOSTED_UNAVAILABLE: Record<string, string> = {
     live_test: 'A hosted TestPilot does not open browsers. Live testing runs in a local TestPilot (Cursor, Claude Code, VS Code, Antigravity) against your test environment.',
     heal_tests: 'A hosted TestPilot has no test runs or traces to work from. Run a local TestPilot (Cursor, Claude Code, VS Code) next to your tests to heal, explain or quarantine them.',
     check_prerequisites: 'A hosted TestPilot cannot see your machine. Once the project is delivered, run a local TestPilot and call check_prerequisites there.'
+    check_prerequisites: 'A hosted TestPilot cannot see your machine. Once the project is delivered, run a local TestPilot and call check_prerequisites there.',
+    quality_scan: 'A hosted TestPilot does not run compilers, browsers or tests. Run quality_scan (gate, accessibility, visual) in a local TestPilot against your checked-out project.'
 };
 
 export interface ProjectContext {
