@@ -1,0 +1,45 @@
+# testpilot.org.yaml: your company's test automation rules, checked by TestPilot.
+#
+# Keep one copy in a place every team can read (a shared repository, raw GitHub URL or wiki attachment),
+# then in each test project ask your AI tool: "Apply our company test rules from <path or https URL>".
+# TestPilot saves a copy in .testpilot/org-policy.yaml and writes .testpilot/reports/policy.md with
+# pass or fail per rule and how to fix it. Ask "Re-check the company rules" any time after changes.
+#
+# Every key is optional: leave out a rule you do not want checked.
+
+name: Acme test automation rules
+version: 1
+
+# Frameworks, languages and patterns teams may choose in the TestPilot wizard.
+# Framework ids: playwright, appium-uiautomator2, appium-xcuitest, selenium, cypress, ...
+# "playwright" also allows its variants (for example playwright-electron).
+allowedFrameworks: [playwright, appium-uiautomator2, appium-xcuitest]
+allowedLanguages: [typescript]
+# pom (page objects), bdd, screenplay, keyword, hybrid
+allowedPatterns: [pom]
+
+# Tags tests must carry. A plain tag means "at least one test"; min sets a higher bar.
+requiredTags:
+  - tag: '@smoke'
+    min: 3
+
+# Regular expression every test title must match. This one asks for the test-case id first,
+# for example "SHOP-12 Add a product to the cart", so results trace back to Jira or TestRail.
+testNamePattern: '^[A-Z][A-Z0-9]+-\d+ '
+
+# CI system the project must use (one value or a list), and its pipeline file must be in the repository.
+ci: github-actions
+
+# Report formats the project must produce (html, junit, allure).
+reporting: [html, junit]
+
+# Code that must not appear in tests, page objects or helpers. Plain text by default;
+# add regex: true for a regular expression. message tells people what to do instead.
+forbidden:
+  - pattern: waitForTimeout
+    message: Fixed waits make tests slow and flaky. Wait for something visible instead, e.g. await expect(locator).toBeVisible().
+  - pattern: test.only
+    message: test.only skips every other test in CI. Remove it before committing.
+  - pattern: 'https?://[^\s''"]*prod'
+    regex: true
+    message: Tests must never point at production. Use APP_BASE_URL from .env.
