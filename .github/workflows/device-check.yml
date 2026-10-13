@@ -1,0 +1,78 @@
+name: Device check
+
+# Proves the mobile path end to end: TestPilot answers the wizard for an Android app, creates and
+# installs the Appium framework, opens the app on a real Android emulator and reads its first screen.
+# A second job does the same on a BrowserStack device when the repository has BrowserStack secrets.
+
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-emulator:
+    name: Android emulator (local Appium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - run: npm ci
+      - run: npm run build
+      - name: Download the Appium sample app
+        run: curl -fsSL -o "$RUNNER_TEMP/ApiDemos-debug.apk" https://github.com/appium/android-apidemos/releases/latest/download/ApiDemos-debug.apk
+      - name: Open the app through TestPilot
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: node scripts/device-check.mjs --target local --app "$RUNNER_TEMP/ApiDemos-debug.apk"
+
+  android-browserstack:
+    name: Android on BrowserStack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+    steps:
+      - name: Skip when BrowserStack is not configured
+        if: env.BROWSERSTACK_USERNAME == ''
+        run: echo "Add BROWSERSTACK_USERNAME and BROWSERSTACK_ACCESS_KEY as repository secrets to run this job."
+      - uses: actions/checkout@v5
+        if: env.BROWSERSTACK_USERNAME != ''
+      - uses: actions/setup-node@v5
+        if: env.BROWSERSTACK_USERNAME != ''
+        with:
+          node-version: 22
+          cache: npm
+      - if: env.BROWSERSTACK_USERNAME != ''
+        run: npm ci && npm run build
+      - name: Upload BrowserStack's sample app
+        if: env.BROWSERSTACK_USERNAME != ''
+        id: upload
+        run: |
+          APP_ID=$(curl -fsS -u "$BROWSERSTACK_USERNAME:$BROWSERSTACK_ACCESS_KEY" -X POST https://api-cloud.browserstack.com/app-automate/upload \
+            -F "url=https://www.browserstack.com/app-automate/sample-apps/android/WikipediaSample.apk" | node -e "process.stdin.on('data', d => console.log(JSON.parse(d).app_url))")
+          echo "app=$APP_ID" >> "$GITHUB_OUTPUT"
+      - name: Open the app through TestPilot
+        if: env.BROWSERSTACK_USERNAME != ''
+        run: node scripts/device-check.mjs --target browserstack --app "${{ steps.upload.outputs.app }}"

@@ -1,0 +1,38 @@
+name: Scorecard
+
+# Plays the whole TestPilot demo against the practice shop, through the MCP protocol, and measures the
+# output: tests generated, first-run pass rate, flaky tests, heals. The result is uploaded as an artifact
+# and printed in the job summary.
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scorecard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Run the scorecard
+        run: node scripts/scorecard.mjs
+      - name: Summary
+        if: always()
+        run: cat docs/scorecard.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scorecard
+          path: |
+            scorecard/latest.json
+            docs/scorecard.md
