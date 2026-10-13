@@ -35,6 +35,14 @@ export function registerPrompts(server: McpServer): void {
     server.registerPrompt('qa-run', { title: 'Run and triage tests', description: 'Run tests, triage failures and propose fixes.', argsSchema: z.object({ selection: z.string().optional().describe('A test id, tag or file') }) }, ({ selection }) =>
         user(`Call run_tests${selection ? ` with selection "${selection}"` : ''}. For each failure explain the triage category and propose a fix as a diff. Never weaken or delete an assertion without asking me. When tests pass, run them again with stabilityRuns: 2. ${RULES}`)
     );
+    server.registerPrompt(
+        'qa-demo',
+        { title: 'Try TestPilot on a practice shop', description: 'Set up a safe demo project and walk through the whole TestPilot story: create, watch it test, generate, run, break, heal, report.', argsSchema: z.object({ language: z.string().optional().describe('typescript or javascript') }) },
+        ({ language }) =>
+            user(
+                `Give me the TestPilot demo. Call demo_project with action "start"${language ? ` and language "${language}"` : ''} (show me what it will create and ask first). Then follow the demo script it returns one step at a time: before each step, tell me in one sentence what is about to happen and why it matters, then do it and summarise the result in two or three lines. ${RULES}`
+            )
+    );
     server.registerPrompt('qa-status', { title: 'Where are we?', description: 'Show where this repository is in the TestPilot workflow.' }, () =>
         user('Call testpilot_status and tell me in a few lines where we are, what is done, and what the next step is.')
     );

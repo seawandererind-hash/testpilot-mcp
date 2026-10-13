@@ -1,0 +1,10 @@
+/**
+ * The practice shop and test cases used by demo_project, kept in code so the npm package and the
+ * plugin bundle need no extra files. examples/demo-shop holds the same files for people reading the repo.
+ */
+export const DEMO_SITE: Record<string, string> = {
+    "index.html": "<!doctype html><html><head><title>Demo Shop</title></head><body>\n<h1>Demo Shop</h1>\n<form id=\"login\"><label for=\"email\">Email</label><input id=\"email\" type=\"email\">\n<label for=\"password\">Password</label><input id=\"password\" type=\"password\">\n<button type=\"submit\">Sign in</button></form>\n<a href=\"/products.html\">Products</a>\n<script>document.getElementById('login').addEventListener('submit', e => { e.preventDefault(); location.href = '/products.html'; });</script>\n</body></html>\n",
+    "products.html": "<!doctype html><html><head><title>Products</title></head><body>\n<h1>Products</h1><ul><li data-testid=\"product\">Red shoes <button>Add to cart</button></li><li data-testid=\"product\">Blue hat <button>Add to cart</button></li></ul>\n<p data-testid=\"cart-count\">0</p>\n<script>document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => { const c = document.querySelector('[data-testid=cart-count]'); c.textContent = String(Number(c.textContent) + 1); }));</script>\n</body></html>\n",
+};
+
+export const DEMO_CASES_CSV = "ID,Title,Module,Priority,Preconditions,Steps,Expected Result\nSHOP-1,Login with valid credentials,Login,High,,\"1. Open the application\n2. Enter the email of the standard user\n3. Enter the password\n4. Click Sign in\",Products page is displayed\nSHOP-2,Add a product to the cart,Cart,High,User is logged in,\"1. Click Add to cart on Red shoes\",\"Cart count shows 1\"\nSHOP-3,Products page lists products,Products,Medium,,\"1. Open the products page\",\"\"\"Red shoes\"\" is shown and \"\"Blue hat\"\" is shown\"\nSHOP-4,Home page look and feel,Home,Low,,\"1. Open the application\",\"Colour scheme matches the brand guide\"\nSHOP-5,Test 5,Cart,Low,,\"Checkout\",\n";
