@@ -11,7 +11,7 @@ TestPilot runs in one of two ways:
 2. Open the repository you want to automate tests for in your AI tool.
 3. That's it: there is nothing to install by hand. Every snippet below starts TestPilot with `npx`, which downloads the released package from GitHub the first time (a few seconds) and reuses it after that:
    ```
-   https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz
+   https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz
    ```
    New versions are listed on the [Releases page](https://github.com/seawandererind-hash/testpilot-mcp/releases); to upgrade, change the version number in the link (both places). If your platform team publishes TestPilot to a company npm registry instead, use the package name they give you in place of the link.
 
@@ -23,7 +23,7 @@ After setup, ask: **"Set up test automation for this repo"**, or pick the `/qa-s
 
 Pick one of three ways:
 
-- **One click**: open the [Add TestPilot to Cursor](https://cursor.com/en/install-mcp?name=testpilot&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImh0dHBzOi8vZ2l0aHViLmNvbS9zZWF3YW5kZXJlcmluZC1oYXNoL3Rlc3RwaWxvdC1tY3AvcmVsZWFzZXMvZG93bmxvYWQvdjAuMS4zL3Rlc3RwaWxvdC1tY3AtMC4xLjMudGd6Il19) link and click **Install** in Cursor.
+- **One click**: open the [Add TestPilot to Cursor](https://cursor.com/en/install-mcp?name=testpilot&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImh0dHBzOi8vZ2l0aHViLmNvbS9zZWF3YW5kZXJlcmluZC1oYXNoL3Rlc3RwaWxvdC1tY3AvcmVsZWFzZXMvZG93bmxvYWQvdjAuMS40L3Rlc3RwaWxvdC1tY3AtMC4xLjQudGd6Il19) link and click **Install** in Cursor.
 - **From the marketplace**: open **Customize** in Cursor's sidebar, search for **testpilot** and click **Install**. This works once TestPilot is listed in the Cursor Marketplace, or in your company's team marketplace (Teams and Enterprise plans: an admin opens **Dashboard → Plugins & MCPs → Team Marketplaces → Add Marketplace → Import from Repo** and pastes `https://github.com/seawandererind-hash/testpilot-mcp`). The plugin also brings the TestPilot skill and rule.
 - **By hand**: create `.cursor/mcp.json` in the repository (or `~/.cursor/mcp.json` for all projects):
 
@@ -32,7 +32,7 @@ Pick one of three ways:
   "mcpServers": {
     "testpilot": {
       "command": "npx",
-      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz", "--root", "${workspaceFolder}"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz", "--root", "${workspaceFolder}"]
     }
   }
 }
@@ -54,7 +54,7 @@ Or, inside Claude Code: `/plugin install testpilot --marketplace seawandererind-
 To add only the server for one repository instead, run this from the repository folder:
 
 ```bash
-claude mcp add --scope project testpilot -- npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz
+claude mcp add --scope project testpilot -- npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz
 ```
 
 This writes `.mcp.json`, which teammates get with the repository (Claude Code asks each person once before starting a project server). Check with `claude mcp list`, or `/mcp` inside Claude Code. Claude Code reads `CLAUDE.md` (which imports `AGENTS.md`) and `.claude/skills/`; TestPilot writes both.
@@ -71,7 +71,7 @@ Open **Settings → Developer → Edit Config** and add TestPilot to `claude_des
   "mcpServers": {
     "testpilot": {
       "command": "npx",
-      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz", "--root", "/Users/you/code/shop-web"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz", "--root", "/Users/you/code/shop-web"]
     }
   }
 }
@@ -89,7 +89,7 @@ Create `.mcp.json` in the repository (the portable format that also works for Cl
     "testpilot": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz", "--root", "${workspaceFolder}"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz", "--root", "${workspaceFolder}"]
     }
   }
 }
@@ -106,7 +106,7 @@ Create `.agents/mcp_config.json` in the repository (or `~/.gemini/config/mcp_con
   "mcpServers": {
     "testpilot": {
       "command": "npx",
-      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz"]
     }
   }
 }
@@ -121,7 +121,7 @@ Antigravity reads `AGENTS.md`, `.agents/rules/testpilot.md` and `.agents/skills/
 ## OpenAI Codex CLI
 
 ```bash
-codex mcp add testpilot -- npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz
+codex mcp add testpilot -- npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz
 ```
 
 or in `~/.codex/config.toml`:
@@ -129,7 +129,7 @@ or in `~/.codex/config.toml`:
 ```toml
 [mcp_servers.testpilot]
 command = "npx"
-args = ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz"]
+args = ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz"]
 ```
 
 Codex reads `AGENTS.md` and `.agents/skills/`.
@@ -137,7 +137,7 @@ Codex reads `AGENTS.md` and `.agents/skills/`.
 ## Gemini CLI
 
 ```bash
-gemini mcp add testpilot npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz
+gemini mcp add testpilot npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz
 ```
 
 Gemini CLI reads `GEMINI.md` by default. To make it read TestPilot's `AGENTS.md`, add to `.gemini/settings.json`: `{"context": {"fileName": ["AGENTS.md", "GEMINI.md"]}}`.
@@ -164,7 +164,7 @@ In hosted mode TestPilot works in a named workspace on the server. Share test ca
 
 ## Windows notes
 
-- If a tool says it cannot find `npx`, use `"command": "cmd"` and put `"/c", "npx"` in front of the arguments: `"args": ["/c", "npx", "-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz"]`.
+- If a tool says it cannot find `npx`, use `"command": "cmd"` and put `"/c", "npx"` in front of the arguments: `"args": ["/c", "npx", "-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz"]`.
 - In JSON, write paths with double backslashes (`"C:\\code\\shop-web"`) or forward slashes (`"C:/code/shop-web"`).
 - Behind a company proxy, set `HTTPS_PROXY` and, if your company uses its own certificates, `NODE_EXTRA_CA_CERTS=C:\path\to\company-ca.pem` in the server's `env` block.
 - Playwright installs browsers into your user profile; if that is blocked, set `PLAYWRIGHT_BROWSERS_PATH` to a folder you can write to.
@@ -174,6 +174,6 @@ In hosted mode TestPilot works in a named workspace on the server. Share test ca
 
 Ask your AI tool: **"What is the TestPilot status of this repo?"** It should answer with the current step (for a new repository, "What kind of application are you testing?"). If the tool does not see TestPilot:
 
-1. Run `npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.3/testpilot-mcp-0.1.3.tgz --version` in a terminal. It should print the version (`0.1.0`).
+1. Run `npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.4/testpilot-mcp-0.1.4.tgz --version` in a terminal. It should print the version (`0.1.0`).
 2. Look at the tool's MCP logs (Cursor: Output → MCP; Claude Code: `claude --debug`; VS Code: Output → MCP).
 3. Make sure Node.js is 22.19 or newer: `node --version`.
