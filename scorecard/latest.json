@@ -1,10 +1,11 @@
 {
-  "version": "0.1.2",
-  "date": "2026-10-13T06:15:00.883Z",
+  "version": "0.1.3",
+  "date": "2026-10-13T06:21:49.709Z",
   "node": "v22.22.0",
   "platform": "linux",
-  "setupSeconds": 2,
-  "liveAutoSteps": 5,
+  "browserDownloadSkipped": true,
+  "setupSeconds": 3,
+  "liveAutoSteps": 4,
   "generatedTests": 2,
   "todosLeft": 0,
   "firstRun": {
@@ -18,122 +19,122 @@
   "qualityGate": "ready",
   "failuresAfterBreak": 2,
   "healProposals": 1,
-  "healedAndPassing": 0,
-  "totalSeconds": 45,
+  "healedAndPassing": 1,
+  "totalSeconds": 46,
   "steps": [
     {
       "step": "Start the demo",
       "tool": "demo_project",
       "ok": true,
-      "ms": 107
+      "ms": 168
     },
     {
       "step": "Preview the framework",
       "tool": "preview_scaffold",
       "ok": true,
-      "ms": 58
+      "ms": 108
     },
     {
       "step": "Create the framework",
       "tool": "scaffold_project",
       "ok": true,
-      "ms": 44
+      "ms": 53
     },
     {
       "step": "Explore",
       "tool": "explore_app",
       "ok": true,
-      "ms": 2393
+      "ms": 2511
     },
     {
       "step": "Import test cases",
       "tool": "import_test_cases",
       "ok": true,
-      "ms": 39
+      "ms": 37
     },
     {
       "step": "Review",
       "tool": "review_test_cases",
       "ok": true,
-      "ms": 32
+      "ms": 28
     },
     {
       "step": "Watch it test (start)",
       "tool": "live_test",
       "ok": true,
-      "ms": 1557
+      "ms": 1593
     },
     {
       "step": "Watch it test (auto)",
       "tool": "live_test",
       "ok": true,
-      "ms": 941
+      "ms": 969
     },
     {
       "step": "Watch it test (finish)",
       "tool": "live_test",
       "ok": true,
-      "ms": 127
+      "ms": 184
     },
     {
       "step": "Plan",
       "tool": "automation_plan",
       "ok": true,
-      "ms": 28
+      "ms": 38
     },
     {
       "step": "Approve the plan",
       "tool": "automation_plan",
       "ok": true,
-      "ms": 16
+      "ms": 20
     },
     {
       "step": "Preview tests",
       "tool": "preview_tests",
       "ok": true,
-      "ms": 19
+      "ms": 26
     },
     {
       "step": "Generate tests",
       "tool": "generate_tests",
       "ok": true,
-      "ms": 20
+      "ms": 24
     },
     {
       "step": "First run",
       "tool": "run_tests",
       "ok": true,
-      "ms": 4102
+      "ms": 4434
     },
     {
       "step": "Stability run (x2)",
       "tool": "run_tests",
       "ok": true,
-      "ms": 5572
+      "ms": 5161
     },
     {
       "step": "Accessibility scan",
       "tool": "quality_scan",
       "ok": true,
-      "ms": 3296
+      "ms": 3292
     },
     {
       "step": "Quality gate",
       "tool": "quality_scan",
       "ok": true,
-      "ms": 1969
+      "ms": 1951
     },
     {
       "step": "Break the app",
       "tool": "demo_project",
       "ok": true,
-      "ms": 12
+      "ms": 14
     },
     {
       "step": "Run after the break",
       "tool": "run_tests",
       "ok": true,
-      "ms": 19491
+      "ms": 19078
     },
     {
       "step": "Propose heals",
@@ -145,19 +146,19 @@
       "step": "Apply heals",
       "tool": "heal_tests",
       "ok": true,
-      "ms": 3499
+      "ms": 3257
     },
     {
       "step": "Coverage map",
       "tool": "insights",
       "ok": true,
-      "ms": 26
+      "ms": 22
     },
     {
       "step": "Report",
       "tool": "publish_results",
       "ok": true,
-      "ms": 21
+      "ms": 19
     },
     {
       "step": "Put the app back",
@@ -169,7 +170,7 @@
       "step": "Stop the shop",
       "tool": "demo_project",
       "ok": true,
-      "ms": 12
+      "ms": 10
     }
   ]
 }
