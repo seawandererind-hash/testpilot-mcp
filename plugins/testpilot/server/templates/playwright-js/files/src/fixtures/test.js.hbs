@@ -1,0 +1,44 @@
+// @ts-check
+// {{header}}
+{{#if isElectron}}
+const { _electron: electron, test: base, expect } = require('@playwright/test');
+
+const { optionalEnv, requireEnv } = require('../utils/env');
+{{else if isBdd}}
+// Cucumber steps (steps/) receive these fixtures; playwright-bdd needs `test` to extend its own.
+const { test: base } = require('playwright-bdd');
+const { expect } = require('@playwright/test');
+{{else}}
+const { test: base, expect } = require('@playwright/test');
+{{/if}}
+{{#if isWeb}}
+
+const { HomePage } = require('../pages/HomePage');
+{{/if}}
+
+/**
+ * Custom fixtures: tests receive ready-made page objects instead of creating them.
+ * TestPilot adds new page objects here when it generates tests.
+ */
+const test = base.extend({
+{{#if isElectron}}
+    // Launches the Electron app for each test and hands its first window to tests as `page`,
+    // so page objects work the same as on the web. Playwright's Electron support is experimental.
+    electronApp: async ({}, use) => {
+        const app = await electron.launch({ executablePath: requireEnv('ELECTRON_APP_PATH'), args: optionalEnv('ELECTRON_APP_ARGS').split(' ').filter(Boolean) });
+        await use(app);
+        await app.close();
+    },
+    page: async ({ electronApp }, use) => {
+        await use(await electronApp.firstWindow());
+    },
+{{/if}}
+{{#if isWeb}}
+    homePage: async ({ page }, use) => {
+        await use(new HomePage(page));
+    },
+{{/if}}
+    // testpilot:fixtures
+});
+
+module.exports = { test, expect };

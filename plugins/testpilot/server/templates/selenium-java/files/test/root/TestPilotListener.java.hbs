@@ -1,0 +1,138 @@
+// {{header}}
+package {{javaPackage}};
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.testng.ITestContext;
+import org.testng.ITestListener;
+import org.testng.ITestResult;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import {{javaPackage}}.config.DriverFactory;
+
+/**
+ * Writes target/testpilot/results.json (one entry per test with its test-case id, status, error and
+ * screenshot), which TestPilot's run_tests reads to triage failures. Passwords and tokens from .env
+ * are masked in error messages. Also saves a screenshot of every failure under target/screenshots/.
+ */
+public class TestPilotListener implements ITestListener {
+    private static final List<Map<String, Object>> RESULTS = java.util.Collections.synchronizedList(new ArrayList<>());
+
+    @Override
+    public void onTestSuccess(ITestResult result) {
+        record(result, "passed");
+    }
+
+    @Override
+    public void onTestFailure(ITestResult result) {
+        record(result, "failed");
+    }
+
+    @Override
+    public void onTestSkipped(ITestResult result) {
+        record(result, "skipped");
+    }
+
+    @Override
+    public void onFinish(ITestContext context) {
+        try {
+            Path out = Path.of("target", "testpilot", "results.json");
+            Files.createDirectories(out.getParent());
+            Files.writeString(out, new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(RESULTS), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("TestPilotListener: could not write results: " + e.getMessage());
+        }
+    }
+
+    private void record(ITestResult result, String status) {
+        Throwable error = result.getThrowable();
+        // A test skipped because its setup (the browser) failed is a failure, not a skip.
+        if (status.equals("skipped") && error != null && !(error instanceof org.testng.SkipException)) status = "failed";
+        Map<String, Object> entry = new LinkedHashMap<>();
+        String title = titleOf(result);
+        entry.put("title", title);
+        entry.put("className", result.getTestClass().getName());
+        entry.put("method", result.getMethod().getMethodName());
+        entry.put("groups", Arrays.asList(result.getMethod().getGroups()));
+        entry.put("status", status);
+        entry.put("durationMs", result.getEndMillis() - result.getStartMillis());
+        if (error != null) {
+            StringBuilder message = new StringBuilder(error.getClass().getSimpleName() + ": " + String.valueOf(error.getMessage()));
+            for (StackTraceElement frame : error.getStackTrace()) {
+                if (frame.getClassName().startsWith("{{javaPackage}}")) {
+                    message.append("\n    at ").append(frame.getClassName()).append(".").append(frame.getMethodName()).append("(").append(frame.getFileName()).append(":").append(frame.getLineNumber()).append(")");
+                }
+            }
+            entry.put("error", mask(message.toString()));
+        }
+        if (status.equals("failed")) {
+            String shot = screenshot(title);
+            if (shot != null) entry.put("screenshot", shot);
+        }
+        RESULTS.add(entry);
+    }
+
+    /** The test's description ("SHOP-1 user can log in") or, for Cucumber, the scenario name. */
+    private static String titleOf(ITestResult result) {
+        Object[] params = result.getParameters();
+        if (params != null && params.length > 0 && params[0] != null && params[0].getClass().getName().contains("PickleWrapper")) {
+            return params[0].toString().replaceAll("^\"|\"$", "");
+        }
+        String description = result.getMethod().getDescription();
+        return description != null && !description.isBlank() ? description : result.getMethod().getMethodName();
+    }
+
+    private static String screenshot(String title) {
+        WebDriver driver = DriverFactory.current();
+        if (!(driver instanceof TakesScreenshot)) return null;
+        try {
+            Path dir = Path.of("target", "screenshots");
+            Files.createDirectories(dir);
+            Path file = dir.resolve(title.replaceAll("[^A-Za-z0-9._-]+", "_") + ".png");
+            Files.write(file, ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES));
+            return file.toString().replace('\\', '/');
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Replaces the value of every secret-looking .env key with [REDACTED]. */
+    private static String mask(String text) {
+        String masked = text;
+        for (Map.Entry<String, String> e : System.getenv().entrySet()) {
+            if (isSecret(e.getKey()) && e.getValue() != null && e.getValue().length() >= 4) masked = masked.replace(e.getValue(), "[REDACTED]");
+        }
+        try {
+            Path env = Path.of(".env");
+            if (Files.exists(env)) {
+                for (String line : Files.readAllLines(env)) {
+                    int eq = line.indexOf('=');
+                    if (eq <= 0 || line.startsWith("#")) continue;
+                    String key = line.substring(0, eq).trim();
+                    String value = line.substring(eq + 1).trim().replaceAll("^[\"']|[\"']$", "");
+                    if (isSecret(key) && value.length() >= 4) masked = masked.replace(value, "[REDACTED]");
+                }
+            }
+        } catch (IOException ignored) {
+            // best effort
+        }
+        return masked;
+    }
+
+    private static boolean isSecret(String key) {
+        String k = key.toLowerCase();
+        return k.contains("password") || k.contains("secret") || k.contains("token") || k.contains("key") || k.contains("credential");
+    }
+}

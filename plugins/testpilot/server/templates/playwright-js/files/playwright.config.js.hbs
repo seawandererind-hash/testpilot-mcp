@@ -1,0 +1,78 @@
+// @ts-check
+// {{header}}
+const { defineConfig, devices } = require('@playwright/test');
+const dotenv = require('dotenv');
+{{#if isBdd}}
+const { defineBddConfig } = require('playwright-bdd');
+{{/if}}
+
+// CI systems pass unset variables as empty strings; drop them so the defaults below still apply.
+for (const [key, value] of Object.entries(process.env)) if (value === '') delete process.env[key];
+// .env holds your secrets (git-ignored); .env.example holds shared, non-secret defaults such as APP_BASE_URL.
+dotenv.config({ path: ['.env', '.env.example'], quiet: true });
+{{#if isBdd}}
+
+// Cucumber feature files in features/ and step definitions in steps/ become Playwright tests (npx bddgen).
+const testDir = defineBddConfig({ features: 'features/**/*.feature', steps: ['steps/**/*.js', 'src/fixtures/test.js'], outputDir: '.features-gen' });
+{{/if}}
+
+/**
+ * Playwright configuration created by TestPilot.
+ * Docs: https://playwright.dev/docs/test-configuration
+ */
+module.exports = defineConfig({
+{{#if isBdd}}
+    testDir,
+{{else}}
+    testDir: './tests',
+{{/if}}
+    fullyParallel: true,
+    forbidOnly: !!process.env.CI,
+    retries: process.env.CI ? 2 : 0,
+    workers: process.env.CI ? 2 : undefined,
+    timeout: 30_000,
+    expect: { timeout: 10_000 },
+    reporter: [
+        ['list'],
+        ['html', { open: 'never', outputFolder: 'playwright-report' }],
+{{#if reporting.junit}}
+        // JUnit XML: annotations are written as properties, which Xray and BrowserStack import.
+        ['junit', { outputFile: 'test-results/junit.xml' }],
+{{/if}}
+{{#if reporting.allure}}
+        ['allure-playwright', { resultsDir: 'allure-results' }],
+{{/if}}
+        ['json', { outputFile: 'test-results/results.json' }]
+    ],
+    use: {
+{{#if isApi}}
+        baseURL: process.env.API_BASE_URL,
+        // API_TOKEN (in .env, never in code) is sent with every request when it is set.
+        extraHTTPHeaders: { Accept: 'application/json', ...(process.env.API_TOKEN ? { Authorization: `Bearer ${process.env.API_TOKEN}` } : {}) },
+{{else}}
+        baseURL: process.env.APP_BASE_URL,
+        testIdAttribute: 'data-testid',
+        // A missing button fails after 15 s with the locator it waited for, instead of at the test timeout.
+        actionTimeout: 15_000,
+        navigationTimeout: 30_000,
+        // Locked-down machine where browser downloads are blocked? Use the installed Chrome or Edge
+        // (BROWSER_CHANNEL=chrome or msedge) or point at a browser binary (BROWSER_EXECUTABLE_PATH).
+        ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}),
+        ...(process.env.BROWSER_EXECUTABLE_PATH ? { launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH } } : {}),
+        trace: 'on-first-retry',
+        screenshot: 'only-on-failure',
+        video: 'retain-on-failure',
+{{/if}}
+    },
+    projects: [
+{{#if isApi}}
+        { name: 'api' }
+{{else if isElectron}}
+        { name: 'electron' }
+{{else}}
+{{#each browsers}}
+        { name: '{{this.name}}', use: { ...devices['{{this.device}}'] } },
+{{/each}}
+{{/if}}
+    ]
+});

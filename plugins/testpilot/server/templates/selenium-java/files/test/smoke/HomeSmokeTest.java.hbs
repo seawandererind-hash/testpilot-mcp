@@ -1,0 +1,18 @@
+// {{header}}
+package {{javaPackage}}.tests.smoke;
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import {{javaPackage}}.BaseTest;
+import {{javaPackage}}.pages.HomePage;
+
+public class HomeSmokeTest extends BaseTest {
+    /** Tests are named "<test-case id> <title>" and grouped by the id, so results trace back to the source. */
+    @Test(description = "SMOKE-1 home page opens", groups = {"SMOKE-1", "smoke"})
+    public void homePageOpens() {
+        HomePage home = new HomePage(driver);
+        home.open();
+        Assert.assertTrue(home.isShown(), "the home page should load with a title");
+    }
+}

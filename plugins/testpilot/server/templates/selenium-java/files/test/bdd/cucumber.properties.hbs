@@ -1,0 +1,5 @@
+# {{header}}
+# Scenarios tagged @testpilot-todo still have TODO(testpilot) steps and are skipped by default.
+# Run one on purpose (after finishing its steps, remove the tag): mvn test -Dcucumber.filter.tags=@SHOP-123
+cucumber.filter.tags=not @testpilot-todo
+cucumber.publish.quiet=true

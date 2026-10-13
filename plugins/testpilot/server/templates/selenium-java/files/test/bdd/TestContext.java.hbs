@@ -1,0 +1,45 @@
+// {{header}}
+package {{javaPackage}}.bdd;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.openqa.selenium.WebDriver;
+
+import {{javaPackage}}.Expect;
+import {{javaPackage}}.config.DriverFactory;
+import {{javaPackage}}.pages.BasePage;
+
+/** One per scenario (PicoContainer): the browser and the page objects the steps share. */
+public class TestContext {
+    private WebDriver driver;
+    private final Map<Class<?>, BasePage> pages = new HashMap<>();
+
+    public WebDriver driver() {
+        if (driver == null) driver = DriverFactory.create();
+        return driver;
+    }
+
+    /** The page object of this type for the current scenario, created on first use. */
+    @SuppressWarnings("unchecked")
+    public <T extends BasePage> T page(Class<T> type) {
+        return (T) pages.computeIfAbsent(type, t -> {
+            try {
+                return (BasePage) t.getConstructor(WebDriver.class).newInstance(driver());
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException("Page objects need a public constructor taking a WebDriver: " + t.getName(), e);
+            }
+        });
+    }
+
+    /** Checks that wait before they judge. */
+    public Expect expect() {
+        return page(Expect.class);
+    }
+
+    public void quit() {
+        DriverFactory.quit();
+        driver = null;
+        pages.clear();
+    }
+}

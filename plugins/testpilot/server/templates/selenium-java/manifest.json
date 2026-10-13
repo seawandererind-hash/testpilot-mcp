@@ -1,0 +1,147 @@
+{
+  "id": "selenium-java",
+  "title": "Selenium 4 + Java (Maven, TestNG, Page Object Model; Cucumber for BDD)",
+  "appTypes": [
+    "web"
+  ],
+  "patterns": [
+    "pom",
+    "hybrid",
+    "keyword",
+    "bdd"
+  ],
+  "packageJson": false,
+  "devDependencies": {},
+  "scripts": {},
+  "install": [
+    {
+      "argv": [
+        "mvn",
+        "-B",
+        "-q",
+        "-DskipTests",
+        "test-compile"
+      ]
+    },
+    {
+      "argv": [
+        "npm",
+        "install",
+        "--prefix",
+        ".testpilot/tools",
+        "--no-package-lock",
+        "--no-audit",
+        "--no-fund",
+        "playwright@1.64.0"
+      ],
+      "when": "ui"
+    },
+    {
+      "argv": [
+        "node",
+        ".testpilot/tools/node_modules/playwright/cli.js",
+        "install",
+        "--with-deps",
+        "chromium"
+      ],
+      "when": "ui"
+    }
+  ],
+  "manualSetup": [
+    {
+      "text": "Java: install a JDK 17 or 21 (for example Eclipse Temurin from https://adoptium.net) and Maven 3.9+ (https://maven.apache.org/install.html), and make sure `java -version` and `mvn -v` work in a new terminal. Selenium Manager downloads the browser drivers by itself."
+    },
+    {
+      "text": "The browser (Chrome by default; BROWSER=firefox or edge in .env.example) must be installed on the machine that runs the tests. HEADLESS=true runs without a window."
+    },
+    {
+      "text": "TestPilot's explore_app uses a small Playwright install under .testpilot/tools (git-ignored) to map the app; the tests themselves only use Selenium."
+    }
+  ],
+  "files": [
+    {
+      "from": "pom.xml.hbs",
+      "to": "pom.xml"
+    },
+    {
+      "from": "testng.xml.hbs",
+      "to": "testng.xml",
+      "when": "notbdd"
+    },
+    {
+      "from": "main/config/Env.java.hbs",
+      "to": "src/main/java/{{javaPackagePath}}/config/Env.java"
+    },
+    {
+      "from": "main/config/DriverFactory.java.hbs",
+      "to": "src/main/java/{{javaPackagePath}}/config/DriverFactory.java"
+    },
+    {
+      "from": "main/pages/BasePage.java.hbs",
+      "to": "src/main/java/{{javaPackagePath}}/pages/BasePage.java"
+    },
+    {
+      "from": "main/pages/HomePage.java.hbs",
+      "to": "src/main/java/{{javaPackagePath}}/pages/HomePage.java"
+    },
+    {
+      "from": "main/data/TestUsers.java.hbs",
+      "to": "src/main/java/{{javaPackagePath}}/data/TestUsers.java"
+    },
+    {
+      "from": "test/root/BaseTest.java.hbs",
+      "to": "src/test/java/{{javaPackagePath}}/BaseTest.java"
+    },
+    {
+      "from": "test/root/TestPilotListener.java.hbs",
+      "to": "src/test/java/{{javaPackagePath}}/TestPilotListener.java"
+    },
+    {
+      "from": "test/root/Expect.java.hbs",
+      "to": "src/test/java/{{javaPackagePath}}/Expect.java"
+    },
+    {
+      "from": "test/smoke/HomeSmokeTest.java.hbs",
+      "to": "src/test/java/{{javaPackagePath}}/tests/smoke/HomeSmokeTest.java",
+      "when": "notbdd"
+    },
+    {
+      "from": "features/smoke.feature.hbs",
+      "to": "src/test/resources/features/smoke.feature",
+      "when": "bdd"
+    },
+    {
+      "from": "test/bdd/CucumberTestRunner.java.hbs",
+      "to": "src/test/java/{{javaPackagePath}}/bdd/CucumberTestRunner.java",
+      "when": "bdd"
+    },
+    {
+      "from": "test/bdd/TestContext.java.hbs",
+      "to": "src/test/java/{{javaPackagePath}}/bdd/TestContext.java",
+      "when": "bdd"
+    },
+    {
+      "from": "test/bdd/Hooks.java.hbs",
+      "to": "src/test/java/{{javaPackagePath}}/bdd/Hooks.java",
+      "when": "bdd"
+    },
+    {
+      "from": "test/bdd/cucumber.properties.hbs",
+      "to": "src/test/resources/cucumber.properties",
+      "when": "bdd"
+    },
+    {
+      "from": "test/bdd/steps/HomeSteps.java.hbs",
+      "to": "src/test/java/{{javaPackagePath}}/bdd/steps/HomeSteps.java",
+      "when": "bdd"
+    },
+    {
+      "from": "test-data/README.md.hbs",
+      "to": "test-data/README.md"
+    },
+    {
+      "from": "test-data/users.json.hbs",
+      "to": "test-data/users.json"
+    }
+  ]
+}

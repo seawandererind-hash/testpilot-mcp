@@ -1,0 +1,9 @@
+# {{header}}
+# Cucumber feature files: business-readable scenarios backed by the page objects in src/pages.
+# Tag each scenario with its test-case id so results trace back to the source.
+Feature: Smoke
+
+  @SMOKE-1 @smoke
+  Scenario: SMOKE-1 home page opens
+    Given I open the home page
+    Then the home page is visible

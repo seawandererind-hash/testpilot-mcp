@@ -1,0 +1,20 @@
+// @ts-check
+// {{header}}
+const { expect } = require('@playwright/test');
+
+const { BasePage } = require('./BasePage');
+
+/** Example page object for the start page. Rename or extend it to match your app. */
+class HomePage extends BasePage {
+    path = '/';
+
+    // testpilot:locators
+
+    async expectVisible() {
+        await expect(this.page.locator('body')).toBeVisible();
+        await expect(this.page).not.toHaveTitle('');
+    }
+    // testpilot:actions
+}
+
+module.exports = { HomePage };

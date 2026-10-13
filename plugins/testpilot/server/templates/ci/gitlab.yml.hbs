@@ -21,11 +21,16 @@ ui-tests:
 {{#if testRootIsSub}}
     - cd {{testRoot}}
 {{/if}}
+{{#if isMaven}}
+    - {{setupCommand}}
+    - {{dockerRunCommand}}
+{{else}}
     - npm ci
 {{#if setupCommand}}
     - {{setupCommand}}
 {{/if}}
     - {{runCommand}}
+{{/if}}
   artifacts:
     when: always
     expire_in: 14 days

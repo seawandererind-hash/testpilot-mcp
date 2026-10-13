@@ -1,0 +1,179 @@
+// {{header}}
+package {{javaPackage}}.pages;
+
+import java.time.Duration;
+import java.util.List;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import {{javaPackage}}.config.Env;
+
+/**
+ * Shared behaviour for every page object. Every action waits for its element (no Thread.sleep).
+ * Locator priority: byRole → byLabel → byTestId → byText → CSS (last resort). The by* helpers mirror
+ * Playwright's user-facing locators, so page objects read like the test case.
+ */
+public abstract class BasePage {
+    protected final WebDriver driver;
+    protected final WebDriverWait wait;
+    /** Path of this page relative to APP_BASE_URL, e.g. "/login". */
+    protected final String path;
+
+    protected BasePage(WebDriver driver, String path) {
+        this.driver = driver;
+        this.path = path;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+    }
+
+    public void open() {
+        driver.get(Env.require("APP_BASE_URL").replaceAll("/+$", "") + path);
+    }
+
+    public void expectLoaded() {
+        wait.until(d -> d.getCurrentUrl().contains(path));
+    }
+
+    // ---- locators -------------------------------------------------------------------------------
+
+    /** A control by its accessible role and name, e.g. byRole("button", "Sign in"). */
+    public static By byRole(String role, String name) {
+        String n = xpathLiteral(name);
+        switch (role) {
+            case "button":
+                return By.xpath("//button[normalize-space(.)=" + n + "] | //input[(@type='submit' or @type='button') and @value=" + n + "] | //*[@role='button' and normalize-space(.)=" + n + "] | //button[@aria-label=" + n + "]");
+            case "link":
+                return By.xpath("//a[normalize-space(.)=" + n + "] | //*[@role='link' and normalize-space(.)=" + n + "] | //a[@aria-label=" + n + "]");
+            case "heading":
+                return By.xpath("//*[(self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or @role='heading') and normalize-space(.)=" + n + "]");
+            case "checkbox":
+            case "radio":
+                return By.xpath("//*[@id=//label[normalize-space(.)=" + n + "]/@for][@type='" + role + "'] | //label[normalize-space(.)=" + n + "]//input[@type='" + role + "'] | //*[@role='" + role + "' and (@aria-label=" + n + " or normalize-space(.)=" + n + ")]");
+            case "textbox":
+            case "searchbox":
+            case "combobox":
+            case "spinbutton":
+                return byLabel(name);
+            default:
+                return By.xpath("//*[@role=" + xpathLiteral(role) + " and (normalize-space(.)=" + n + " or @aria-label=" + n + ")]");
+        }
+    }
+
+    /** A form field by its label, aria-label or placeholder. */
+    public static By byLabel(String label) {
+        String l = xpathLiteral(label);
+        return By.xpath("//*[@id=//label[normalize-space(.)=" + l + "]/@for] | //label[normalize-space(.)=" + l + "]//*[self::input or self::textarea or self::select] | //*[@aria-label=" + l + "] | //*[@placeholder=" + l + "]");
+    }
+
+    public static By byTestId(String id) {
+        return By.cssSelector("[data-testid='" + id.replace("'", "\\'") + "']");
+    }
+
+    /** The innermost element that shows this text. */
+    public static By byText(String text) {
+        String t = xpathLiteral(text);
+        return By.xpath("//*[contains(normalize-space(.), " + t + ") and not(.//*[contains(normalize-space(.), " + t + ")])]");
+    }
+
+    /** A control inside the list item, row or card whose text contains `within`. */
+    public static By within(String within, By inner) {
+        String container = "(//li | //tr | //article | //*[@role='listitem' or @role='row' or @role='article'])[contains(normalize-space(.), " + xpathLiteral(within) + ")]";
+        String innerXpath = inner.toString().replaceFirst("^By\\.xpath: ", "");
+        // Each alternative of the inner locator is searched inside the container: (container)//button[...] | (container)//a[...]
+        StringBuilder xpath = new StringBuilder();
+        for (String alternative : innerXpath.split(" \\| ")) {
+            if (xpath.length() > 0) xpath.append(" | ");
+            xpath.append(container).append(alternative.startsWith("//") ? alternative : "//" + alternative.replaceFirst("^/+", ""));
+        }
+        return By.xpath(xpath.toString());
+    }
+
+    /** An XPath string literal for any text, including quotes. */
+    public static String xpathLiteral(String s) {
+        if (!s.contains("'")) return "'" + s + "'";
+        if (!s.contains("\"")) return "\"" + s + "\"";
+        return "concat('" + s.replace("'", "', \"'\", '") + "')";
+    }
+
+    // ---- actions --------------------------------------------------------------------------------
+
+    protected WebElement visible(By by) {
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(by));
+    }
+
+    protected WebElement clickable(By by) {
+        return wait.until(ExpectedConditions.elementToBeClickable(by));
+    }
+
+    public void click(By by) {
+        clickable(by).click();
+    }
+
+    public void type(By by, String text) {
+        WebElement field = visible(by);
+        field.clear();
+        field.sendKeys(text);
+    }
+
+    public void clear(By by) {
+        visible(by).clear();
+    }
+
+    public void select(By by, String option) {
+        new Select(visible(by)).selectByVisibleText(option);
+    }
+
+    public void setChecked(By by, boolean checked) {
+        WebElement box = clickable(by);
+        if (box.isSelected() != checked) box.click();
+    }
+
+    public void hover(By by) {
+        new org.openqa.selenium.interactions.Actions(driver).moveToElement(visible(by)).perform();
+    }
+
+    public void press(org.openqa.selenium.Keys key) {
+        new org.openqa.selenium.interactions.Actions(driver).sendKeys(key).perform();
+    }
+
+    public String textOf(By by) {
+        return visible(by).getText();
+    }
+
+    public boolean isVisible(By by) {
+        try {
+            return visible(by).isDisplayed();
+        } catch (org.openqa.selenium.TimeoutException e) {
+            return false;
+        }
+    }
+
+    public boolean isHidden(By by) {
+        try {
+            return wait.until(ExpectedConditions.invisibilityOfElementLocated(by));
+        } catch (org.openqa.selenium.TimeoutException e) {
+            return false;
+        }
+    }
+
+    public boolean isEnabled(By by) {
+        return visible(by).isEnabled();
+    }
+
+    public boolean isChecked(By by) {
+        return visible(by).isSelected();
+    }
+
+    public List<WebElement> all(By by) {
+        return driver.findElements(by);
+    }
+
+    public void scrollTo(By by) {
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'})", visible(by));
+    }
+}

@@ -1,18 +1,30 @@
 // {{header}}
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
+{{#if isBdd}}
+import { defineBddConfig } from 'playwright-bdd';
+{{/if}}
 
 // CI systems pass unset variables as empty strings; drop them so the defaults below still apply.
 for (const [key, value] of Object.entries(process.env)) if (value === '') delete process.env[key];
 // .env holds your secrets (git-ignored); .env.example holds shared, non-secret defaults such as APP_BASE_URL.
 dotenv.config({ path: ['.env', '.env.example'], quiet: true });
+{{#if isBdd}}
+
+// Cucumber feature files in features/ and step definitions in steps/ become Playwright tests (npx bddgen).
+const testDir = defineBddConfig({ features: 'features/**/*.feature', steps: ['steps/**/*.ts', 'src/fixtures/test.ts'], outputDir: '.features-gen' });
+{{/if}}
 
 /**
  * Playwright configuration created by TestPilot.
  * Docs: https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
+{{#if isBdd}}
+    testDir,
+{{else}}
     testDir: './tests',
+{{/if}}
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
