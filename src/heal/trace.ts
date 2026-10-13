@@ -1,5 +1,4 @@
-import path from 'node:path';
-
+import { relativeToRoot } from '../core/relative.js';
 import type { ProjectStore } from '../core/store.js';
 import type { FailureCategory, RunSummary, TestOutcome } from '../run/playwright.js';
 import { secretScrubber } from '../run/playwright.js';
@@ -110,7 +109,7 @@ export function readTrace(zip: Buffer, repoRoot: string, scrub: (s: string) => s
     const runner = jsonl(reader.read('test.trace'));
     const library = reader.names.filter(n => /^(\d+-)?trace\.trace$/.test(n) && n !== 'test.trace').flatMap(n => jsonl(reader.read(n)));
     const network = reader.names.filter(n => /\.network$/.test(n)).flatMap(n => jsonl(reader.read(n)));
-    const rel = (f?: { file: string; line: number }) => (f ? `${path.relative(repoRoot, f.file).split(path.sep).join('/')}:${f.line}` : undefined);
+    const rel = (f?: { file: string; line: number }) => (f ? `${relativeToRoot(repoRoot, f.file)}:${f.line}` : undefined);
 
     const actions: TraceAction[] = [];
     const ends = new Map<string, RawEvent>();

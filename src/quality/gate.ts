@@ -5,6 +5,7 @@ import path from 'node:path';
 import { isSetting } from '../catalog/env-keys.js';
 import { loadEnvValues } from '../core/env.js';
 import { toPosix } from '../core/paths.js';
+import { relativeToRoot } from '../core/relative.js';
 import type { Config } from '../core/schema.js';
 import type { ProjectStore } from '../core/store.js';
 import { runPlaywright } from '../run/playwright.js';
@@ -392,7 +393,7 @@ export function parseTscOutput(output: string, cwd: string, toRepo: (abs: string
     for (const raw of output.replace(ANSI, '').split(/\r?\n/)) {
         const m = raw.match(/^(.+?)\((\d+),(\d+)\): error (TS\d+): (.*)$/);
         if (!m) continue;
-        const file = toRepo(path.resolve(cwd, m[1]));
+        const file = toRepo(path.resolve(cwd, m[1])).split(path.sep).join('/');
         const list = map.get(file) ?? [];
         list.push({ line: Number(m[2]), message: `${m[4]}: ${m[5]}` });
         map.set(file, list);
@@ -406,7 +407,7 @@ export function parseMavenOutput(output: string, toRepo: (abs: string) => string
     for (const raw of output.replace(ANSI, '').split(/\r?\n/)) {
         const m = raw.match(/^\[ERROR\]\s+(.+?\.java):\[(\d+),(\d+)\]\s*(.*)$/);
         if (!m) continue;
-        const file = toRepo(path.resolve(m[1]));
+        const file = toRepo(path.resolve(m[1])).split(path.sep).join('/');
         const list = map.get(file) ?? [];
         list.push({ line: Number(m[2]), message: m[4] });
         map.set(file, list);
@@ -417,13 +418,7 @@ export function parseMavenOutput(output: string, toRepo: (abs: string) => string
 export async function compileFiles(store: ProjectStore, config: Config, files: string[], exec: Exec): Promise<CompileResult> {
     const { cwd } = testRootOf(store, config);
     const result: CompileResult = { perFile: new Map(), skipped: new Map(), otherErrors: 0, notes: [] };
-    const toRepo = (abs: string) => {
-        try {
-            return store.relative(abs);
-        } catch {
-            return abs;
-        }
-    };
+    const toRepo = (abs: string) => relativeToRoot(store.root, abs);
     const ts = files.filter(f => languageOf(f) === 'ts');
     const js = files.filter(f => languageOf(f) === 'js');
     const java = files.filter(f => languageOf(f) === 'java');
