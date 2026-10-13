@@ -54,9 +54,9 @@ export function demoScript(url: string, projectRoot: string | undefined): Array<
     const pr = projectRoot ? { projectRoot } : {};
     return [
         { step: 'Create the framework', tool: 'preview_scaffold', args: { ...pr }, say: 'Show the file list, ask "Can I create the project framework?", then call scaffold_project with the confirmToken, install: true and userApproved: true after the yes.' },
+        { step: 'Import the test cases', tool: 'import_test_cases', args: { ...pr, source: 'csv', location: CASES_FILE }, say: 'Then review_test_cases: 3 to automate, 1 manual (brand look), 1 too vague.' },
         { step: 'Watch it test, live', tool: 'live_test', args: { ...pr, action: 'start', url, caseId: 'SHOP-1' }, say: 'Then live_test action "auto" with caseId SHOP-1, and "finish". The browser opens on the screen and signs in by itself.' },
         { step: 'Explore the app', tool: 'explore_app', args: { ...pr }, say: 'Records every page, button and field with stable locators.' },
-        { step: 'Import the test cases', tool: 'import_test_cases', args: { ...pr, source: 'csv', location: CASES_FILE }, say: 'Then review_test_cases: 3 to automate, 1 manual (brand look), 1 too vague.' },
         { step: 'Plan', tool: 'automation_plan', args: { ...pr, action: 'generate' }, say: 'Ask who approves, then action "approve" with their name.' },
         { step: 'Generate tests', tool: 'preview_tests', args: { ...pr, wave: 1 }, say: 'Show the files, then generate_tests with the confirmToken after the yes.' },
         { step: 'Run twice', tool: 'run_tests', args: { ...pr, stabilityRuns: 2 }, say: 'A test only counts once it passes twice in a row.' },

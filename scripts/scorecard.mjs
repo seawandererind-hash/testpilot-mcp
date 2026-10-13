@@ -47,17 +47,18 @@ const preview = await call('Preview the framework', 'preview_scaffold');
 const token = preview?.structuredContent?.confirmToken ?? preview?.structuredContent?.token;
 await call('Create the framework', 'scaffold_project', { confirmToken: token, userApproved: true, approver: 'scorecard', install: !skipBrowserDownload });
 if (skipBrowserDownload) spawnSync('npm', ['install', '--no-audit', '--no-fund'], { cwd: root, stdio: 'ignore', shell: process.platform === 'win32' });
+metrics.browserDownloadSkipped = skipBrowserDownload;
 metrics.setupSeconds = Math.round((Date.now() - t0) / 1000);
-
-await call('Watch it test (start)', 'live_test', { action: 'start', headed: false, caseId: 'SHOP-1' });
-const auto = await call('Watch it test (auto)', 'live_test', { action: 'auto', caseId: 'SHOP-1' });
-await call('Watch it test (finish)', 'live_test', { action: 'finish', userApproved: true, approver: 'scorecard' });
-metrics.liveAutoSteps = auto?.structuredContent?.done?.length ?? auto?.structuredContent?.performed?.length;
 
 await call('Explore', 'explore_app');
 await call('Import test cases', 'import_test_cases', { source: 'csv', location: 'test-cases/shop.csv' });
 const review = await call('Review', 'review_test_cases');
 metrics.reviewVerdicts = review?.structuredContent?.summary ?? review?.structuredContent?.verdicts;
+await call('Watch it test (start)', 'live_test', { action: 'start', headed: false, caseId: 'SHOP-1' });
+const auto = await call('Watch it test (auto)', 'live_test', { action: 'auto', caseId: 'SHOP-1' });
+await call('Watch it test (finish)', 'live_test', { action: 'finish', userApproved: true, approver: 'scorecard' });
+metrics.liveAutoSteps = auto?.structuredContent?.done?.filter(d => !d.skipped).length;
+
 await call('Plan', 'automation_plan', { action: 'generate' });
 await call('Approve the plan', 'automation_plan', { action: 'approve', approver: 'scorecard', userApproved: true });
 const tests = await call('Preview tests', 'preview_tests', { wave: 1 });
@@ -85,8 +86,8 @@ const proposals = await call('Propose heals', 'heal_tests', { action: 'propose' 
 const ids = (proposals?.structuredContent?.proposals ?? []).map(p => p.id);
 metrics.healProposals = ids.length;
 const applied = ids.length ? await call('Apply heals', 'heal_tests', { action: 'apply', ids, userApproved: true, approver: 'scorecard' }) : undefined;
-const healed = applied?.structuredContent?.results ?? applied?.structuredContent?.applied ?? [];
-metrics.healedAndPassing = Array.isArray(healed) ? healed.filter(h => h.passed ?? h.ok ?? h.status === 'passed').length : undefined;
+const outcomes = applied?.structuredContent?.outcomes ?? [];
+metrics.healedAndPassing = outcomes.filter(o => o.healed && (o.results ?? []).every(r => r.after === 'passed')).length;
 await call('Coverage map', 'insights', { action: 'coverage' });
 await call('Report', 'publish_results', { action: 'report' });
 await call('Put the app back', 'demo_project', { action: 'restore' });
@@ -109,12 +110,14 @@ const md = [
     '| Measure | Result |',
     '|---|---|',
     `| Steps that worked | ${ok} of ${steps.length} |`,
-    `| Setup (demo + framework + install) | ${metrics.setupSeconds}s |`,
-    `| Tests generated from the 3 automatable cases | ${metrics.generatedTests ?? 'n/a'} (${metrics.todosLeft ?? 'n/a'} steps left for the AI to finish) |`,
+    `| Setup (demo + framework${skipBrowserDownload ? ', browser download skipped' : ' + install'}) | ${metrics.setupSeconds}s |`,
+    `| Tests generated for plan wave 1 | ${metrics.generatedTests ?? 'n/a'} (${metrics.todosLeft ?? 'n/a'} steps left for the AI to finish) |`,
     `| First-run pass rate | ${metrics.firstRunPassRate ?? 'n/a'}% |`,
     `| Flaky after two runs | ${metrics.flakyAfterTwoRuns ?? 'n/a'} |`,
     `| Failures after renaming the Sign in button | ${metrics.failuresAfterBreak ?? 'n/a'} |`,
     `| Heals proposed / passing after apply | ${metrics.healProposals ?? 'n/a'} / ${metrics.healedAndPassing ?? 'n/a'} |`,
+    `| Live test steps done on its own (SHOP-1) | ${metrics.liveAutoSteps ?? 'n/a'} |`,
+    `| Quality gate verdict | ${metrics.qualityGate ?? 'n/a'} |`,
     `| Whole story | ${metrics.totalSeconds}s |`,
     '',
     '## Steps',
