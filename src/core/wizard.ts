@@ -5,7 +5,7 @@ import { classifyAppRef } from './app-target.js';
 import { type RepoDetection, uiFrameworksIn } from './detect.js';
 import { type AppType, type Config, type ExecutionTarget, type Pattern, type State, type TestCaseSource } from './schema.js';
 import { setEnvDefault } from './env.js';
-import type { ProjectStore } from './store.js';
+import { DECISIONS_FILE, type ProjectStore } from './store.js';
 
 export type StepKind = 'choice' | 'multi' | 'text' | 'action';
 
@@ -581,4 +581,27 @@ export function resetToStep(store: ProjectStore, id: string): void {
         s.step = id;
     });
     store.recordDecision(`Went back to wizard step ${id}`, 'Requested by the user', 'user');
+}
+
+/** The quick start's main choices in plain words, e.g. "Web app, Playwright, TypeScript, Page Object Model". */
+export function quickStartChoices(config: Config): string {
+    const fw = config.appType && config.stack.framework ? findFramework(config.appType, config.stack.framework) : undefined;
+    return [
+        config.appType ? label(APP_TYPE_OPTIONS, config.appType) : undefined,
+        fw?.label ?? config.stack.framework,
+        config.stack.language ? (LANGUAGE_LABELS[config.stack.language] ?? config.stack.language) : undefined,
+        config.stack.pattern ? label(PATTERN_OPTIONS, config.stack.pattern) : undefined
+    ]
+        .filter(Boolean)
+        .join(', ');
+}
+
+/**
+ * When the quick start (test_my_app) picked the app type, framework and language instead of the user, says so and how to choose again.
+ * The last APP_TYPE answer in decisions.md tells who answered it.
+ */
+export function quickStartNote(store: ProjectStore, config: Config): string | undefined {
+    const lines = (store.read(DECISIONS_FILE) ?? '').split('\n').filter(line => line.includes('Answered wizard step APP_TYPE'));
+    if (!lines.at(-1)?.includes('testpilot (quick start)')) return undefined;
+    return `The quick start chose these for the user without asking: ${quickStartChoices(config)}. If the user wants to pick the kind of app, the framework or the language themselves, call wizard with action "back" and step "APP_TYPE", then ask each question again.`;
 }

@@ -10,6 +10,8 @@ You do not need to know anything about testing to use TestPilot. If you can open
 
 ## Three sentences is all it takes
 
+This quick path is for websites, and TestPilot picks the setup for you (Playwright with TypeScript). To choose the kind of app, the framework and the language yourself, or for a phone or desktop app, say **"Set up test automation"** (or use `/qa-setup`) instead: TestPilot asks those questions first, one at a time.
+
 Type these into the chat, one at a time:
 
 1. **"Test my app at https://staging.yourcompany.com"** (or use the `/qa-start` command)

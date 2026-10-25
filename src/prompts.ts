@@ -17,19 +17,19 @@ export function registerPrompts(server: McpServer): void {
         },
         ({ projectRoot }) =>
             user(
-                `Help me set up test automation with TestPilot${projectRoot ? ` in ${projectRoot}` : ''}. First call testpilot_status, then detect_repo. Then run the wizard: call wizard with action "next", ask me each question, and save my answers with action "answer" until the wizard reaches an action step; for action steps follow the instructions the wizard gives. ${RULES}`
+                `Help me set up test automation with TestPilot${projectRoot ? ` in ${projectRoot}` : ''}. First call testpilot_status, then detect_repo. Then run the wizard: call wizard with action "next" and ask me each question, starting with what kind of app it is, then the framework, then the language. Do not use test_my_app or pick answers for me. Save my answers with action "answer" until the wizard reaches an action step; for action steps follow the instructions the wizard gives. ${RULES}`
             )
     );
     server.registerPrompt(
         'qa-start',
         {
             title: 'Test my app (no testing knowledge needed)',
-            description: 'The easiest start: give the address of your website and TestPilot checks it for problems, writes starter tests and runs them, explaining everything in plain words.',
+            description: 'The easiest start: TestPilot asks what kind of app you have; for a website, give its address and it checks it for problems, writes starter tests and runs them with recommended choices, explaining everything in plain words.',
             argsSchema: z.object({ url: z.string().optional().describe('The address of your app, e.g. https://staging.yourcompany.com') })
         },
         ({ url }) =>
             user(
-                `I want my app tested, and I have no testing experience, so explain everything in plain, friendly words without jargon. ${url ? `My app is at ${url}.` : 'First ask me for the address of my app (the link I open in the browser), and whether it is a test copy or the live site.'} Use test_my_app: action "start" (tell me in one sentence what it will do and ask me before it runs), then tell me what it found: problems first, each with what it means for the people using the app, then what works. Then ask whether to turn the starter tests into automated tests (action "make-tests"). After that, offer to add tests for things I describe in my own words. If my app is a phone or desktop app instead, use the wizard and explain each question with its "in plain words" text. When I ask what a word means, use explain_testing. ${RULES}`
+                `I want my app tested, and I have no testing experience, so explain everything in plain, friendly words without jargon. ${url ? `My app is a website at ${url}.` : 'First ask me what kind of app it is: a website (opened with a link), a phone app (Android or iPhone) or a computer program (desktop). If it is a website, ask for its address (the link I open in the browser) and whether it is a test copy or the live site.'} For a website, use test_my_app: action "start" (tell me in one sentence what it will do, including that it picks the recommended setup for me: Playwright with TypeScript, and that I can choose the framework and language myself instead; ask me before it runs; if I want to choose, use the wizard), then tell me what it found: problems first, each with what it means for the people using the app, then what works. Then ask whether to turn the starter tests into automated tests (action "make-tests"). After that, offer to add tests for things I describe in my own words. If my app is a phone or desktop app, use the wizard and explain each question with its "in plain words" text. When I ask what a word means, use explain_testing. ${RULES}`
             )
     );
     server.registerPrompt(

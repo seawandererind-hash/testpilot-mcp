@@ -4,10 +4,10 @@ import * as z from 'zod/v4';
 import { integrationsFor, keysFor } from '../catalog/env-keys.js';
 import { classifyAppRef, isLikelyProduction } from '../core/app-target.js';
 import { uiFrameworksIn } from '../core/detect.js';
-import { checkEnv, ENV_FILE, loadEnvValues, resolveBaseUrl, writeEnvTemplate } from '../core/env.js';
+import { checkEnv, ENV_EXAMPLE_FILE, ENV_FILE, loadEnvValues, resolveBaseUrl, writeEnvTemplate } from '../core/env.js';
 import type { Config } from '../core/schema.js';
-import type { ProjectStore } from '../core/store.js';
-import { answerStep, completeActionStep, currentStepId, viewStep, WizardInputError } from '../core/wizard.js';
+import { CONFIG_FILE, DECISIONS_FILE, type ProjectStore, STATE_FILE } from '../core/store.js';
+import { answerStep, completeActionStep, currentStepId, quickStartChoices, viewStep, WizardInputError } from '../core/wizard.js';
 import { exploreWeb } from '../explore/web.js';
 import { buildHealthReport, type Finding, HEALTH_DIR, type HealthReport, renderHealthMarkdown, STARTER_CASES_FILE, STARTER_PREFIX, starterCases, starterCasesCsv } from '../health/check.js';
 import { buildPlan, readPlanMeta, savePlan } from '../plan/plan.js';
@@ -75,6 +75,18 @@ function answerForBeginner(store: ProjectStore, detection: ReturnType<ReturnType
     const keys = keysFor(integrationsFor(config));
     writeEnvTemplate(store, keys);
     if (checkEnv(store, keys).ok && !store.readState().completed.includes('SECRETS')) completeActionStep(store, 'SECRETS', 'No keys needed for a first check');
+}
+
+/** Remembers files as they are now, so choices made before a "no" can be put back exactly. */
+function snapshotFiles(store: ProjectStore, files: string[]): () => void {
+    const saved = files.map(file => ({ file, content: store.read(file) }));
+    return () => {
+        for (const { file, content } of saved) {
+            if (content === undefined) {
+                if (store.exists(file)) store.remove(file);
+            } else store.write(file, content);
+        }
+    };
 }
 
 /** Can this setup run the quick path? Only web apps with a Playwright project. */
@@ -191,7 +203,7 @@ export function registerQuickStartTools(server: McpServer, options: ServerOption
         {
             title: 'Test my app (quick start)',
             description:
-                'The easiest way in, for people who have never written a test: give the address of a website and TestPilot does the rest with its recommended choices. Use this first when the user says things like "test my app", "check my website", "is my site working", "I don\'t know testing", or gives a URL without test cases. ' +
+                'Quick check of a website for people who have never written a test: TestPilot picks every setup choice itself (website, Playwright, TypeScript, Page Objects) instead of asking. Use it only when the user gives a website address and asks to check or test it quickly, or picks the quick start. For "set up test automation", "test my app" without an address, a phone or desktop app, or when the user wants to choose the framework or language, use wizard instead: it asks the kind of app, the framework and the language first. ' +
                 'action "start" (needs url; one approval) creates a small Playwright test project, installs the test browser, visits the app\'s pages like a visitor (follows links only, never types, clicks buttons or submits) and reports problems in plain words: pages or links that are broken, programming errors, failed requests, slow pages, pages too wide for a phone, images without descriptions. It also writes starter tests in plain English (every page opens, the main links work) to test-cases/starter-tests.csv. ' +
                 'action "make-tests" (one approval) turns those test cases into automated Playwright tests, then runs each twice and explains any failure in plain words. ' +
                 'action "check" repeats the health check and says what got fixed and what is new since last time. ' +
@@ -218,7 +230,11 @@ export function registerQuickStartTools(server: McpServer, options: ServerOption
 
                 // Which address, and is it one we may use?
                 const url = (args.url ?? (store.hasConfig() ? resolveBaseUrl(store, config0) : undefined))?.trim();
-                if (!url) return failure('I need the address of the app first. Ask the user: "What is the address of your app? It is the link you open in the browser, for example https://staging.yourcompany.com. A test or staging address is best, not the live site."');
+                // Without an address the user gave, this is a general "set up testing" request: the wizard asks what kind of app it is first.
+                if (!url)
+                    return failure(
+                        'The quick check needs a website address that the user gave. They have not given one, so do not ask for it here: start the step-by-step setup instead. Call wizard with action "next". Its first question is what kind of app this is (website, Android, iPhone, desktop and more), then which framework and which language; ask the user each one and save each answer with action "answer".'
+                    );
                 const ref = classifyAppRef(url, 'web');
                 if (ref.kind === 'help') return failure(ref.guidance ?? 'That is not an address I can open. Ask for the full link, starting with https://');
                 if (ref.kind !== 'url') {
@@ -329,6 +345,8 @@ export function registerQuickStartTools(server: McpServer, options: ServerOption
                 // action: start
                 const site = await reachable(url);
                 if (!site.ok) return failure(`I could not open ${url}: ${site.reason}. Ask the user to check the address, then try again.`);
+                // Nothing the quick start picks stays saved until the user says yes.
+                const restore = snapshotFiles(store, [CONFIG_FILE, STATE_FILE, DECISIONS_FILE, ENV_EXAMPLE_FILE, '.gitignore']);
                 const fresh = !store.hasConfig();
                 if (fresh) {
                     store.writeConfig(store.readConfig());
@@ -347,6 +365,7 @@ export function registerQuickStartTools(server: McpServer, options: ServerOption
                         key: 'quick-start',
                         question: [
                             `Set up testing for ${url}?`,
+                            `I will use the recommended setup: ${quickStartChoices(config)}. If you would rather choose the kind of app, the tool and the language yourself, say so and I will ask you step by step instead.`,
                             writes.length ? `I will add a small test project to ${store.root} (${writes.length} files; your own files are not changed).` : '',
                             needsInstall ? 'I will download Playwright and its test browser (about 150 MB, a few minutes, once).' : '',
                             'Then I visit your app\'s pages like a visitor to look for problems. I only follow links: nothing is clicked, typed or changed in your app.',
@@ -357,7 +376,10 @@ export function registerQuickStartTools(server: McpServer, options: ServerOption
                         userApproved: args.userApproved,
                         approver: args.approver
                     });
-                    if (!approval.approved) return approval.reply;
+                    if (!approval.approved) {
+                        restore();
+                        return approval.reply;
+                    }
                     if (production) store.recordDecision(`Allowed the quick start on ${url}, which looks like production`, 'Read-only health check', approval.by);
                     if (!scaffolded) {
                         const { written } = writePlanned(store, plan.files);
@@ -403,6 +425,7 @@ export function registerQuickStartTools(server: McpServer, options: ServerOption
                     `The test project is ready, and I checked ${report.pagesChecked} page(s) of ${url}.`,
                     report.verdict,
                     ...findingLines(report.findings),
+                    `Setup used: ${quickStartChoices(config)}. If the user wants to choose these themselves, call wizard with action "back" and step "APP_TYPE".`,
                     report.good.length ? `Good news: ${report.good.join(' ')}` : '',
                     `Full report (with what to do about each problem): ${HEALTH_DIR}/report.md. Screenshots: .testpilot/exploration/screenshots/.`,
                     '',

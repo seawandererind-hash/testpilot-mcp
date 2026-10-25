@@ -4,7 +4,7 @@ import * as z from 'zod/v4';
 import type { RepoDetection } from '../core/detect.js';
 import { checkPrerequisites } from '../core/prereqs.js';
 import type { ProjectStore } from '../core/store.js';
-import { answerStep, currentStepId, resetToStep, STEP_IDS, type StepView, viewStep, type WizardContext } from '../core/wizard.js';
+import { answerStep, currentStepId, quickStartNote, resetToStep, STEP_IDS, type StepView, viewStep, type WizardContext } from '../core/wizard.js';
 import { regenerateKnowledge } from './scaffold.js';
 import { clientSupportsForms, guarded, openProject, projectRootArg, READ_ONLY, result, type ServerOptions, WRITES_STATE } from './common.js';
 
@@ -56,7 +56,7 @@ export function registerWizardTools(server: McpServer, options: ServerOptions): 
         {
             title: 'TestPilot status',
             description:
-                'Shows where this repository is in the TestPilot workflow: saved choices, completed steps, approvals and the next step. Call this first in any conversation about test automation in this repo, including when resuming in a different AI tool.',
+                'Shows where this repository is in the TestPilot workflow: saved choices, completed steps, approvals and the next step. Call this first in any conversation about test automation in this repo, including when resuming in a different AI tool. In a new repository the next step is the wizard, whose first questions are the kind of app and then the framework and language.',
             inputSchema: z.object({ projectRoot: projectRootArg }),
             annotations: READ_ONLY
         },
@@ -68,9 +68,10 @@ export function registerWizardTools(server: McpServer, options: ServerOptions): 
             const next = currentStepId(ctx);
             const view = next ? viewStep(next, ctx) : undefined;
             const cases = store.readCases();
+            const note = store.hasConfig() ? quickStartNote(store, config) : undefined;
             const summary = store.hasConfig()
-                ? `TestPilot is set up in ${store.root}. ${view ? `Next: ${view.progress}, ${view.title}.` : 'All wizard steps are done.'} ${cases.length} test case(s) imported.`
-                : `TestPilot has not been set up in ${store.root} yet. Start with the wizard (action "next").`;
+                ? `TestPilot is set up in ${store.root}. ${view ? `Next: ${view.progress}, ${view.title}.` : 'All wizard steps are done.'} ${cases.length} test case(s) imported.${note ? `\n${note}` : ''}`
+                : `TestPilot has not been set up in ${store.root} yet. Start the wizard: call wizard with action "next". Its first question is what kind of app the user is testing (website, Android, iPhone, desktop and more), then which framework and which language. Ask the user each question; do not pick answers for them.`;
             return result(summary, {
                 root: store.root,
                 initialised: store.hasConfig(),
@@ -128,7 +129,7 @@ export function registerWizardTools(server: McpServer, options: ServerOptions): 
         {
             title: 'TestPilot setup wizard',
             description:
-                'The guided setup, one question at a time. action "next" returns the current question (or shows a form when the AI tool supports it); action "answer" saves an answer for a step and returns the next question; action "back" re-opens an earlier step. Every answer is saved in .testpilot/ in the repository, so the setup can be resumed from any AI tool. Ask the user each question yourself; never invent answers.',
+                'The guided setup, one question at a time, and the default way to start test automation: it first asks what kind of app it is (website, Android, iPhone, desktop and more), then the framework, then the language, then the rest. action "next" returns the current question (or shows a form when the AI tool supports it); action "answer" saves an answer for a step and returns the next question; action "back" re-opens an earlier step. Every answer is saved in .testpilot/ in the repository, so the setup can be resumed from any AI tool. Ask the user each question yourself; never invent answers.',
             inputSchema: z.object({
                 projectRoot: projectRootArg,
                 action: z.enum(['next', 'answer', 'back']).default('next'),
@@ -168,7 +169,10 @@ export function registerWizardTools(server: McpServer, options: ServerOptions): 
 
                 // action === 'next'
                 const current = currentStepId(wctx());
-                if (!current) return result('The wizard is complete. Use testpilot_status to see the saved setup.', { done: true });
+                if (!current) {
+                    const note = quickStartNote(store, store.readConfig());
+                    return result(`The wizard is complete. Use testpilot_status to see the saved setup.${note ? `\n${note}` : ''}`, { done: true });
+                }
                 const view = viewStep(current, wctx());
 
                 const canForm = args.interactive && view.kind !== 'action' && clientSupportsForms(server, ctx as never);

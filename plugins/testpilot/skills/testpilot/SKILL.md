@@ -7,19 +7,23 @@ description: Set up, plan, write and run automated tests for this repository wit
 
 TestPilot is an MCP server that guides the whole flow and saves every answer and decision in `.testpilot/` in the repository, so any AI tool or teammate can continue later.
 
-## Someone new to testing, or "just test my app"
+## Start or continue (the default)
 
-1. Ask for the address of the app (the link they open in the browser) and whether it is a test copy or the live site.
-2. Call `test_my_app` with `action: "start"` and the `url`. Tell them in one sentence what it will do, and pass `userApproved: true` only after they say yes. It sets up Playwright with the recommended choices, checks every page and writes starter tests.
-3. Explain the findings in plain words: problems first, each with what it means for the people using the app, then what works.
-4. Offer to turn the starter tests into automated tests: `test_my_app` with `action: "make-tests"` (again after a yes). Afterwards offer to add tests for things they describe in their own words (`save_test_case`, then `make-tests`), and `action: "check"` after each release.
-5. For phone or desktop apps, use the wizard below and read out each question's "in plain words" text. "Not sure" picks the recommended answer. Use `explain_testing` whenever a testing word comes up.
-
-## Start or continue
+This is how every "set up testing", "automate my tests" or "test my app" request starts. Never skip the first three questions (kind of app, framework, language) and never answer them for the person.
 
 1. Call `testpilot_status`. If the repository is new, call `detect_repo`.
 2. Run the wizard: call `wizard` with action `next`, ask the person that one question in plain words with TestPilot's recommendation, then save their answer with action `answer`. Repeat until the wizard reaches an action step, and follow the instructions it returns.
 3. The order is: app type, framework, language, design pattern, where tests run, test-case source, CI, reports, then credentials (`write_env_template`, the person fills in `.env`, then `check_env`), the framework (`preview_scaffold`, then `scaffold_project`), the app address or build, extras such as `explore_app`, then test cases.
+
+## Quick check of a website
+
+Only when the person gives a website address and asks for a quick check (or picks the quick start). It chooses the setup for them: website, Playwright, TypeScript, Page Objects.
+
+1. Ask whether the address is a test copy or the live site.
+2. Call `test_my_app` with `action: "start"` and the `url`. Tell them in one sentence what it will do and that it picks Playwright with TypeScript for them (if they want to choose, use the wizard instead), and pass `userApproved: true` only after they say yes. It sets up Playwright with the recommended choices, checks every page and writes starter tests.
+3. Explain the findings in plain words: problems first, each with what it means for the people using the app, then what works.
+4. Offer to turn the starter tests into automated tests: `test_my_app` with `action: "make-tests"` (again after a yes). Afterwards offer to add tests for things they describe in their own words (`save_test_case`, then `make-tests`), and `action: "check"` after each release.
+5. For phone or desktop apps, use the wizard above and read out each question's "in plain words" text. "Not sure" picks the recommended answer. Use `explain_testing` whenever a testing word comes up.
 
 ## Test cases to running tests
 

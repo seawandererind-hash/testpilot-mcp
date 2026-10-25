@@ -3,7 +3,9 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { closestOption } from '../src/core/wizard.js';
+import { answerStep, closestOption } from '../src/core/wizard.js';
+import { ProjectStore } from '../src/core/store.js';
+import { detectRepo } from '../src/core/detect.js';
 import { classifyAppRef } from '../src/core/app-target.js';
 import { APP_TYPE_OPTIONS } from '../src/catalog/frameworks.js';
 import { DEMO_SITE } from '../src/demo/assets.js';
@@ -180,7 +182,9 @@ describe('test_my_app', () => {
 
         const none = await c.call('test_my_app', {});
         expect(none.isError).toBe(true);
-        expect(none.content[0].text).toMatch(/What is the address of your app/);
+        // No address from the user: a general request, so the wizard asks what kind of app it is first.
+        expect(none.content[0].text).toMatch(/do not ask for it here.*wizard.*what kind of app/s);
+        expect(existsSync(path.join(root, '.testpilot/config.yaml'))).toBe(false);
 
         const prod = await c.call('test_my_app', { url: 'https://www.mybank.com' });
         expect(prod.isError).toBe(true);
@@ -202,17 +206,55 @@ describe('test_my_app', () => {
             const ask = await c.call('test_my_app', { url: shop.url });
             expect(ask.isError).toBe(true);
             expect(ask.content[0].text).toMatch(/Approval needed.*Set up testing for/s);
+            expect(ask.content[0].text).toMatch(/recommended setup: Web.*Playwright.*TypeScript.*choose .* yourself/s);
             expect(existsSync(path.join(root, 'playwright.config.ts'))).toBe(false);
-            // The beginner choices are saved, so the wizard and every other tool see the same setup.
-            const config = readFileSync(path.join(root, '.testpilot/config.yaml'), 'utf8');
-            expect(config).toContain('appType: web');
-            expect(config).toContain('framework: playwright');
-            expect(config).toContain('testCaseSource: none');
-            const status = await c.call('testpilot_status');
-            expect(status.structuredContent.nextStep.step).toBe('SCAFFOLD');
+            // Nothing is saved before the yes, so the wizard still asks the kind of app first.
+            expect(existsSync(path.join(root, '.testpilot/config.yaml'))).toBe(false);
+            expect(existsSync(path.join(root, '.env.example'))).toBe(false);
+            const before = await c.call('testpilot_status');
+            expect(before.structuredContent.nextStep.step).toBe('APP_TYPE');
+            expect(before.content[0].text).toMatch(/first question is what kind of app/);
         } finally {
             await stopDemoServer(site);
         }
+    });
+
+    it('keeps the earlier setup when the quick start is declined', async () => {
+        const root = tempRepo();
+        const c = await connect(root, 'legacy');
+        close = c.close;
+        await c.call('wizard', { action: 'answer', step: 'APP_TYPE', answer: 'web' });
+        const configBefore = readFileSync(path.join(root, '.testpilot/config.yaml'), 'utf8');
+        const stateBefore = readFileSync(path.join(root, '.testpilot/state.json'), 'utf8');
+        const site = path.join(root, 'site');
+        mkdirSync(site, { recursive: true });
+        for (const [name, content] of Object.entries(DEMO_SITE)) writeFileSync(path.join(site, name), content);
+        const shop = await startDemoServer(site, 4761);
+        try {
+            const ask = await c.call('test_my_app', { url: shop.url });
+            expect(ask.content[0].text).toMatch(/Approval needed/);
+            expect(readFileSync(path.join(root, '.testpilot/config.yaml'), 'utf8')).toBe(configBefore);
+            expect(readFileSync(path.join(root, '.testpilot/state.json'), 'utf8')).toBe(stateBefore);
+            const status = await c.call('testpilot_status');
+            expect(status.structuredContent.nextStep.step).toBe('FRAMEWORK');
+        } finally {
+            await stopDemoServer(site);
+        }
+    });
+
+    it('says when the quick start picked the setup, and how to choose again', async () => {
+        const root = tempRepo();
+        const store = new ProjectStore(root);
+        const detection = detectRepo(root);
+        for (const [step, answer] of [['APP_TYPE', 'web'], ['FRAMEWORK', 'playwright'], ['LANGUAGE', 'typescript']] as const) answerStep(store, detection, step, answer, 'testpilot (quick start)');
+        const c = await connect(root, 'legacy');
+        close = c.close;
+        const status = await c.call('testpilot_status');
+        expect(status.content[0].text).toMatch(/quick start chose these for the user without asking: Web.*Playwright.*TypeScript.*"back" and step "APP_TYPE"/s);
+        await c.call('wizard', { action: 'back', step: 'APP_TYPE' });
+        await c.call('wizard', { action: 'answer', step: 'APP_TYPE', answer: 'android' });
+        const after = await c.call('testpilot_status');
+        expect(after.content[0].text).not.toMatch(/quick start chose/);
     });
 
     it('refuses on a folder set up for a phone app', async () => {
