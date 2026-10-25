@@ -172,7 +172,8 @@ describe('test_my_app', () => {
         close = undefined;
     });
 
-    it('asks for an address, refuses the live site, hands apps to the wizard and asks before writing', async () => {
+    // Windows takes a few seconds to report a refused connection, so this test gets more than the default 5 s.
+    it('asks for an address, refuses the live site, hands apps to the wizard and asks before writing', { timeout: 60_000 }, async () => {
         const root = tempRepo();
         const c = await connect(root, 'legacy');
         close = c.close;
