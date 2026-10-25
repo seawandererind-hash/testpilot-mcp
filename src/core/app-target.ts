@@ -25,6 +25,12 @@ export function classifyAppRef(input: string, appType: AppType | undefined): App
     if (!value || HELP_WORDS.test(value)) {
         return { kind: 'help', ref: '', guidance: (appType && NO_BUILD_GUIDANCE[appType]) ?? 'Give me the URL of the test environment, a path to the app file, or a cloud app id.' };
     }
+    // People often type "mysite.com" or "localhost:3000" without the https:// part.
+    const bareHost = /^(localhost|127\.\d+\.\d+\.\d+|[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}|\d+\.\d+\.\d+\.\d+)(:\d+)?(\/\S*)?$/i;
+    if ((appType === 'web' || appType === 'api') && bareHost.test(value) && !/\.(apk|aab|ipa|app|exe|msi|json|ya?ml)$/i.test(value)) {
+        const local = /^(localhost|127\.|\d+\.\d+\.\d+\.\d+)/i.test(value);
+        return classifyAppRef(`${local ? 'http' : 'https'}://${value}`, appType);
+    }
     if (/^https?:\/\//i.test(value)) {
         let note: string | undefined;
         try {

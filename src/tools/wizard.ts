@@ -20,6 +20,7 @@ function answerAndSync(store: ProjectStore, detection: RepoDetection, step: stri
 
 function describeStep(view: StepView): string {
     const lines = [`${view.progress}: ${view.title}`, '', view.question, `Why it matters: ${view.why}`];
+    if (view.plain) lines.push(`In plain words (use this wording if the user is new to testing): ${view.plain}`);
     if (view.options?.length) {
         lines.push('', 'Options:');
         for (const o of view.options) {
@@ -27,6 +28,11 @@ function describeStep(view: StepView): string {
             lines.push(`- ${o.label} [${o.value}]${rec ? ' ★ recommended' : ''}: ${o.description}`);
         }
         if (view.allowFreeText) lines.push('- Or type any other value.');
+        lines.push(
+            view.recommended !== undefined
+                ? 'If the user is not sure, they can say "not sure" (or "you choose") and the recommended option is used. Small typos and everyday words ("website", "phone app", "spreadsheet") are understood.'
+                : 'If the user is not sure, help them with the plain-words question above. Everyday words ("website", "phone app", "desktop program") and small typos are understood.'
+        );
     }
     if (view.action) lines.push('', `This is an action step. Tools: ${view.action.tools.join(', ')}.`, view.action.instructions);
     else lines.push('', `Ask the user this question in plain words (show the recommendation), then call wizard with action "answer", step "${view.step}" and their answer.`);

@@ -13,9 +13,10 @@ import { buildHealthReport, type Finding, HEALTH_DIR, type HealthReport, renderH
 import { buildPlan, readPlanMeta, savePlan } from '../plan/plan.js';
 import type { FailureCategory, RunSummary } from '../run/playwright.js';
 import { runPlaywright } from '../run/playwright.js';
+import { GLOSSARY, lookupTerm } from '../knowledge/glossary.js';
 import { inTestRoot, runCommand, writePlanned } from '../scaffold/engine.js';
 import { runImport } from '../testcases/import.js';
-import { approverArg, failure, guarded, openProject, projectRootArg, requireApproval, result, type ServerOptions, userApprovedArg } from './common.js';
+import { approverArg, failure, guarded, openProject, projectRootArg, READ_ONLY, requireApproval, result, type ServerOptions, userApprovedArg } from './common.js';
 import { applyGeneration, buildGeneration, select } from './generate.js';
 import { recordRun } from './run.js';
 import { buildScaffoldPlan } from './scaffold.js';
@@ -166,6 +167,25 @@ function describeQuickRun(run: RunSummary): string[] {
 }
 
 export function registerQuickStartTools(server: McpServer, options: ServerOptions): void {
+    server.registerTool(
+        'explain_testing',
+        {
+            title: 'Explain a testing word',
+            description:
+                'Explains a testing word in plain language with an everyday example, for people new to testing: test case, automated test, framework, Playwright, Selenium, Appium, emulator, Page Object Model, BDD, locator, assertion, flaky, smoke test, regression, staging, .env, CI, report, trace, headless, accessibility, self-healing, test data, coverage, wave. Without a term it lists every word it knows. Use it whenever the user asks "what is …?" or seems unsure about a word TestPilot used.',
+            inputSchema: z.object({ term: z.string().optional().describe('The word or phrase, e.g. "flaky test" or "what is CI"') }),
+            annotations: READ_ONLY
+        },
+        guarded('explain_testing', options, async ({ term }: { term?: string }) => {
+            if (!term?.trim()) {
+                return result(`Testing words I can explain:\n${GLOSSARY.map(e => `- ${e.term}: ${e.plain}`).join('\n')}`, { terms: GLOSSARY.map(e => e.term) });
+            }
+            const entry = lookupTerm(term);
+            if (!entry) return result(`"${term}" is not in TestPilot's word list. Explain it to the user in one or two plain sentences with an everyday example, without other jargon.`, { found: false, terms: GLOSSARY.map(e => e.term) });
+            return result(`${entry.term}: ${entry.plain}\nExample: ${entry.example}`, { found: true, ...entry });
+        })
+    );
+
     server.registerTool(
         'test_my_app',
         {

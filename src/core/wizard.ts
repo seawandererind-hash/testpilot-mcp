@@ -264,6 +264,8 @@ export const STEPS: StepDef[] = [
         apply: (config, answer) => {
             const ref = classifyAppRef(String(answer), config.appType);
             if (ref.kind === 'help') throw new WizardInputError(ref.guidance ?? 'Please give a URL, a file path or an app id.');
+            const mismatch = appRefMismatch(config.appType, ref.kind);
+            if (mismatch) throw new WizardInputError(mismatch);
             config.app = { kind: ref.kind, ref: ref.ref, notes: ref.note };
             if (ref.kind === 'url') {
                 const base = config.environments.find(e => e.name === 'test');
@@ -361,6 +363,23 @@ export const STEPS: StepDef[] = [
     }
 ];
 
+const FILE_KIND_NAMES: Record<string, string> = { apk: 'an Android app file (.apk)', aab: 'an Android app bundle (.aab)', ipa: 'an iPhone app file (.ipa)', app: 'an Apple app (.app)', exe: 'a Windows program (.exe)' };
+
+/** Catches the most common wrong choice: an app file for a web app, or a web address for a phone app. */
+export function appRefMismatch(appType: AppType | undefined, kind: string): string | undefined {
+    const back = 'If that is the app you want to test, go back and change the app type (wizard action "back", step "APP_TYPE"); otherwise give';
+    if ((appType === 'web' || appType === 'api') && FILE_KIND_NAMES[kind]) {
+        return `That is ${FILE_KIND_NAMES[kind]}, but the app type is ${appType === 'web' ? 'a web app' : 'an API'}. ${back} the ${appType === 'web' ? 'website address (https://…)' : 'API address'}.`;
+    }
+    if ((appType === 'android' || appType === 'android-ios') && (kind === 'ipa' || kind === 'exe')) return `That is ${FILE_KIND_NAMES[kind]}, not an Android app. ${back} the .apk or .aab file.`;
+    if (appType === 'ios' && (kind === 'apk' || kind === 'aab' || kind === 'exe')) return `That is ${FILE_KIND_NAMES[kind]}, not an iPhone app. ${back} the .ipa or .app file.`;
+    if ((appType === 'windows' || appType === 'macos') && (kind === 'apk' || kind === 'aab' || kind === 'ipa')) return `That is ${FILE_KIND_NAMES[kind]}, which runs on phones, but the app type is a desktop app. ${back} the desktop program.`;
+    if (appType && mobileTypes.includes(appType) && appType !== 'hybrid' && kind === 'url') {
+        return 'That is a website address, but the app type is a phone app. To test a website (also on phone-sized screens), go back and choose "web" (wizard action "back", step "APP_TYPE"). To test the installed app, give the app file (.apk or .ipa) or say "help".';
+    }
+    return undefined;
+}
+
 export class WizardInputError extends Error {
     constructor(message: string) {
         super(message);
@@ -436,9 +455,20 @@ export function normaliseAnswer(id: string, raw: string | string[], ctx: WizardC
         return text;
     }
     const options = def.options?.(ctx) ?? [];
+    const recommended = def.recommended?.(ctx);
+    const whole = (Array.isArray(raw) ? raw.join(' ') : String(raw ?? '')).trim();
+    // "Not sure" is a fine answer: it takes TestPilot's recommendation.
+    if (UNSURE.test(whole)) {
+        if (recommended !== undefined) return def.kind === 'multi' ? toArray(recommended) : Array.isArray(recommended) ? recommended[0] : recommended;
+        throw new WizardInputError(`That's fine, this one has no default because only the user knows it. Help them decide with this plain question: ${def.plain ?? def.why}`);
+    }
     const match = (value: string): string | undefined => {
         const v = value.trim().toLowerCase();
-        return options.find(o => o.value.toLowerCase() === v || o.label.toLowerCase() === v)?.value;
+        const exact = options.find(o => o.value.toLowerCase() === v || o.label.toLowerCase() === v)?.value;
+        if (exact) return exact;
+        const synonym = SYNONYMS[id]?.find(([re]) => re.test(v))?.[1];
+        if (synonym && options.some(o => o.value === synonym)) return synonym;
+        return closestOption(v, options);
     };
     if (def.kind === 'multi') {
         const items = toArray(raw);
@@ -454,7 +484,57 @@ export function normaliseAnswer(id: string, raw: string | string[], ctx: WizardC
     const m = match(String(single ?? ''));
     if (m) return m;
     if (def.allowFreeText && String(single ?? '').trim()) return String(single).trim();
-    throw new WizardInputError(`"${single}" is not one of: ${options.map(o => o.value).join(', ')}.`);
+    throw new WizardInputError(`"${single}" is not one of: ${options.map(o => o.value).join(', ')}.${recommended !== undefined ? ` If the user is not sure, answer "not sure" to take the recommendation (${String(recommended)}).` : ''}`);
+}
+
+/** Answers that mean "you choose". */
+const UNSURE = /^(not sure|unsure|i'?m not sure|i am not sure|i don'?t know|don'?t know|dunno|no idea|idk|\?|you (choose|decide|pick)|your (choice|call|pick)|recommended|use (the )?recommended|the recommended( one)?|default|use (the )?default|whatever|anything|any|best|whatever is best|suggest one)[.!]*$/i;
+
+/** Everyday words people use for each choice. */
+const SYNONYMS: Record<string, Array<[RegExp, string]>> = {
+    APP_TYPE: [
+        [/^(web(site| site)?|site|browser|url|link|web ?app(lication)?|webpage|web page|online|portal|saas|react|angular|vue)$/, 'web'],
+        [/^(mobile|mobile app|phone|phone app|both|android and ios|ios and android|cross[- ]?platform|react native|flutter)$/, 'android-ios'],
+        [/^(android( phone| app)?|apk|aab|samsung|play store)$/, 'android'],
+        [/^(iphone|ipad|ios app|apple phone|ipa|app store)$/, 'ios'],
+        [/^(desktop|desktop app|windows app|windows program|pc|exe|program|software)$/, process.platform === 'darwin' ? 'macos' : 'windows'],
+        [/^(mac|mac app|macos app|osx)$/, 'macos'],
+        [/^(rest|rest api|graphql|backend|back end|endpoints?|web ?service|microservices?)$/, 'api'],
+        [/^(webview|web view|ionic|cordova|capacitor)$/, 'hybrid']
+    ],
+    EXECUTION_TARGET: [[/^(here|local(ly)?|my (computer|laptop|pc|machine)|this (pc|laptop|machine)|on my computer)$/, 'local']],
+    TEST_CASE_SOURCE: [
+        [/^(no|none|nothing|nowhere|i have none|no test cases|i don'?t have (any|them)|don'?t have|not yet)$/, 'none'],
+        [/^(xlsx|spreadsheet|sheet|excel sheet|google sheets?)$/, 'excel'],
+        [/^(docx|doc|word document|word file)$/, 'word']
+    ],
+    CI: [[/^(no|none|not now|later|skip|nothing|i don'?t know what that is)$/, 'none'], [/^(github|gh actions|actions)$/, 'github-actions']],
+    PATTERN: [[/^(pom|page objects?|page object)$/, 'pom'], [/^(cucumber|gherkin|given when then|plain english)$/, 'bdd']]
+};
+
+/** Distance between two short strings (typo tolerance). */
+function editDistance(a: string, b: string): number {
+    const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+        let prev = row[0];
+        row[0] = i;
+        for (let j = 1; j <= b.length; j++) {
+            const keep = row[j];
+            row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+            prev = keep;
+        }
+    }
+    return row[b.length];
+}
+
+/** The option a small typo was meant to be ("playright" is Playwright), when exactly one is close. */
+export function closestOption(value: string, options: Option[]): string | undefined {
+    const v = value.trim().toLowerCase();
+    if (v.length < 4) return undefined;
+    const scored = options.map(o => ({ value: o.value, d: Math.min(editDistance(v, o.value.toLowerCase()), editDistance(v, o.label.toLowerCase())) }));
+    const limit = v.length >= 8 ? 2 : 1;
+    const close = scored.filter(x => x.d <= limit);
+    return close.length === 1 ? close[0].value : undefined;
 }
 
 /** Validates and saves one answer, records the decision, and returns the next step (or undefined when done). */
