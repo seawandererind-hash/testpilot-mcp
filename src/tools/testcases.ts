@@ -3,7 +3,7 @@ import * as z from 'zod/v4';
 
 import { loadEnvValues } from '../core/env.js';
 import { TEST_CASE_SOURCES, type TestCase, type TestCaseSource, TestStepSchema, VERDICTS } from '../core/schema.js';
-import { REVIEWS_DIR } from '../core/store.js';
+import { type ProjectStore, REVIEWS_DIR } from '../core/store.js';
 import { completeActionStep } from '../core/wizard.js';
 import { IntegrationError } from '../integrations/http.js';
 import { contentDigest, ImportError, runImport, sourceFromPath } from '../testcases/import.js';
@@ -26,6 +26,32 @@ function brief(tc: TestCase) {
         wave: tc.automation?.wave,
         status: tc.automation?.status
     };
+}
+
+/** Reviews cases, saves each verdict on the case and writes the review report. */
+export function reviewAndStore(store: ProjectStore, cases: TestCase[], userOverrides: Array<{ id: string; verdict: (typeof VERDICTS)[number]; note?: string }> = []) {
+    const suite = reviewSuite(cases);
+    const when = new Date().toISOString();
+    const overrides = new Map(userOverrides.map(o => [o.id, o]));
+    for (const r of suite.reviews) {
+        const o = overrides.get(r.id);
+        if (o) {
+            r.verdict = o.verdict;
+            r.issues.push(`Verdict set by the user${o.note ? `: ${o.note}` : ''}.`);
+        }
+    }
+    for (const tc of cases) {
+        const r = suite.reviews.find(x => x.id === tc.id)!;
+        tc.review = { score: r.score, verdict: r.verdict, scores: r.scores, issues: r.issues, suggestions: r.suggestions, duplicateOf: r.duplicateOf, reviewedAt: when };
+        tc.automation = { ...tc.automation, effort: r.effort, status: r.verdict === 'MANUAL' ? 'manual' : tc.automation?.status };
+        store.writeCase(tc);
+    }
+    for (const o of userOverrides) store.recordDecision(`Verdict for ${o.id}: ${o.verdict}`, o.note ?? 'Decided by the user', 'user');
+    const reportPath = `${REVIEWS_DIR}/review-${when.slice(0, 10)}.md`;
+    const reviewedAll = store.readCases();
+    store.write(reportPath, renderReviewMarkdown(suiteFromStored(reviewedAll), reviewedAll, when));
+    if (store.hasConfig() && !store.readState().completed.includes('TEST_CASES')) completeActionStep(store, 'TEST_CASES', `Imported and reviewed ${reviewedAll.length} test case(s)`);
+    return { suite, reportPath };
 }
 
 export function registerTestCaseTools(server: McpServer, options: ServerOptions): void {
@@ -228,27 +254,7 @@ export function registerTestCaseTools(server: McpServer, options: ServerOptions)
             if (!all.length) return failure('No test cases yet. Import them first with import_test_cases.');
             const cases = args.ids?.length ? all.filter(tc => args.ids!.includes(tc.id)) : all;
             if (!cases.length) return failure(`None of these ids exist: ${args.ids?.join(', ')}.`);
-            const suite = reviewSuite(cases);
-            const when = new Date().toISOString();
-            const overrides = new Map(args.overrides.map(o => [o.id, o]));
-            for (const r of suite.reviews) {
-                const o = overrides.get(r.id);
-                if (o) {
-                    r.verdict = o.verdict;
-                    r.issues.push(`Verdict set by the user${o.note ? `: ${o.note}` : ''}.`);
-                }
-            }
-            for (const tc of cases) {
-                const r = suite.reviews.find(x => x.id === tc.id)!;
-                tc.review = { score: r.score, verdict: r.verdict, scores: r.scores, issues: r.issues, suggestions: r.suggestions, duplicateOf: r.duplicateOf, reviewedAt: when };
-                tc.automation = { ...tc.automation, effort: r.effort, status: r.verdict === 'MANUAL' ? 'manual' : tc.automation?.status };
-                store.writeCase(tc);
-            }
-            for (const o of args.overrides) store.recordDecision(`Verdict for ${o.id}: ${o.verdict}`, o.note ?? 'Decided by the user', 'user');
-            const reportPath = `${REVIEWS_DIR}/review-${when.slice(0, 10)}.md`;
-            const reviewedAll = store.readCases();
-            store.write(reportPath, renderReviewMarkdown(suiteFromStored(reviewedAll), reviewedAll, when));
-            if (store.hasConfig() && !store.readState().completed.includes('TEST_CASES')) completeActionStep(store, 'TEST_CASES', `Imported and reviewed ${reviewedAll.length} test case(s)`);
+            const { suite, reportPath } = reviewAndStore(store, cases, args.overrides);
             const weakest = [...suite.reviews].sort((a, b) => a.score - b.score).slice(0, 5);
             const summary = [
                 `Reviewed ${cases.length} case(s). Average score ${suite.averageScore}/100: ${suite.byVerdict.AUTOMATE} ready to automate, ${suite.byVerdict['NEEDS-REWORK']} need rework, ${suite.byVerdict.MANUAL} better kept manual.`,

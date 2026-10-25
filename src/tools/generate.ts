@@ -23,7 +23,7 @@ interface Selection {
     error?: string;
 }
 
-function select(store: ProjectStore, wave: number | undefined, ids: string[] | undefined, includeGenerated: boolean): Selection {
+export function select(store: ProjectStore, wave: number | undefined, ids: string[] | undefined, includeGenerated: boolean): Selection {
     const meta = readPlanMeta(store);
     if (!meta) return { cases: [], error: 'There is no automation plan yet. Run automation_plan with action "generate", then get it approved.' };
     if (!isApproved(meta)) return { cases: [], error: 'The automation plan is not approved yet. Tests are generated only for an approved plan: ask the user who approves it and call automation_plan with action "approve".' };
@@ -41,7 +41,7 @@ function select(store: ProjectStore, wave: number | undefined, ids: string[] | u
     return { cases, wave: target };
 }
 
-function buildGeneration(store: ProjectStore, config: Config, cases: TestCase[]): { plan?: GenerationPlan; error?: string; token: string } {
+export function buildGeneration(store: ProjectStore, config: Config, cases: TestCase[]): { plan?: GenerationPlan; error?: string; token: string } {
     const pack = config.stack.templatePack;
     if (pack !== 'playwright-ts' && pack !== 'playwright-js' && pack !== 'appium-ts' && pack !== 'selenium-java') {
         return {
@@ -79,6 +79,27 @@ function describe(plan: GenerationPlan): string {
     for (const c of plan.cases.filter(x => x.skipped)) lines.push(`Skipped ${c.id}: ${c.skipped}`);
     if (plan.notes.length) lines.push('', ...plan.notes);
     return lines.join('\n');
+}
+
+/** Writes generated files, marks each case as generated and records who approved it. */
+export function applyGeneration(store: ProjectStore, plan: GenerationPlan, wave: number | undefined, approval: { by: string; via: string }, overwrite: string[] = []) {
+    const specs = plan.cases.filter(c => c.spec);
+    const { written, kept } = writePlanned(store, plan.files, overwrite);
+    const writtenSet = new Set(written);
+    for (const c of specs) {
+        if (!writtenSet.has(c.spec) && !plan.files.some(f => f.path === c.spec && f.status === 'unchanged')) continue;
+        const tc = store.readCase(c.id);
+        if (!tc) continue;
+        tc.automation = { ...tc.automation, status: 'generated', specFile: c.spec };
+        store.writeCase(tc);
+    }
+    const at = new Date().toISOString();
+    store.updateState(s => {
+        s.approvals.push({ what: `generate ${specs.length} test(s)${wave ? ` (wave ${wave})` : ''}`, by: approval.by, at, note: approval.via });
+    });
+    store.recordDecision(`Generated ${specs.length} test(s)${wave ? ` for wave ${wave}` : ''}: ${specs.map(c => c.id).join(', ')}`, `Approved ${approval.via === 'form' ? 'in a form' : 'in chat'}`, approval.by);
+    if (store.hasConfig()) completeActionStep(store, 'GENERATE', `Generated ${specs.length} test(s)`);
+    return { written, kept };
 }
 
 const selectionArgs = {
@@ -153,21 +174,7 @@ export function registerGenerateTools(server: McpServer, options: ServerOptions)
                     approver: args.approver
                 });
                 if (!approval.approved) return approval.reply;
-                const { written, kept } = writePlanned(store, built.plan.files, args.overwrite);
-                const writtenSet = new Set(written);
-                for (const c of specs) {
-                    if (!writtenSet.has(c.spec) && !built.plan.files.some(f => f.path === c.spec && f.status === 'unchanged')) continue;
-                    const tc = store.readCase(c.id);
-                    if (!tc) continue;
-                    tc.automation = { ...tc.automation, status: 'generated', specFile: c.spec };
-                    store.writeCase(tc);
-                }
-                const at = new Date().toISOString();
-                store.updateState(s => {
-                    s.approvals.push({ what: `generate ${specs.length} test(s)${sel.wave ? ` (wave ${sel.wave})` : ''}`, by: approval.by, at, note: approval.via });
-                });
-                store.recordDecision(`Generated ${specs.length} test(s)${sel.wave ? ` for wave ${sel.wave}` : ''}: ${specs.map(c => c.id).join(', ')}`, `Approved ${approval.via === 'form' ? 'in a form' : 'in chat'}`, approval.by);
-                if (store.hasConfig()) completeActionStep(store, 'GENERATE', `Generated ${specs.length} test(s)`);
+                const { written, kept } = applyGeneration(store, built.plan, sel.wave, approval, args.overwrite);
                 const partial = specs.filter(c => c.todos);
                 const summary = [
                     `Wrote ${written.length} file(s)${kept.length ? `; kept ${kept.length} existing file(s)` : ''}.`,

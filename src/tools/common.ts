@@ -47,6 +47,7 @@ export function projectRootFor(options: ServerOptions, explicit?: string, create
 
 /** Tools that run programs on the machine. A hosted server never runs them; the team runs tests locally or in CI. */
 const HOSTED_UNAVAILABLE: Record<string, string> = {
+    test_my_app: 'A hosted TestPilot does not open browsers or run tests. The quick start runs in a local TestPilot (Cursor, Claude Code, VS Code, Antigravity) on your computer.',
     run_tests: 'A hosted TestPilot does not run tests. Deliver the project (hosted_workspace, action "zip" or "pull-request"), then run the tests on your machine or in CI with the pipeline from publish_results.',
     explore_app: 'A hosted TestPilot does not open browsers or apps. Exploration runs in a local TestPilot (Cursor, Claude Code, VS Code, Antigravity) against your test environment.',
     live_test: 'A hosted TestPilot does not open browsers. Live testing runs in a local TestPilot (Cursor, Claude Code, VS Code, Antigravity) against your test environment.',

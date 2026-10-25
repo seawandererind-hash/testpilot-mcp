@@ -15,6 +15,7 @@ import { registerLiveTools } from './tools/live.js';
 import { registerPlanTools } from './tools/plan.js';
 import { registerPublishTools } from './tools/publish.js';
 import { registerQualityTools } from './tools/quality.js';
+import { registerQuickStartTools } from './tools/quickstart.js';
 import { registerRunTools } from './tools/run.js';
 import { registerScaffoldTools } from './tools/scaffold.js';
 import { registerTestCaseTools } from './tools/testcases.js';
@@ -34,6 +35,7 @@ const HOSTED_INSTRUCTIONS = `This is a hosted TestPilot: each person works in na
 export function createServer(options: Partial<ServerOptions> = {}): McpServer {
     const opts: ServerOptions = { mode: options.mode ?? 'local', root: options.root, version: options.version ?? VERSION, hosted: options.hosted };
     const server = new McpServer({ name: 'testpilot', title: 'TestPilot', version: opts.version }, { instructions: opts.mode === 'remote' ? `${INSTRUCTIONS}\n${HOSTED_INSTRUCTIONS}` : INSTRUCTIONS });
+    registerQuickStartTools(server, opts);
     registerWizardTools(server, opts);
     registerEnvTools(server, opts);
     registerScaffoldTools(server, opts);

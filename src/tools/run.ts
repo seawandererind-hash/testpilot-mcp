@@ -3,6 +3,7 @@ import * as z from 'zod/v4';
 
 import { isLikelyProduction } from '../core/app-target.js';
 import { resolveBaseUrl } from '../core/env.js';
+import type { ProjectStore } from '../core/store.js';
 import { completeActionStep } from '../core/wizard.js';
 import { readPlanMeta } from '../plan/plan.js';
 import { usesAppium } from '../explore/mobile.js';
@@ -16,7 +17,7 @@ function escapeRegExp(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function describeRun(run: RunSummary, saved: string, runner: 'playwright' | 'wdio' | 'maven' = 'playwright'): string {
+export function describeRun(run: RunSummary, saved: string, runner: 'playwright' | 'wdio' | 'maven' = 'playwright'): string {
     const s = run.stats;
     if (!s.total) {
         const triage = runner === 'wdio' && run.consoleTail ? categoriseAppium(run.consoleTail) : undefined;
@@ -46,6 +47,30 @@ function describeRun(run: RunSummary, saved: string, runner: 'playwright' | 'wdi
     if (!bad.length && run.repeat < 2) lines.push('All passed. Run again with stabilityRuns: 2 to confirm they are stable before calling them done.');
     if (bad.length) lines.push('Propose fixes as diffs for the user to review. Never delete or weaken an assertion to make a test pass without their agreement; if the app is wrong, it is a bug to report.');
     return lines.join('\n');
+}
+
+/** Saves a run and each case's latest status; the RUN step completes after two clean runs in a row. */
+export function recordRun(store: ProjectStore, run: RunSummary): string {
+    const saved = saveRun(store, run);
+    const byId = new Map<string, string>();
+    for (const t of run.tests) {
+        const prev = byId.get(t.id);
+        const status = t.status === 'passed' ? 'passing' : t.status === 'skipped' ? undefined : 'failing';
+        if (status && prev !== 'failing') byId.set(t.id, status);
+    }
+    for (const [id, status] of byId) {
+        const tc = store.readCase(id);
+        if (tc && tc.automation?.status !== status) {
+            tc.automation = { ...tc.automation, status: status as 'passing' | 'failing' };
+            store.writeCase(tc);
+        }
+    }
+    store.updateState(s => {
+        s.lastRun = run.finishedAt;
+    });
+    const allGood = run.stats.total > 0 && run.stats.failed === 0 && run.stats.flaky === 0;
+    if (allGood && run.repeat >= 2 && store.hasConfig()) completeActionStep(store, 'RUN', `${run.stats.passed} test(s) passed ${run.repeat} times in a row`);
+    return saved;
 }
 
 export function registerRunTools(server: McpServer, options: ServerOptions): void {
@@ -154,27 +179,7 @@ export function registerRunTools(server: McpServer, options: ServerOptions): voi
                           bdd: config.stack.pattern === 'bdd'
                       });
                 run.baseUrl = baseUrl;
-                const saved = saveRun(store, run);
-
-                // Record each case's latest status.
-                const byId = new Map<string, string>();
-                for (const t of run.tests) {
-                    const prev = byId.get(t.id);
-                    const status = t.status === 'passed' ? 'passing' : t.status === 'skipped' ? undefined : 'failing';
-                    if (status && prev !== 'failing') byId.set(t.id, status);
-                }
-                for (const [id, status] of byId) {
-                    const tc = store.readCase(id);
-                    if (tc && tc.automation?.status !== status) {
-                        tc.automation = { ...tc.automation, status: status as 'passing' | 'failing' };
-                        store.writeCase(tc);
-                    }
-                }
-                store.updateState(s => {
-                    s.lastRun = run.finishedAt;
-                });
-                const allGood = run.stats.total > 0 && run.stats.failed === 0 && run.stats.flaky === 0;
-                if (allGood && run.repeat >= 2 && store.hasConfig()) completeActionStep(store, 'RUN', `${run.stats.passed} test(s) passed ${run.repeat} times in a row`);
+                const saved = recordRun(store, run);
                 return result(describeRun(run, saved, maven ? 'maven' : wdio ? 'wdio' : 'playwright'), { run: { ...run, tests: run.tests.slice(0, 100) }, saved });
             }
         )

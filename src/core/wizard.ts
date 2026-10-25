@@ -17,6 +17,8 @@ export interface StepView {
     kind: StepKind;
     question: string;
     why: string;
+    /** The same question explained for someone who has never done testing. */
+    plain?: string;
     options?: Option[];
     recommended?: string | string[];
     allowFreeText: boolean;
@@ -38,6 +40,7 @@ interface StepDef {
     skip?: (ctx: WizardContext) => boolean;
     question: (ctx: WizardContext) => string;
     why: string;
+    plain?: string;
     options?: (ctx: WizardContext) => Option[];
     recommended?: (ctx: WizardContext) => string | string[] | undefined;
     allowFreeText?: boolean;
@@ -54,6 +57,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'APP_TYPE',
         title: 'What are you testing?',
+        plain: 'Is it something you open in a web browser with a link (a web app), something you install on a phone (Android or iPhone), or a program on a computer (desktop)? If you open it with a link, it is a web app.',
         kind: 'choice',
         question: () => 'What kind of application are you testing?',
         why: 'The app type decides which automation engine, tools and templates fit.',
@@ -79,6 +83,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'EXISTING',
         title: 'Existing framework',
+        plain: 'This folder already has some automated tests. Extending means adding to them in the same style; creating new means starting a separate test project next to them.',
         kind: 'choice',
         skip: ctx => uiFrameworksIn(ctx.detection).length === 0,
         question: ctx => `I found ${uiFrameworksIn(ctx.detection).join(', ')} in this repository. Should I extend that framework or create a new one next to it?`,
@@ -99,6 +104,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'FRAMEWORK',
         title: 'Framework',
+        plain: 'A framework is the tool that uses your app for you, like a robot user that clicks and types. If you are not sure, take the recommended one.',
         kind: 'choice',
         allowFreeText: true,
         question: ctx => `Which framework do you want to use for ${label(APP_TYPE_OPTIONS, ctx.config.appType ?? 'web').toLowerCase()} testing?`,
@@ -114,6 +120,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'LANGUAGE',
         title: 'Language',
+        plain: 'Tests are small programs. The language only matters if someone on your team will read or change them; if nobody has a preference, take the recommended one.',
         kind: 'choice',
         allowFreeText: true,
         question: () => 'Which programming language should the tests be written in? This is your team\'s choice; every option works.',
@@ -140,6 +147,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'PATTERN',
         title: 'Design pattern',
+        plain: 'How the test files are organised. Page Object Model keeps the names of each page\'s buttons and fields in one place, so when a button changes you fix it once. BDD writes tests as plain-English sentences (Given / When / Then) that anyone can read.',
         kind: 'choice',
         question: () => 'Which design pattern should the framework follow?',
         why: 'The pattern decides how tests are organised. The Page Object Model is the safest default for most teams; BDD (Cucumber) adds Given/When/Then feature files on top of the same page objects.',
@@ -153,6 +161,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'EXECUTION_TARGET',
         title: 'Where tests run',
+        plain: 'Where the robot browser or phone runs. "This computer" is free and the easiest start; cloud services give many browsers and real phones but need an account.',
         kind: 'choice',
         question: ctx =>
             ctx.config.appType === 'ios' && process.platform !== 'darwin'
@@ -170,6 +179,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'TEST_CASE_SOURCE',
         title: 'Where your test cases live',
+        plain: 'A test case is a short written recipe: the steps to take and what should happen ("open the sign-in page, enter a wrong password, an error message appears"). Pick where yours are kept. If you have none, choose "None yet" and TestPilot drafts them from your app.',
         kind: 'choice',
         question: () => 'Where are your test cases saved today?',
         why: 'TestPilot imports them from there, and later sends results back. Knowing it now lets me list the credentials you need in one go.',
@@ -183,6 +193,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'CI',
         title: 'Continuous integration',
+        plain: 'CI (continuous integration) is a service that runs your tests automatically every time someone changes the code, so nobody has to remember. If your code is on GitHub, pick GitHub Actions; "Not now" is fine too.',
         kind: 'choice',
         question: ctx => (ctx.detection.ci.length ? `I see ${ctx.detection.ci.join(', ')} in this repo. Which CI should run the tests?` : 'Which CI system should run the tests?'),
         why: 'Tests only protect the team when they run automatically on every change.',
@@ -196,6 +207,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'REPORTING',
         title: 'Reports',
+        plain: 'Reports show which tests passed or failed. The HTML report is a web page for people; JUnit XML is for other tools. Keeping both is a safe choice.',
         kind: 'multi',
         question: () => 'Which reports do you want? You can pick more than one.',
         why: 'The HTML report is for people; JUnit XML is what CI and test-management tools import.',
@@ -209,6 +221,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'SECRETS',
         title: 'Credentials',
+        plain: 'Some tests need passwords or keys, for example a test account to sign in. They go in a private file called .env on your computer, never in the chat. TestPilot only checks that they are filled in.',
         kind: 'action',
         question: () => 'Add the credentials TestPilot needs to the .env file.',
         why: 'Secrets stay on your computer in .env, which git ignores. TestPilot only checks that each key is filled in; it never reads the values into the chat.',
@@ -221,6 +234,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'SCAFFOLD',
         title: 'Create the project framework',
+        plain: 'TestPilot creates the folders and starter files your tests need. You see the full list before anything is written.',
         kind: 'action',
         question: ctx => (ctx.config.existing?.mode === 'extend' ? 'Can I add TestPilot\'s files (plans, skills, AGENTS.md) to your existing framework?' : 'Can I create the project framework?'),
         why: 'You see every file before anything is written, and nothing is overwritten without your consent.',
@@ -233,6 +247,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'APP_UNDER_TEST',
         title: 'The application under test',
+        plain: 'Tell TestPilot where your app is: the link you open in the browser, or the app file. Use a test or staging copy, not the live site your customers use.',
         kind: 'text',
         allowFreeText: true,
         question: ctx =>
@@ -270,6 +285,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'EXTRAS',
         title: 'Anything else?',
+        plain: 'Optional extras. "Explore" lets TestPilot look around your app first, so the tests use the real names of buttons and fields.',
         kind: 'multi',
         question: () => 'Anything else before we look at test cases? Pick any, or none.',
         why: 'These are optional add-ons. Exploring the app first gives better locators for generated tests.',
@@ -283,6 +299,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'TEST_CASES',
         title: 'Import and review test cases',
+        plain: 'TestPilot reads your test cases and tells you which ones are clear enough to automate, and how to fix the unclear ones.',
         kind: 'action',
         question: ctx => (ctx.config.integrations.testCaseSource === 'none' ? 'You have no test cases yet. Shall I draft some from the app or from your requirements?' : 'Let\'s import your test cases and review them.'),
         why: 'Automation is only as good as the test cases behind it; the review catches gaps before code is written.',
@@ -297,6 +314,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'PLAN',
         title: 'Automation plan',
+        plain: 'The plan lists which tests get automated first. You say OK before any test code is written.',
         kind: 'action',
         question: () => 'Shall I build the automation plan from the reviewed test cases?',
         why: 'The plan is the contract: what gets automated first, what stays manual, and the risks. A named person approves it before code is generated.',
@@ -308,6 +326,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'GENERATE',
         title: 'Generate tests',
+        plain: 'TestPilot writes the test code for you, one test per test case.',
         kind: 'action',
         question: () => 'Shall I write the tests for the first wave?',
         why: 'Tests are written in small batches, each tagged with its test-case id, so every result traces back.',
@@ -319,6 +338,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'RUN',
         title: 'Run and fix',
+        plain: 'TestPilot runs the tests in a browser and explains any failure in plain words.',
         kind: 'action',
         question: () => 'Shall I run the new tests?',
         why: 'A test only counts as done after it passes twice in a row.',
@@ -330,6 +350,7 @@ export const STEPS: StepDef[] = [
     {
         id: 'REPORT',
         title: 'Report and CI',
+        plain: 'Share the results with your team and make the tests run automatically.',
         kind: 'action',
         question: () => 'Shall I create the report and the CI pipeline, and send results to your test-management tool?',
         why: 'Results belong where your team already looks.',
@@ -396,6 +417,7 @@ export function viewStep(id: string, ctx: WizardContext): StepView {
         kind: def.kind,
         question: def.question(ctx),
         why: def.why,
+        plain: def.plain,
         options: def.options?.(ctx),
         recommended: def.recommended?.(ctx),
         allowFreeText: def.allowFreeText ?? false,
