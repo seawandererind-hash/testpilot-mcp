@@ -1,7 +1,7 @@
 {
   "name": "testpilot",
   "displayName": "TestPilot",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Guided test automation for web, API, mobile and desktop apps: sets up Playwright (TypeScript or JavaScript), Selenium with Java or Appium, with Page Objects or Cucumber BDD, imports test cases from Jira, Xray, TestRail, BrowserStack, Azure DevOps, Excel or Word, reviews them, plans, writes and runs the tests.",
   "author": {
     "name": "Surya Bhise"

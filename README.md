@@ -75,7 +75,7 @@ You need Node.js 22.19 or newer. [docs/install.md](docs/install.md) has the step
 
 **Cursor**: click the button, then **Install** in Cursor.
 
-[![Add TestPilot to Cursor](https://cursor.com/deeplink/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=testpilot&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImh0dHBzOi8vZ2l0aHViLmNvbS9zZWF3YW5kZXJlcmluZC1oYXNoL3Rlc3RwaWxvdC1tY3AvcmVsZWFzZXMvZG93bmxvYWQvdjAuMS41L3Rlc3RwaWxvdC1tY3AtMC4xLjUudGd6Il19)
+[![Add TestPilot to Cursor](https://cursor.com/deeplink/mcp-install-dark.png)](https://cursor.com/en/install-mcp?name=testpilot&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsImh0dHBzOi8vZ2l0aHViLmNvbS9zZWF3YW5kZXJlcmluZC1oYXNoL3Rlc3RwaWxvdC1tY3AvcmVsZWFzZXMvZG93bmxvYWQvdjAuMS42L3Rlc3RwaWxvdC1tY3AtMC4xLjYudGd6Il19)
 
 Teams on Cursor's Teams or Enterprise plans can also offer TestPilot as a plugin in their own marketplace: an admin opens **Dashboard → Plugins & MCPs → Team Marketplaces → Add Marketplace → Import from Repo** and pastes `https://github.com/seawandererind-hash/testpilot-mcp`. Everyone then finds **testpilot** under **Customize** and clicks **Install**.
 
@@ -93,7 +93,7 @@ claude plugin install testpilot@testpilot-mcp
   "mcpServers": {
     "testpilot": {
       "command": "npx",
-      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.5/testpilot-mcp-0.1.5.tgz"]
+      "args": ["-y", "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.6/testpilot-mcp-0.1.6.tgz"]
     }
   }
 }
