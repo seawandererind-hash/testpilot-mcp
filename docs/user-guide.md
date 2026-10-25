@@ -9,6 +9,8 @@ This guide walks through one complete session: a web shop, test cases in an Exce
 - You know the address of a **test** environment, for example `https://staging.shop.example.com`. Never use production.
 - You have the test cases somewhere: an Excel or Word file, Jira, TestRail, BrowserStack or similar.
 
+**No test cases, or new to testing?** Skip this guide and say "test my app at <address>" instead. [beginners.md](beginners.md) shows that shorter path: TestPilot checks the app, writes starter tests and runs them, with no questions beyond the address.
+
 ## 1. Start
 
 Say: **"Set up test automation for this repo."**

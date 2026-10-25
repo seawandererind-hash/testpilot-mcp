@@ -1,11 +1,19 @@
 ---
 name: testpilot
-description: Set up, plan, write and run automated tests for this repository with the TestPilot MCP tools. Use when someone asks to start test automation, import or review test cases (Jira, Xray, Zephyr, TestRail, BrowserStack, Azure DevOps, Excel, CSV, Word, Gherkin), build an automation plan, generate or fix Playwright, Selenium (Java) or Appium tests, run tests, or asks "where are we" with testing.
+description: Set up, plan, write and run automated tests for this repository with the TestPilot MCP tools. Use when someone asks to test their app or website (even with no testing knowledge), to start test automation, import or review test cases (Jira, Xray, Zephyr, TestRail, BrowserStack, Azure DevOps, Excel, CSV, Word, Gherkin), build an automation plan, generate or fix Playwright, Selenium (Java) or Appium tests, run tests, or asks "where are we" with testing.
 ---
 
 # Test automation with TestPilot
 
 TestPilot is an MCP server that guides the whole flow and saves every answer and decision in `.testpilot/` in the repository, so any AI tool or teammate can continue later.
+
+## Someone new to testing, or "just test my app"
+
+1. Ask for the address of the app (the link they open in the browser) and whether it is a test copy or the live site.
+2. Call `test_my_app` with `action: "start"` and the `url`. Tell them in one sentence what it will do, and pass `userApproved: true` only after they say yes. It sets up Playwright with the recommended choices, checks every page and writes starter tests.
+3. Explain the findings in plain words: problems first, each with what it means for the people using the app, then what works.
+4. Offer to turn the starter tests into automated tests: `test_my_app` with `action: "make-tests"` (again after a yes). Afterwards offer to add tests for things they describe in their own words (`save_test_case`, then `make-tests`), and `action: "check"` after each release.
+5. For phone or desktop apps, use the wizard below and read out each question's "in plain words" text. "Not sure" picks the recommended answer. Use `explain_testing` whenever a testing word comes up.
 
 ## Start or continue
 
