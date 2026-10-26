@@ -20,7 +20,7 @@ You can run plain-English tests in two ways. Both read the same test files in `a
 | Extra cost | Nothing extra (it uses your chat's normal usage) | A few cents per test, paid to the model provider |
 | Works on | **Websites only** for now | Websites, Android, iPhone, HarmonyOS, desktop apps |
 | You need to | Keep the chat open while it runs (a few minutes per test) | Nothing: it runs by itself, also in CI at night |
-| What you get | A **normal Playwright test** (`tests/recorded/…`) that then runs fast, free and without any AI | Midscene's visual replay report for every run; the AI runs every time |
+| What you get | A **normal test in your project's style** (Page Objects, BDD or Selenium Java) that then runs fast, free and without any AI | Midscene's visual replay report for every run; the AI runs every time |
 
 **Why can't Midscene just use my Cursor key?** Cursor does not give its key to other programs; it only
 lets the AI in its own chat use it. So TestPilot turns it around: in way A, the chat's AI is the brain
@@ -39,8 +39,11 @@ and TestPilot is its hands and eyes in the browser.
    tells you what it did. Simple steps ("click Sign in", "type qa@example.com into Email") TestPilot does
    by itself; for longer sentences ("fill in the password and press sign in") the chat's AI works out the
    single actions. If a step looks like paying, ordering, deleting or sending, it asks you first.
-5. At the end it shows you the test it wrote (for example `tests/recorded/shop-1-sign-in.spec.ts`).
-   Say yes to save it.
+5. At the end it shows you the test it wrote, **in your project's own style**: in a Page Object project
+   the buttons and fields go into your page objects (`src/pages/…`) and the test into `tests/…`; in a BDD
+   project you get a `.feature` file plus step definitions; in a Selenium Java project a TestNG test and Java
+   page objects. Your own code in those files is kept. Say yes to save it. It is also saved as a test case,
+   so it shows up in the plan and coverage like your imported ones.
 6. Say **"run that test"**. From now on it is a normal test: fast, free, and it runs in CI without any AI.
 
 Good to know:
