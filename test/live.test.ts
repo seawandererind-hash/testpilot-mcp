@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer as createHttpServer, type Server } from 'node:http';
 import path from 'node:path';
@@ -13,7 +13,7 @@ import { resolveStepValue } from '../src/live/engine.js';
 import { defaultHeaded, encodeCommand, isRiskyTarget, isSensitiveTarget, LineBuffer, locatorExpression, parseDriverLine } from '../src/live/protocol.js';
 import { mergeIntoExploration, type Recording, recordingToSpec, renderLiveSection, type VerifiedElement } from '../src/live/recording.js';
 import { closeAllSessions, type DriverFactory, setDriverFactory } from '../src/live/session.js';
-import { connect, tempRepo } from './helpers.js';
+import { answerWebSetup, connect, tempRepo } from './helpers.js';
 
 const HOME = ['- heading "Demo Shop" [level=1]', '- text: Email', '- textbox "Email"', '- text: Password', '- textbox "Password"', '- button "Sign in"', '- link "Products":', '  - /url: /products.html'].join('\n');
 const PRODUCTS = ['- heading "Products" [level=1]', '- list:', '  - listitem:', '    - text: Red shoes', '    - button "Add to cart"', '  - listitem:', '    - text: Blue hat', '    - button "Add to cart"'].join('\n');
@@ -399,6 +399,37 @@ describe('live_test tool (fake browser)', () => {
         }
     });
 
+    for (const [style, overrides, main, expected] of [
+        ['BDD', { PATTERN: 'bdd' }, 'features/general/SHOP-9.feature', 'And Click the "Sign in" button'],
+        ['Selenium Java', { FRAMEWORK: 'selenium', LANGUAGE: 'java' }, 'src/test/java/com/demoapp/tests/tests/general/SHOP_9Test.java', 'homePage.click(homePage.signInButton);']
+    ] as const) {
+        it(`saves a no-key AI test in the project's style: ${style}`, async () => {
+            setDriverFactory(fakeDriver([]));
+            const root = tempRepo();
+            const c = await connect(root, 'legacy');
+            try {
+                await answerWebSetup(c, root, { TEST_CASE_SOURCE: 'csv', ...overrides });
+                const sc = await c.call('preview_scaffold');
+                await c.call('scaffold_project', { confirmToken: sc.structuredContent.confirmToken, userApproved: true });
+                mkdirSync(path.join(root, 'ai-tests/cases/web'), { recursive: true });
+                writeFileSync(path.join(root, 'ai-tests/cases/web/login.yaml'), 'cases:\n  - name: SHOP-9 sign in\n    steps:\n      - aiInput: { prompt: Email, value: "${TEST_USER_EMAIL}" }\n      - aiInput: { prompt: Password, value: "${TEST_USER_PASSWORD}" }\n      - aiTap: Sign in\n      - aiAssert: The Products page is displayed\n');
+                await c.call('live_test', { action: 'start', aiFile: 'login', url: 'http://localhost:4599/' });
+                expect((await c.call('live_test', { action: 'auto' })).structuredContent.needsHelp).toBeNull();
+                const preview = await c.call('live_test', { action: 'finish' });
+                expect(preview.structuredContent.spec.path).toBe(main);
+                const done = await c.call('live_test', { action: 'finish', name: 'shop-9-sign-in', confirmToken: preview.structuredContent.confirmToken, userApproved: true });
+                expect(done.isError, done.content[0].text).toBeFalsy();
+                const file = readFileSync(path.join(root, main), 'utf8');
+                expect(file).toContain(expected);
+                expect(file).not.toContain(SECRET);
+                expect(existsSync(path.join(root, 'tests/recorded'))).toBe(false);
+                expect(JSON.parse(readFileSync(path.join(root, '.testpilot/test-cases/normalized/SHOP-9.json'), 'utf8')).source.type).toBe('ai-test');
+            } finally {
+                await c.close();
+            }
+        });
+    }
+
     it('points mobile apps to explore_app and Java projects to generate_tests', async () => {
         setDriverFactory(fakeDriver([]));
         const mobile = tempRepo({ '.testpilot/config.yaml': 'appType: android\n' });
@@ -567,4 +598,55 @@ describe.skipIf(!process.env.TESTPILOT_E2E)('live_test in a real browser', () =>
         expect(run.stdout).toContain('1 passed');
         expect(readFileSync(path.join(root, 'tests/recorded/shop-1-sign-in-shows-the-products.spec.ts'), 'utf8')).not.toContain(SECRET);
     }, 180_000);
+    it('saves a no-key AI test as Page Objects in a scaffolded project, and it passes', async () => {
+        const site = path.resolve('examples/demo-shop/site');
+        http = createHttpServer((req, res) => {
+            const file = path.join(site, req.url === '/' ? 'index.html' : (req.url ?? '').split('?')[0]);
+            if (!file.startsWith(site) || !existsSync(file)) return void res.writeHead(404).end();
+            res.writeHead(200, { 'content-type': 'text/html' }).end(readFileSync(file));
+        });
+        await new Promise<void>(r => http!.listen(0, '127.0.0.1', r));
+        const base = `http://127.0.0.1:${(http.address() as { port: number }).port}`;
+        const root = tempRepo();
+        const c = await connect(root, 'modern');
+        try {
+            await answerWebSetup(c, root, { TEST_CASE_SOURCE: 'csv' });
+            const sc = await c.call('preview_scaffold');
+            const made = await c.call('scaffold_project', { confirmToken: sc.structuredContent.confirmToken, userApproved: true });
+            expect(made.isError, made.content[0].text).toBeFalsy();
+            writeFileSync(path.join(root, '.env'), `APP_BASE_URL=${base}\nTEST_USER_EMAIL=qa@example.com\nTEST_USER_PASSWORD=${SECRET}\n`);
+            mkdirSync(path.join(root, 'ai-tests/cases/web'), { recursive: true });
+            writeFileSync(path.join(root, 'ai-tests/cases/web/login.yaml'), ['cases:', '  - name: SHOP-9 sign in shows the products', '    steps:', '      - gotoUrl: /', '      - aiAct: Type the email and password, then sign in', '      - aiAssert: The Products page is displayed'].join('\n'));
+            execSync('npm install --no-audit --no-fund', { cwd: root, stdio: 'pipe', timeout: 5 * 60_000 });
+            const start = await c.call('live_test', { action: 'start', aiFile: 'login', headed: false });
+            expect(start.isError, start.content[0].text).toBeFalsy();
+            const first = await c.call('live_test', { action: 'auto' });
+            expect(first.structuredContent.nextItem, first.content[0].text).toBe(1);
+            // The chat's AI signs in from the element list.
+            for (const step of [
+                { action: 'fill', target: { role: 'textbox', name: 'Email' }, valueFromEnv: 'TEST_USER_EMAIL' },
+                { action: 'fill', target: { role: 'textbox', name: 'Password' }, valueFromEnv: 'TEST_USER_PASSWORD' },
+                { action: 'click', target: { role: 'button', name: 'Sign in' } }
+            ]) {
+                const res = await c.call('live_test', { action: 'step', step });
+                expect(res.structuredContent?.ok, res.content[0].text).toBe(true);
+            }
+            const rest = await c.call('live_test', { action: 'auto', startAt: 2 });
+            expect(rest.structuredContent.needsHelp, rest.content[0].text).toBeNull();
+            const preview = await c.call('live_test', { action: 'finish' });
+            expect(preview.content[0].text).toContain('Page Object Model');
+            expect(preview.structuredContent.spec.path).toBe('tests/general/SHOP-9.spec.ts');
+            const written = await c.call('live_test', { action: 'finish', name: 'shop-9-sign-in-shows-the-products', confirmToken: preview.structuredContent.confirmToken, userApproved: true });
+            expect(written.isError, written.content[0].text).toBeFalsy();
+            const spec = readFileSync(path.join(root, 'tests/general/SHOP-9.spec.ts'), 'utf8');
+            expect(spec).toContain('homePage.signInButton.click()');
+            expect(spec).not.toContain(SECRET);
+            expect(readFileSync(path.join(root, 'src/pages/HomePage.ts'), 'utf8')).toContain("getByRole('button', { name: 'Sign in' })");
+            const run = await c.call('run_tests', { files: ['tests/general/SHOP-9.spec.ts'], userApproved: true });
+            expect(run.structuredContent?.run?.stats?.failed, run.content[0].text).toBe(0);
+            expect(run.structuredContent?.run?.stats?.passed, run.content[0].text).toBe(1);
+        } finally {
+            await c.close();
+        }
+    }, 600_000);
 });

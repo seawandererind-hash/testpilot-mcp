@@ -69,6 +69,9 @@ function cleanName(s: string): string {
 
 function valueFor(field: string, step: string, data?: string): ValueSource {
     const quoted = quotedIn(step).filter(q => q.toLowerCase() !== field.toLowerCase());
+    // "${TEST_USER_PASSWORD}" names a .env key; the value itself is never in the case.
+    const envRef = [...quoted, data?.trim() ?? ''].map(q => q.match(/^\$\{([A-Z][A-Z0-9_]*)\}$/)).find(Boolean);
+    if (envRef) return { kind: 'env', name: envRef[1] };
     const isPassword = /pass ?word|passcode|\bpin\b/i.test(field);
     const isEmail = /e-?mail|user ?name|login/i.test(field);
     if (quoted.length && !/\[REDACTED\]/.test(quoted[0])) return { kind: 'literal', value: quoted[0] };

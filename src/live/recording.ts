@@ -29,6 +29,8 @@ export interface Recording {
     id: string;
     caseId?: string;
     title?: string;
+    /** The plain-English AI test this recording carried out (no-key mode). */
+    aiTest?: { file: string; name: string };
     startUrl: string;
     startedAt: string;
     finishedAt?: string;
@@ -257,4 +259,66 @@ export function renderLiveSection(existing: string | undefined, pages: ExploredP
     const end = base.indexOf(README_END);
     if (start >= 0 && end > start) return base.slice(0, start) + section + base.slice(end + README_END.length);
     return `${base.replace(/\s*$/, '\n')}\n${section}\n`;
+}
+
+const ROLE_WORD: Record<string, string> = { button: 'button', link: 'link', tab: 'tab', menuitem: 'menu item', checkbox: 'checkbox', radio: 'radio button', textbox: 'field', searchbox: 'field', combobox: 'dropdown', heading: 'heading' };
+
+/** The words a person would use for a target, quoted so the step parser keeps the name intact. */
+function targetWords(t: LiveTarget | undefined): string {
+    if (!t) return 'the page';
+    const name = t.name ?? t.label ?? t.placeholder ?? t.text ?? t.testId ?? t.css ?? '';
+    const word = t.role ? ROLE_WORD[t.role] : t.label || t.placeholder ? 'field' : undefined;
+    return `the "${name.replace(/"/g, "'")}"${word ? ` ${word}` : ''}`;
+}
+
+function valueWords(v: RecordedValue | undefined): string {
+    if (!v) return '""';
+    return v.kind === 'env' ? `"\${${v.name}}"` : `"${v.value.replace(/"/g, "'")}"`;
+}
+
+/**
+ * Writes the steps that worked as a test case in plain words, so the project's own generator
+ * turns it into tests in the project's style (page objects, BDD features, Selenium Java).
+ * Every sentence is one the step parser reads back into exactly the recorded action.
+ */
+export function recordingToSteps(rec: Recording): string[] {
+    const start = pathOf(rec.startUrl) || '/';
+    const out = [`Open ${start}`];
+    for (const s of rec.steps.filter(x => x.result === 'ok')) {
+        const v = s.value?.kind === 'literal' ? s.value.value : undefined;
+        switch (s.action) {
+            case 'goto':
+                out.push(`Open ${v && /^https?:/i.test(v) ? pathOf(v) : (v ?? '/')}`);
+                break;
+            case 'click':
+                out.push(`Click ${targetWords(s.target)}`);
+                break;
+            case 'fill':
+                out.push(s.value?.kind === 'literal' && s.value.value === '' ? `Clear ${targetWords(s.target)}` : `Enter ${valueWords(s.value)} in ${targetWords(s.target)}`);
+                break;
+            case 'select':
+                out.push(`Select ${valueWords(s.value)} from ${targetWords(s.target)}`);
+                break;
+            case 'check':
+            case 'uncheck':
+                out.push(`${s.action === 'check' ? 'Check' : 'Uncheck'} ${targetWords({ ...s.target, role: undefined })} checkbox`);
+                break;
+            case 'press':
+                out.push(`Press ${v ?? 'Enter'}`);
+                break;
+            case 'hover':
+                out.push(`Hover over ${targetWords(s.target)}`);
+                break;
+            case 'expectVisible':
+                out.push(s.target?.role === 'heading' ? `Verify the ${s.target.name ?? ''} page is displayed` : `Verify "${(s.target?.name ?? s.target?.text ?? s.target?.label ?? '').replace(/"/g, "'")}" is displayed`);
+                break;
+            case 'expectText':
+                out.push(`Verify "${(v ?? '').replace(/"/g, "'")}" is displayed`);
+                break;
+            case 'expectUrl':
+                out.push(`Verify the URL contains ${v ?? '/'}`);
+                break;
+        }
+    }
+    return out;
 }
