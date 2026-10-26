@@ -7,7 +7,7 @@ It asks one question at a time, explains every choice in plain language, preview
 - **Web** with Playwright, **Android and iOS** with Appium, **Windows and macOS desktop** with Appium, **Electron** and **API** with Playwright.
 - **Test cases from** Jira, Xray, Zephyr Scale, TestRail, BrowserStack Test Management, Azure Test Plans, Excel, CSV, Word, Gherkin and Markdown.
 - **Power features**: watch it test a case live in a real browser, self-healing locators with your approval, failure stories from traces, flaky-test quarantine, a quality gate for test code, explained accessibility checks, visual checks that hide changing areas, a coverage and traceability map, a team dashboard, and one-request add-ons (log in once, test-data factory, faster CI, cloud browsers, API tests from OpenAPI, companion MCP servers, company rules). See [docs/power-features.md](docs/power-features.md).
-- **Plain-English AI tests** (new in 0.1.7): describe a test in your own words and an AI that sees the screen carries it out on websites, Android, iPhone, HarmonyOS or desktop apps, reads data off the screen and checks results, with a visual replay of every step. Powered by Midscene.js; your normal tests stay as they are. See [docs/ai-steps.md](docs/ai-steps.md).
+- **Plain-English AI tests** (new in 0.1.7): describe a test in your own words and an AI that sees the screen carries it out on websites, Android, iPhone, HarmonyOS or desktop apps, reads data off the screen and checks results, with a visual replay of every step. Powered by Midscene.js; your normal tests stay as they are. **New in 0.1.8:** no AI key? On websites the AI already in your chat (Cursor, Claude Code, Antigravity) can carry the test out and save it as a normal test. See [docs/ai-steps.md](docs/ai-steps.md).
 - **Results back to** Xray, Zephyr Scale, TestRail, BrowserStack Test Management and Azure Test Plans, plus HTML and Markdown reports and CI pipelines for GitHub Actions, Azure DevOps, GitLab and Jenkins.
 
 **Start here:** say **"Set up test automation"** (or use `/qa-setup`). TestPilot first asks what kind of app you have (website, Android, iPhone, desktop and more), then which framework, then which language, one question at a time, and saves every answer in `.testpilot/`.
@@ -138,7 +138,7 @@ More in [docs/security.md](docs/security.md).
 | `quality_scan` | Quality gate for test code, explained accessibility checks (WCAG 2.2), visual checks with smart masks |
 | `insights` | Coverage and traceability map, metrics, team dashboard (shown as an interactive view where MCP Apps are supported) |
 | `add_capability` | Log in once, test-data factory, faster CI, cloud browsers, API tests from OpenAPI, companion MCP servers, company rule pack, plain-English AI tests |
-| `ai_tests` | Plain-English AI tests (Midscene): model settings, write from your words or from imported cases, check the model, run with a visual replay report |
+| `ai_tests` | Plain-English AI tests (Midscene): model settings, write from your words or from imported cases, check the model, run with a visual replay report, or `drive` with no key: the AI in your chat does it and it is saved as a normal test |
 | `demo_project` | A practice shop with the wizard filled in, for demos and first tries |
 | `hosted_workspace` | Hosted mode only: add shared files, download a zip, open a pull request |
 

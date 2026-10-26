@@ -10,6 +10,49 @@ team), pinned to version 1.15.0. It works for **websites, Android, iPhone/iOS, H
 apps (Windows, macOS, Linux)**, whatever language your normal tests use: the AI tests live in their own
 folder, `ai-tests/`, and your existing tests are not changed.
 
+## Two ways to run them: with a model key, or with the AI in your chat
+
+You can run plain-English tests in two ways. Both read the same test files in `ai-tests/cases/`.
+
+| | **A. Use the AI in your chat (no key)** | **B. Use a separate AI model key (Midscene)** |
+|---|---|---|
+| What thinks | The AI you are already chatting with in Cursor, Claude Code or Antigravity, on your normal subscription | A vision model such as Google Gemini, with its own API key in `.env` |
+| Extra cost | Nothing extra (it uses your chat's normal usage) | A few cents per test, paid to the model provider |
+| Works on | **Websites only** for now | Websites, Android, iPhone, HarmonyOS, desktop apps |
+| You need to | Keep the chat open while it runs (a few minutes per test) | Nothing: it runs by itself, also in CI at night |
+| What you get | A **normal Playwright test** (`tests/recorded/…`) that then runs fast, free and without any AI | Midscene's visual replay report for every run; the AI runs every time |
+
+**Why can't Midscene just use my Cursor key?** Cursor does not give its key to other programs; it only
+lets the AI in its own chat use it. So TestPilot turns it around: in way A, the chat's AI is the brain
+and TestPilot is its hands and eyes in the browser.
+
+### Way A, step by step (Cursor on Windows; Claude Code and Antigravity work the same)
+
+1. Make sure TestPilot is set up for a website and the plain-English tests are added (say **"add
+   plain-English AI tests"** and say yes to the preview). You do **not** need to install anything else
+   or add a key. If your Playwright tests already run, the browser is ready; otherwise run
+   `npx playwright install chromium` once in the terminal.
+2. Write a test in your own words, for example: *"Write an AI test: sign in, check the Products page
+   shows, and tell me how many products there are."* Say yes when it shows you the steps.
+3. Say: **"Run that AI test with your own AI, no key."** (or: *"drive the AI test login"*).
+4. A browser window opens on your test website. Watch: the chat's AI reads the page, does each step and
+   tells you what it did. Simple steps ("click Sign in", "type qa@example.com into Email") TestPilot does
+   by itself; for longer sentences ("fill in the password and press sign in") the chat's AI works out the
+   single actions. If a step looks like paying, ordering, deleting or sending, it asks you first.
+5. At the end it shows you the test it wrote (for example `tests/recorded/shop-1-sign-in.spec.ts`).
+   Say yes to save it.
+6. Say **"run that test"**. From now on it is a normal test: fast, free, and it runs in CI without any AI.
+
+Good to know:
+
+- Questions like "how many products are there?" are answered in the chat; to keep one as a check, ask the AI
+  to "keep that as a check" and it records the text it saw.
+- Passwords: write `${TEST_USER_PASSWORD}` in the test (or let the AI use the `.env` key). The value is
+  never shown in the chat or saved in the test.
+- Under the hood this is `ai_tests` action `drive`, then `live_test` with `aiFile`. The chat's AI can also
+  look at a screenshot (`image: true`) when the list of buttons and fields is not enough.
+- Cursor tip: Cursor's Agent mode (not Ask mode) is needed, because the AI has to call TestPilot's tools.
+
 ## When to use it (and when not)
 
 | Good for | Better with normal tests |
@@ -39,7 +82,10 @@ Say **"add plain-English AI tests"** (or use `/qa-ai`). Your AI tool calls `add_
 Say yes, and say yes again to installing the packages (or run `npm install` inside `ai-tests/`).
 The platform comes from your app type; add another later with `platforms`, for example `["ios"]`.
 
-### 2. Pick an AI model and put its settings in `.env`
+### 2. Pick an AI model and put its settings in `.env` (way B only)
+
+Using way A (the AI in your chat)? Skip this step and step 5; see "Way A, step by step" above.
+
 
 The AI must be a **vision model that can point at things on the screen**. Claude (and the ChatGPT app)
 cannot be used for this part; these can. Pick one, create an API key on the provider's site, and add
