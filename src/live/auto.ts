@@ -13,6 +13,10 @@ export interface CaseItem {
     text: string;
     kind: 'action' | 'check';
     intent: ActionIntent | CheckIntent;
+    /** Hand this item to the AI with this instruction (plain-English AI steps). */
+    help?: string;
+    /** Nothing to do in the browser, for this reason. */
+    skip?: string;
 }
 
 /** The case's steps and expected results, in order, as parsed intents. */
@@ -46,16 +50,27 @@ export function matchElement(name: string, roles: string[], elements: ExploredEl
     return partial.length === 1 && partial[0].count === 1 ? partial[0] : undefined;
 }
 
+function samePage(path: string, startUrl: string): boolean {
+    try {
+        const norm = (u: URL) => `${u.origin}${u.pathname.replace(/\/(index\.html?)?$/, '')}${u.search}`;
+        return norm(new URL(path, startUrl)) === norm(new URL(startUrl));
+    } catch {
+        return false;
+    }
+}
+
 const target = (e: ExploredElement) => ({ role: e.role, name: e.name });
 
 /** Maps one parsed case item to live steps on the current page. */
 export function planItem(item: CaseItem, elements: ExploredElement[], ctx: { isFirst: boolean; atStart: boolean; startUrl: string }): Plan {
+    if (item.skip) return { kind: 'skip', note: item.skip };
+    if (item.help) return { kind: 'help', reason: item.help };
     const i = item.intent;
     if (item.kind === 'action') {
         const a = i as ActionIntent;
         switch (a.kind) {
             case 'open': {
-                if (a.path) return { kind: 'steps', steps: [{ action: 'goto', value: a.path }] };
+                if (a.path) return ctx.atStart && samePage(a.path, ctx.startUrl) ? { kind: 'skip', note: 'The start page is already open.' } : { kind: 'steps', steps: [{ action: 'goto', value: a.path }] };
                 if (/^(?:the\s+)?(app|application|site|web ?site|home ?page|home|start page|landing page|login|log ?in|sign ?in)$/i.test(a.target)) {
                     return ctx.atStart ? { kind: 'skip', note: 'The start page is already open.' } : { kind: 'steps', steps: [{ action: 'goto', value: ctx.startUrl }] };
                 }

@@ -59,12 +59,12 @@ export function registerPrompts(server: McpServer): void {
         'qa-ai',
         {
             title: 'Plain-English AI tests',
-            description: 'Describe a test in your own words and an AI that looks at the screen carries it out (websites, Android, iPhone, desktop), with a visual replay report. Powered by Midscene.',
+            description: 'Describe a test in your own words and an AI that looks at the screen carries it out (websites, Android, iPhone, desktop), with a visual replay report. Powered by Midscene; on websites it also works with no AI key, using the AI in your chat.',
             argsSchema: z.object({ test: z.string().optional().describe('What the test should do, in your own words') })
         },
         ({ test }) =>
             user(
-                `I want plain-English AI tests. Call ai_tests with action "status". If they are not set up, explain in two sentences what they are, then call add_capability with capability "ai-steps", show me the preview and ask before writing (install: true installs the packages). If model keys are missing, call ai_tests action "models", recommend one, and tell me exactly which four lines to put in .env myself. ${test ? `Then turn this into an AI test with ai_tests action "write": ${test}. ` : 'Then ask me what the first test should do, in my own words, and save it with ai_tests action "write". '}Show me the steps before saving, then offer to run it (action "run"), and give me the visual report path afterwards, explaining what it shows. ${RULES}`
+                `I want plain-English AI tests. Call ai_tests with action "status". If they are not set up, explain in two sentences what they are, then call add_capability with capability "ai-steps", show me the preview and ask before writing (install: true installs the packages). If model keys are missing, offer me two ways in plain words: (1) no key: for a website, you (the AI in this chat, using my Cursor, Claude or Antigravity subscription) carry out the test in a live browser with ai_tests action "drive" and live_test, and it is saved as a normal test that replays without any AI; (2) a separate AI model key, which runs unattended, also on phones and desktops: call ai_tests action "models", recommend one, and tell me exactly which four lines to put in .env myself. ${test ? `Then turn this into an AI test with ai_tests action "write": ${test}. ` : 'Then ask me what the first test should do, in my own words, and save it with ai_tests action "write". '}Show me the steps before saving, then offer to run it (action "run" with a key, action "drive" without), and afterwards explain the result: the visual report path for "run", or the saved test file for "drive". ${RULES}`
             )
     );
     server.registerPrompt('qa-status', { title: 'Where are we?', description: 'Show where this repository is in the TestPilot workflow.' }, () =>

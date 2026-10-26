@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { ProjectStore } from '../src/core/store.js';
 import { parseAriaSnapshot, readExploration } from '../src/explore/web.js';
+import { aiNodeItems } from '../src/live/ai-case.js';
 import { caseItems, matchElement, planItem } from '../src/live/auto.js';
 import { resolveStepValue } from '../src/live/engine.js';
 import { defaultHeaded, encodeCommand, isRiskyTarget, isSensitiveTarget, LineBuffer, locatorExpression, parseDriverLine } from '../src/live/protocol.js';
@@ -197,6 +198,23 @@ describe('auto mode planning', () => {
     });
 });
 
+describe('plain-English AI steps without a model key', () => {
+    it('matches simple steps and hands the rest to the chat AI', () => {
+        expect(aiNodeItems({ gotoUrl: '/products.html' })[0].intent).toEqual({ kind: 'open', target: '/products.html', path: '/products.html' });
+        expect(aiNodeItems({ aiTap: 'Sign in' })[0].intent).toMatchObject({ kind: 'click', name: 'Sign in' });
+        expect(aiNodeItems({ aiInput: { prompt: 'Password', value: '${TEST_USER_PASSWORD}' } })[0].intent).toEqual({ kind: 'fill', field: 'Password', value: { kind: 'env', name: 'TEST_USER_PASSWORD' } });
+        expect(aiNodeItems({ aiKeyboardPress: { keyName: 'Enter' } })[0].intent).toEqual({ kind: 'press', key: 'Enter' });
+        expect(aiNodeItems({ aiAssert: 'The URL contains /products' })[0]).toMatchObject({ kind: 'check', intent: { kind: 'url' } });
+        expect(aiNodeItems({ aiAct: 'Search for "mug" and add the first result to the basket' })[0].help).toContain('several actions');
+        expect(aiNodeItems({ aiQuery: 'the total as a number' })[0].help).toContain('reads information');
+        expect(aiNodeItems({ sleep: 1000 })[0].skip).toBeTruthy();
+        expect(aiNodeItems({ launch: 'x' })[0].help).toBeTruthy();
+        const home = parseAriaSnapshot(HOME).elements;
+        expect(planItem(aiNodeItems({ gotoUrl: '/' })[0], home, { isFirst: true, atStart: true, startUrl: 'http://localhost:4599/' })).toMatchObject({ kind: 'skip' });
+        expect(planItem(aiNodeItems({ gotoUrl: '/products.html' })[0], home, { isFirst: true, atStart: true, startUrl: 'http://localhost:4599/' })).toMatchObject({ kind: 'steps' });
+    });
+});
+
 /** A pretend browser for the demo shop, so the tool can be tested without Playwright. */
 function fakeDriver(log: Array<Record<string, unknown>>): DriverFactory {
     return async (_store, options) => {
@@ -323,6 +341,64 @@ describe('live_test tool (fake browser)', () => {
         }
     });
 
+    it('carries out a plain-English AI test with no model key, then writes a normal spec', async () => {
+        const log: Array<Record<string, unknown>> = [];
+        setDriverFactory(fakeDriver(log));
+        const root = tempRepo({
+            '.testpilot/config.yaml': 'appType: web\nstack:\n  framework: playwright\n  language: typescript\napp:\n  kind: url\n  ref: http://localhost:4599\n',
+            '.env': `TEST_USER_EMAIL=qa@example.com\nTEST_USER_PASSWORD=${SECRET}\n`,
+            'ai-tests/cases/web/shop.yaml': [
+                'cases:',
+                '  - name: SHOP-9 sign in and see products',
+                '    steps:',
+                '      - gotoUrl: /',
+                '      - aiInput: { prompt: the Email field, value: qa@example.com }',
+                '      - aiAct: Fill in the password and press the sign in button',
+                '      - aiWaitFor: The "Products" heading is shown',
+                '      - aiQuery: Return the product names as a list',
+                '      - sleep: 500',
+                '  - name: SHOP-10 other',
+                '    steps:',
+                '      - aiAssert: something'
+            ].join('\n')
+        });
+        const c = await connect(root, 'modern');
+        try {
+            const drive = await c.call('ai_tests', { action: 'drive', file: 'cases/web/shop.yaml' });
+            expect(drive.isError, drive.content[0].text).toBeFalsy();
+            expect(drive.content[0].text).toContain('no AI model key is needed');
+            expect(drive.structuredContent.next).toEqual({ tool: 'live_test', action: 'start', aiFile: 'ai-tests/cases/web/shop.yaml', aiCase: 'SHOP-9 sign in and see products' });
+            expect(drive.structuredContent.steps.map((s: { by: string }) => s.by)).toEqual(['TestPilot', 'TestPilot', 'you', 'TestPilot', 'you', 'nothing to do']);
+            expect((await c.call('ai_tests', { action: 'drive', file: 'cases/web/shop.yaml', caseName: 'nope' })).content[0].text).toContain('SHOP-10 other');
+
+            const start = await c.call('live_test', { action: 'start', aiFile: 'shop', aiCase: 'SHOP-9' });
+            expect(start.isError, start.content[0].text).toBeFalsy();
+            expect(start.content[0].text).toContain('you are the AI');
+            const first = await c.call('live_test', { action: 'auto' });
+            expect(first.structuredContent.nextItem).toBe(2);
+            expect(first.content[0].text).toContain('several actions');
+            expect(log.filter(l => l.op === 'step').map(l => l.action)).toEqual(['fill']);
+            // The chat AI does the compound step itself.
+            await c.call('live_test', { action: 'step', step: { action: 'fill', target: { role: 'textbox', name: 'Password' }, valueFromEnv: 'TEST_USER_PASSWORD' } });
+            const click = await c.call('live_test', { action: 'step', image: true, step: { action: 'click', target: { role: 'button', name: 'Sign in' } } });
+            expect(click.structuredContent.ok).toBe(true);
+            const second = await c.call('live_test', { action: 'auto', startAt: 3 });
+            expect(second.structuredContent.nextItem).toBe(4);
+            expect(second.content[0].text).toContain('reads information off the screen');
+            const last = await c.call('live_test', { action: 'auto', startAt: 5 });
+            expect(last.structuredContent.needsHelp).toBeNull();
+            const preview = await c.call('live_test', { action: 'finish' });
+            expect(preview.structuredContent.spec.path).toBe('tests/recorded/shop-9-sign-in-and-see-products.spec.ts');
+            const spec = preview.structuredContent.spec.content as string;
+            expect(spec).toContain('SHOP-9 sign in and see products');
+            expect(spec).toContain("fill(fromEnv('TEST_USER_PASSWORD'))");
+            expect(spec).toContain("getByText('Products')");
+            expect(spec).not.toContain(SECRET);
+        } finally {
+            await c.close();
+        }
+    });
+
     it('points mobile apps to explore_app and Java projects to generate_tests', async () => {
         setDriverFactory(fakeDriver([]));
         const mobile = tempRepo({ '.testpilot/config.yaml': 'appType: android\n' });
@@ -422,5 +498,73 @@ describe.skipIf(!process.env.TESTPILOT_E2E)('live_test in a real browser', () =>
         });
         expect(run.status, run.stdout + run.stderr).toBe(0);
         expect(run.stdout).toContain('1 passed');
+    }, 180_000);
+
+    it('carries out a plain-English AI test with no model key, and the saved spec passes', async () => {
+        const site = path.resolve('examples/demo-shop/site');
+        http = createHttpServer((req, res) => {
+            const file = path.join(site, req.url === '/' ? 'index.html' : (req.url ?? '').split('?')[0]);
+            if (!file.startsWith(site) || !existsSync(file)) return void res.writeHead(404).end();
+            res.writeHead(200, { 'content-type': 'text/html' }).end(readFileSync(file));
+        });
+        await new Promise<void>(r => http!.listen(0, '127.0.0.1', r));
+        const base = `http://127.0.0.1:${(http.address() as { port: number }).port}`;
+        const root = tempRepo({
+            '.testpilot/config.yaml': `appType: web\nstack:\n  framework: playwright\n  language: typescript\napp:\n  kind: url\n  ref: ${base}\n`,
+            '.env': `TEST_USER_EMAIL=qa@example.com\nTEST_USER_PASSWORD=${SECRET}\n`,
+            'playwright.config.ts': `import { defineConfig } from '@playwright/test';\nexport default defineConfig({ testDir: './tests', reporter: 'list', use: { baseURL: '${base}' } });\n`,
+            'ai-tests/cases/web/login.yaml': [
+                'cases:',
+                '  - name: SHOP-1 sign in shows the products',
+                '    steps:',
+                '      - gotoUrl: /',
+                '      - aiInput: { prompt: Email, value: "${TEST_USER_EMAIL}" }',
+                '      - aiAct: Type the password and click Sign in',
+                '      - aiAssert: The "Products" heading is shown',
+                '      - aiQuery: Return how many Add to cart buttons there are, as a number'
+            ].join('\n')
+        });
+        symlinkSync(path.join(path.resolve(process.env.TESTPILOT_E2E_PW_DIR ?? '.'), 'node_modules'), path.join(root, 'node_modules'), 'dir');
+        const c = await connect(root, 'modern');
+        try {
+            const drive = await c.call('ai_tests', { action: 'drive', file: 'login' });
+            expect(drive.isError, drive.content[0].text).toBeFalsy();
+            const start = await c.call('live_test', { ...drive.structuredContent.next, headed: false, image: true });
+            expect(start.isError, start.content[0].text).toBeFalsy();
+            expect(start.content.some(p => p.type === 'image')).toBe(true);
+            const first = await c.call('live_test', { action: 'auto' });
+            expect(first.structuredContent.nextItem, first.content[0].text).toBe(2);
+            // Here the chat's AI works out the two actions of the compound step from the element list.
+            for (const step of [
+                { action: 'fill', target: { role: 'textbox', name: 'Password' }, valueFromEnv: 'TEST_USER_PASSWORD' },
+                { action: 'click', target: { role: 'button', name: 'Sign in' } }
+            ]) {
+                const res = await c.call('live_test', { action: 'step', step });
+                expect(res.structuredContent?.ok, res.content[0].text).toBe(true);
+            }
+            const second = await c.call('live_test', { action: 'auto', startAt: 3 });
+            expect(second.structuredContent.nextItem, second.content[0].text).toBe(4);
+            const look = await c.call('live_test', { action: 'snapshot', image: true });
+            expect(look.structuredContent.elements.filter((e: { name: string }) => e.name === 'Add to cart')).toHaveLength(1);
+            expect(look.structuredContent.elements.find((e: { name: string }) => e.name === 'Add to cart').count).toBe(2);
+            const preview = await c.call('live_test', { action: 'finish' });
+            expect(preview.structuredContent.spec.path).toBe('tests/recorded/shop-1-sign-in-shows-the-products.spec.ts');
+            const written = await c.call('live_test', { action: 'finish', name: 'shop-1-sign-in-shows-the-products', confirmToken: preview.structuredContent.confirmToken, userApproved: true });
+            expect(written.isError, written.content[0].text).toBeFalsy();
+        } finally {
+            await c.close();
+        }
+        writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'e2e', version: '1.0.0' }));
+        const run = await new Promise<{ status: number | null; stdout: string; stderr: string }>(resolve => {
+            const child = spawn(process.execPath, [path.join(root, 'node_modules/@playwright/test/cli.js'), 'test'], { cwd: root, env: { ...process.env, TEST_USER_EMAIL: 'qa@example.com', TEST_USER_PASSWORD: SECRET } });
+            let stdout = '';
+            let stderr = '';
+            child.stdout.on('data', d => (stdout += d.toString()));
+            child.stderr.on('data', d => (stderr += d.toString()));
+            child.on('close', status => resolve({ status, stdout, stderr }));
+        });
+        expect(run.status, run.stdout + run.stderr).toBe(0);
+        expect(run.stdout).toContain('1 passed');
+        expect(readFileSync(path.join(root, 'tests/recorded/shop-1-sign-in-shows-the-products.spec.ts'), 'utf8')).not.toContain(SECRET);
     }, 180_000);
 });

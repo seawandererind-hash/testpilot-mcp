@@ -74,7 +74,7 @@ Plain-English tests live in \`${folder}/cases/<platform>/*.yaml\`. A vision mode
 
 ## Rules
 - Model keys (MIDSCENE_MODEL_*) are only in .env. Never ask for them in chat, never print them.
-- Use TestPilot's \`ai_tests\` tool: "status" (what is set up, which keys are missing), "models" (copy-ready model settings), "write" (new case file, preview first), "from-cases" (turn imported test cases into AI cases), "verify" (model check), "run" (asks the user first; costs a little per AI step).
+- Use TestPilot's \`ai_tests\` tool: "status" (what is set up, which keys are missing), "models" (copy-ready model settings), "write" (new case file, preview first), "from-cases" (turn imported test cases into AI cases), "verify" (model check), "run" (asks the user first; costs a little per AI step), "drive" (websites, no model key: you carry out one case yourself with live_test, and it is saved as a normal Playwright test).
 - Every AI step sends a screenshot to the model provider: test accounts and test data only, never production.
 - Write one action per "do" step when it matters which control is used; one sentence is fine for simple flows. Name targets by what a person sees ("the blue Sign in button"), not by code.
 - Every expected result becomes a "check" (aiAssert). Never weaken or delete a check to make a run pass without the user agreeing.

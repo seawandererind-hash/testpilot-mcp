@@ -2,6 +2,7 @@ import { type ChildProcess, spawn } from 'node:child_process';
 
 import type { ExploredElement } from '../explore/web.js';
 import type { ProjectStore } from '../core/store.js';
+import type { AiDrive } from './ai-case.js';
 import { LIVE_DRIVER_SCRIPT } from './driver-script.js';
 import { type DriverReply, encodeCommand, LineBuffer, type LiveCommand, parseDriverLine } from './protocol.js';
 import type { LivePageCapture, RecordedStep } from './recording.js';
@@ -145,6 +146,8 @@ export interface LiveSession {
     headed: boolean;
     caseId?: string;
     name?: string;
+    /** A plain-English AI case driven by the chat's own AI (no model key). */
+    ai?: AiDrive;
     allowProduction: boolean;
     /** Repository-relative screenshot folder. */
     shotsDir: string;
