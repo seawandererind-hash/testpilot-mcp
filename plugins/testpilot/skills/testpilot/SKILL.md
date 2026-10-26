@@ -1,6 +1,6 @@
 ---
 name: testpilot
-description: Set up, plan, write and run automated tests for this repository with the TestPilot MCP tools. Use when someone asks to test their app or website (even with no testing knowledge), to start test automation, import or review test cases (Jira, Xray, Zephyr, TestRail, BrowserStack, Azure DevOps, Excel, CSV, Word, Gherkin), build an automation plan, generate or fix Playwright, Selenium (Java) or Appium tests, run tests, or asks "where are we" with testing.
+description: Set up, plan, write and run automated tests for this repository with the TestPilot MCP tools. Use when someone asks to test their app or website (even with no testing knowledge), to start test automation, import or review test cases (Jira, Xray, Zephyr, TestRail, BrowserStack, Azure DevOps, Excel, CSV, Word, Gherkin), build an automation plan, generate or fix Playwright, Selenium (Java) or Appium tests, write plain-English AI tests (Midscene), run tests, or asks "where are we" with testing.
 ---
 
 # Test automation with TestPilot
@@ -46,6 +46,7 @@ Only when the person gives a website address and asks for a quick check (or pick
 | Check test quality, accessibility or visual changes | `quality_scan`: `gate`, `accessibility`, `visual` |
 | See coverage or a team overview | `insights`: `coverage`, `metrics`, `dashboard` |
 | Log in once, test data, faster CI, cloud browsers, OpenAPI tests, companion MCPs, company rules | `add_capability` with the matching capability |
+| Write tests in plain English that an AI carries out by looking at the screen (Midscene: web, Android, iOS, desktop), read data off the screen, replay runs visually | `add_capability` with `ai-steps`, then `ai_tests`: `models` (settings for .env), `write` or `from-cases`, `verify`, `run` (or the `/qa-ai` prompt) |
 
 ## Rules
 
