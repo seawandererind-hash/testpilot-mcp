@@ -55,6 +55,18 @@ export function registerPrompts(server: McpServer): void {
                 `Give me the TestPilot demo. Call demo_project with action "start"${language ? ` and language "${language}"` : ''} (show me what it will create and ask first). Then follow the demo script it returns one step at a time: before each step, tell me in one sentence what is about to happen and why it matters, then do it and summarise the result in two or three lines. ${RULES}`
             )
     );
+    server.registerPrompt(
+        'qa-ai',
+        {
+            title: 'Plain-English AI tests',
+            description: 'Describe a test in your own words and an AI that looks at the screen carries it out (websites, Android, iPhone, desktop), with a visual replay report. Powered by Midscene.',
+            argsSchema: z.object({ test: z.string().optional().describe('What the test should do, in your own words') })
+        },
+        ({ test }) =>
+            user(
+                `I want plain-English AI tests. Call ai_tests with action "status". If they are not set up, explain in two sentences what they are, then call add_capability with capability "ai-steps", show me the preview and ask before writing (install: true installs the packages). If model keys are missing, call ai_tests action "models", recommend one, and tell me exactly which four lines to put in .env myself. ${test ? `Then turn this into an AI test with ai_tests action "write": ${test}. ` : 'Then ask me what the first test should do, in my own words, and save it with ai_tests action "write". '}Show me the steps before saving, then offer to run it (action "run"), and give me the visual report path afterwards, explaining what it shows. ${RULES}`
+            )
+    );
     server.registerPrompt('qa-status', { title: 'Where are we?', description: 'Show where this repository is in the TestPilot workflow.' }, () =>
         user('Call testpilot_status and tell me in a few lines where we are, what is done, and what the next step is.')
     );

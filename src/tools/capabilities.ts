@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 
+import { AI_PLATFORMS, type AiPlatform } from '../ai/midscene.js';
 import { CAPABILITIES, type Capability, type CapabilityPlan, CLOUD_PROVIDERS, type CloudProvider, COMPANION_IDS, type CompanionId, planCapability, planToken } from '../capabilities/index.js';
 import { POLICY_REPORT } from '../capabilities/org-policy.js';
 import { CI_PROVIDERS } from '../core/schema.js';
@@ -53,6 +54,7 @@ type Args = {
     allowProduction: boolean;
     servers?: CompanionId[];
     policy?: string;
+    platforms?: AiPlatform[];
 };
 
 export function registerCapabilityTools(server: McpServer, options: ServerOptions): void {
@@ -68,6 +70,7 @@ export function registerCapabilityTools(server: McpServer, options: ServerOption
                 '"cloud-grid": run the web tests on BrowserStack, Sauce Labs or LambdaTest (provider).',
                 '"openapi": API tests from an OpenAPI 3 or Swagger 2 file (spec: a repo path or test-environment URL). GET tests run; data-changing ones start as test.fixme.',
                 '"companions": add companion MCP servers (Playwright, Appium, BrowserStack, Atlassian, GitHub) that fit this project to the AI tools\' MCP config files, never removing existing servers.',
+                '"ai-steps": plain-English AI tests (Midscene) in ai-tests/: a vision model reads the screen and carries out steps like "fill the sign-up form but do not send it", reads data off the screen and checks results, with a visual replay report. Works for websites, Android, iOS, HarmonyOS and desktop apps whatever language the project uses; Playwright projects also get aiAct/aiQuery/aiAssert inside coded tests. Needs an AI model key in .env (ai_tests action "models"). Then use the ai_tests tool.',
                 '"org-policy": adopt a company rule pack (policy: repo path or https URL of testpilot.org.yaml) and check the project against it, writing .testpilot/reports/policy.md. Without policy it re-checks against the saved copy straight away.'
             ].join('\n'),
             inputSchema: z.object({
@@ -77,14 +80,15 @@ export function registerCapabilityTools(server: McpServer, options: ServerOption
                 overwrite: z.array(z.string()).default([]).describe('Paths from the preview\'s "exists and differs" list that the user agreed to replace'),
                 userApproved: userApprovedArg,
                 approver: approverArg,
-                install: z.boolean().default(false).describe('test-data, cloud-grid: also run npm install after writing (needs network access)'),
+                install: z.boolean().default(false).describe('test-data, cloud-grid, ai-steps: also run npm install after writing (needs network access)'),
                 shards: z.number().int().min(1).max(32).default(4).describe('ci-speed: how many machines share the full run'),
                 ciProvider: z.enum(CI_PROVIDERS).optional().describe('ci-speed: CI system (default: the saved choice)'),
                 provider: z.enum(CLOUD_PROVIDERS).optional().describe('cloud-grid: which cloud (default: the saved execution target, else BrowserStack)'),
                 spec: z.string().optional().describe('openapi: path of the OpenAPI/Swagger file inside the repository, or an http(s) address of a test environment (default: the API description from the wizard)'),
                 allowProduction: z.boolean().default(false).describe('openapi: allow downloading from an address that does not look like a test environment. Only after the user confirms it is safe.'),
                 servers: z.array(z.enum(COMPANION_IDS)).optional().describe('companions: which servers to add (default: the ones that fit this project)'),
-                policy: z.string().optional().describe('org-policy: repository path or https URL of the company policy file (testpilot.org.yaml). Omit to re-check against the saved copy.')
+                policy: z.string().optional().describe('org-policy: repository path or https URL of the company policy file (testpilot.org.yaml). Omit to re-check against the saved copy.'),
+                platforms: z.array(z.enum(AI_PLATFORMS)).optional().describe('ai-steps: which screens the AI drives (web, android, ios, harmony, computer = desktop). Default: from the app type.')
             }),
             annotations: EXTERNAL
         },
@@ -99,7 +103,8 @@ export function registerCapabilityTools(server: McpServer, options: ServerOption
                 spec: args.spec,
                 allowProduction: args.allowProduction,
                 servers: args.servers,
-                policy: args.policy
+                policy: args.policy,
+                platforms: args.platforms
             });
             if ('error' in outcome) return failure(outcome.error);
             const plan = outcome;
