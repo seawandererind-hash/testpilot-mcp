@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { digestOf } from '../core/confirm.js';
 import type { Config } from '../core/schema.js';
 import type { ProjectStore } from '../core/store.js';
+import { planAiSteps } from './ai-steps.js';
 import { planCiSpeed } from './ci-speed.js';
 import { planCloudGrid } from './cloud-grid.js';
 import { planCompanions } from './companions.js';
@@ -31,6 +32,8 @@ export async function planCapability(store: ProjectStore, config: Config, capabi
             return planCompanions(store, config, input.servers);
         case 'org-policy':
             return planOrgPolicy(store, config, input.policy, input.fetch);
+        case 'ai-steps':
+            return planAiSteps(store, config, input.platforms);
     }
 }
 

@@ -1,12 +1,13 @@
 import { statSync } from 'node:fs';
 
+import type { AiPlatform } from '../ai/midscene.js';
 import type { EnvKey } from '../catalog/env-keys.js';
 import { ENV_EXAMPLE_FILE, parseDotenv } from '../core/env.js';
 import type { Config } from '../core/schema.js';
 import type { ProjectStore } from '../core/store.js';
 import { inTestRoot, type PackManifest, type PlannedFile, planPackageJson } from '../scaffold/engine.js';
 
-export const CAPABILITIES = ['login-once', 'test-data', 'ci-speed', 'cloud-grid', 'openapi', 'companions', 'org-policy'] as const;
+export const CAPABILITIES = ['login-once', 'test-data', 'ci-speed', 'cloud-grid', 'openapi', 'companions', 'org-policy', 'ai-steps'] as const;
 export type Capability = (typeof CAPABILITIES)[number];
 
 export const CLOUD_PROVIDERS = ['browserstack', 'saucelabs', 'lambdatest'] as const;
@@ -44,6 +45,7 @@ export interface CapabilityInput {
     allowProduction?: boolean;
     servers?: CompanionId[];
     policy?: string;
+    platforms?: AiPlatform[];
     /** Injected in tests; defaults to global fetch. */
     fetch?: typeof fetch;
 }

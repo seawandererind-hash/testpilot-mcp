@@ -13,6 +13,13 @@ export interface EnvKey {
 
 /** Keys each integration needs. Values never pass through the AI; only presence and format are reported. */
 export const INTEGRATION_KEYS: Record<string, EnvKey[]> = {
+    // AI steps (Midscene): the vision model that reads the screen. See docs/ai-steps.md.
+    'ai-model': [
+        { name: 'MIDSCENE_MODEL_BASE_URL', description: 'Address of the AI model service (vision model) that reads the screen', whereToGet: 'Copy it from the model list in docs/ai-steps.md (or ai_tests action "models"), e.g. https://generativelanguage.googleapis.com/v1beta/openai/ for Google Gemini.', format: 'url', required: true, secret: false },
+        { name: 'MIDSCENE_MODEL_API_KEY', description: 'API key for that model service (each AI step costs a little money)', whereToGet: 'The provider\'s console, e.g. Google AI Studio → Get API key. Use a key with a spending limit.', format: 'nonempty', required: true, secret: true },
+        { name: 'MIDSCENE_MODEL_NAME', description: 'Model name, e.g. gemini-3.5-flash or qwen3.7-plus', whereToGet: 'Same model list as the address.', format: 'nonempty', required: true, secret: false },
+        { name: 'MIDSCENE_MODEL_FAMILY', description: 'Model family Midscene should expect, e.g. gemini, qwen3, doubao-seed, gpt-6', whereToGet: 'Same model list; it must match the model name.', format: 'nonempty', required: true, secret: false }
+    ],
     app: [
         { name: 'APP_BASE_URL', description: 'Address of the test environment, e.g. https://staging.example.com', whereToGet: 'TestPilot fills this in .env.example when you give the test URL in the app step. Put a different address in .env to override it. Never use production.', format: 'url', required: false, secret: false },
         { name: 'TEST_USER_EMAIL', description: 'Login of a test account', whereToGet: 'A dedicated test user created for automation.', format: 'nonempty', required: false, secret: false },
