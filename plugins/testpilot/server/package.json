@@ -1,11 +1,11 @@
 {
   "name": "@yourorg/testpilot-mcp",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "TestPilot MCP server bundled for the plugin. Built from src/ by scripts/build-plugin.mjs; do not edit.",
   "license": "MIT",
   "type": "module",
   "private": true,
   "testpilot": {
-    "install": "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.6/testpilot-mcp-0.1.6.tgz"
+    "install": "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.7/testpilot-mcp-0.1.7.tgz"
   }
 }
