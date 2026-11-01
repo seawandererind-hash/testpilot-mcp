@@ -39,6 +39,7 @@ Only when the person gives a website address and asks for a quick check (or pick
 
 | When the person wants to | Tool |
 |---|---|
+| Click through TestPilot in the browser instead of chatting ("open the TestPilot app", "is there a UI") | `testpilot_status` with `openApp: true` (or the `/qa-app` prompt); give the person the address it returns |
 | Try TestPilot or show it to a team | `demo_project` (or the `/qa-demo` prompt), then follow the script it returns |
 | Watch a test case run in a real browser | `live_test`: `start`, `auto` with the case id, `step` for anything it hands back, `finish` |
 | Fix tests broken by an app change | `heal_tests`: `propose`, then `apply` after an explicit yes; `explain` for failure stories |

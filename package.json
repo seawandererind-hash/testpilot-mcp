@@ -12,7 +12,7 @@
     "inspect:legacy": "MCP_INSPECTOR_SECRET_STORE=memory npx -y @modelcontextprotocol/inspector@2.10.1 --cli node dist/index.js --protocol-era legacy --method tools/list --strict",
     "inspect:modern": "MCP_INSPECTOR_SECRET_STORE=memory npx -y @modelcontextprotocol/inspector@2.10.1 --cli node dist/index.js --protocol-era modern --method tools/list --strict",
     "start:hosted": "node dist/index.js --remote",
-    "version": "node scripts/sync-version.mjs && node scripts/build-plugin.mjs && git add package.json package-lock.json plugins README.md docs/install.md",
+    "version": "node scripts/sync-version.mjs && node scripts/build-plugin.mjs && git add package.json package-lock.json plugins README.md docs/install.md docs/app.md",
     "build:plugin": "node scripts/build-plugin.mjs"
   },
   "keywords": [
@@ -26,6 +26,7 @@
   "dependencies": {
     "@cucumber/gherkin": "^42.0.1",
     "@cucumber/messages": "^34.2.1",
+    "@modelcontextprotocol/client": "^2.4.0",
     "@modelcontextprotocol/node": "^2.1.1",
     "@modelcontextprotocol/server": "^2.3.1",
     "csv-parse": "^7.0.3",
@@ -36,7 +37,6 @@
     "zod": "^4.6.6"
   },
   "devDependencies": {
-    "@modelcontextprotocol/client": "^2.3.1",
     "@types/node": "^22.20.5",
     "esbuild": "0.28.2",
     "tsx": "^4.23.15",

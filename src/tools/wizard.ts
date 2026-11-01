@@ -4,9 +4,9 @@ import * as z from 'zod/v4';
 import type { RepoDetection } from '../core/detect.js';
 import { checkPrerequisites } from '../core/prereqs.js';
 import type { ProjectStore } from '../core/store.js';
-import { answerStep, currentStepId, quickStartNote, resetToStep, STEP_IDS, type StepView, viewStep, type WizardContext } from '../core/wizard.js';
+import { activeStepIds, answerStep, currentStepId, quickStartNote, resetToStep, STEP_IDS, type StepView, viewStep, type WizardContext } from '../core/wizard.js';
 import { regenerateKnowledge } from './scaffold.js';
-import { clientSupportsForms, guarded, openProject, projectRootArg, READ_ONLY, result, type ServerOptions, WRITES_STATE } from './common.js';
+import { clientSupportsForms, failure, guarded, openProject, projectRootArg, READ_ONLY, result, type ServerOptions, WRITES_STATE } from './common.js';
 
 /** Saves an answer; once the framework exists, also refreshes AGENTS.md and the skills so every AI tool sees the change. */
 function answerAndSync(store: ProjectStore, detection: RepoDetection, step: string, answer: string | string[]) {
@@ -56,12 +56,22 @@ export function registerWizardTools(server: McpServer, options: ServerOptions): 
         {
             title: 'TestPilot status',
             description:
-                'Shows where this repository is in the TestPilot workflow: saved choices, completed steps, approvals and the next step. Call this first in any conversation about test automation in this repo, including when resuming in a different AI tool. In a new repository the next step is the wizard, whose first questions are the kind of app and then the framework and language.',
-            inputSchema: z.object({ projectRoot: projectRootArg }),
+                'Shows where this repository is in the TestPilot workflow: saved choices, completed steps, approvals and the next step. Call this first in any conversation about test automation in this repo, including when resuming in a different AI tool. In a new repository the next step is the wizard, whose first questions are the kind of app and then the framework and language. ' +
+                'With openApp: true it also opens the TestPilot app, a point-and-click page in the browser on this computer for the same setup, imports, runs and reports, when the user asks for the app, a UI, or to use TestPilot without the chat.',
+            inputSchema: z.object({
+                projectRoot: projectRootArg,
+                openApp: z.boolean().optional().describe('Also start the TestPilot app for this repository on this computer and open it in the browser. Only when the user asks for the app or a UI.')
+            }),
             annotations: READ_ONLY
         },
-        guarded('testpilot_status', options, async ({ projectRoot }: { projectRoot?: string }) => {
+        guarded('testpilot_status', options, async ({ projectRoot, openApp }: { projectRoot?: string; openApp?: boolean }) => {
             const { store, detection } = openProject(options, projectRoot);
+            let app: { url: string } | undefined;
+            if (openApp) {
+                if (options.mode === 'remote') return failure('The TestPilot app runs on your own computer. Start it there with: npx -y <TestPilot release link> ui (see docs/app.md).');
+                const { startApp } = await import('../ui-app/server.js');
+                app = await startApp({ root: store.root, open: true });
+            }
             const state = store.readState();
             const config = store.readConfig();
             const ctx: WizardContext = { config, state, detection: detection() };
@@ -72,11 +82,14 @@ export function registerWizardTools(server: McpServer, options: ServerOptions): 
             const summary = store.hasConfig()
                 ? `TestPilot is set up in ${store.root}. ${view ? `Next: ${view.progress}, ${view.title}.` : 'All wizard steps are done.'} ${cases.length} test case(s) imported.${note ? `\n${note}` : ''}`
                 : `TestPilot has not been set up in ${store.root} yet. Start the wizard: call wizard with action "next". Its first question is what kind of app the user is testing (website, Android, iPhone, desktop and more), then which framework and which language. Ask the user each question; do not pick answers for them.`;
-            return result(summary, {
+            const appLine = app ? `\n\nThe TestPilot app is open in the browser at ${app.url} (it stays available while this AI tool is open). If no browser window appeared, give the user this address to open. Everything they do there is saved in the same .testpilot/ folder, so the chat and the app stay in step.` : '';
+            return result(summary + appLine, {
+                ...(app ? { appUrl: app.url } : {}),
                 root: store.root,
                 initialised: store.hasConfig(),
                 config,
                 completedSteps: state.completed,
+                steps: activeStepIds(ctx),
                 approvals: state.approvals,
                 testCases: cases.length,
                 nextStep: view ?? null

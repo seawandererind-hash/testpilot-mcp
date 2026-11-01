@@ -12,6 +12,7 @@ import { createHttpApp, type HttpAppOptions } from './http.js';
 import { discoverAuthorizationServer, JwtVerifier, StaticTokenVerifier } from './remote/auth.js';
 import { DownloadSigner, type GitHubSettings } from './remote/delivery.js';
 import { createServer } from './server.js';
+import { startApp } from './ui-app/server.js';
 import { VERSION } from './version.js';
 
 const HELP = `TestPilot MCP ${VERSION}
@@ -20,6 +21,7 @@ Usage:
   testpilot-mcp [--root <repo folder>]                  Serve one repository over stdio (Cursor, Claude Code, VS Code, Antigravity…)
   testpilot-mcp --http [--port 3333] [--host 127.0.0.1]  Serve one repository over Streamable HTTP on this machine
   testpilot-mcp --remote --public-url <url>             Hosted mode for ChatGPT and claude.ai (see docs/hosting.md)
+  testpilot-mcp ui [--root <repo folder>] [--no-open]   Open the TestPilot app: point and click in your browser (see docs/app.md)
 
 Options:
   --root <path>        Repository folder to work in (default: TESTPILOT_ROOT or the current folder)
@@ -29,6 +31,7 @@ Options:
   --workspaces <dir>   Folder for hosted workspaces (default: TESTPILOT_WORKSPACES or ./testpilot-workspaces)
   --port <n>           HTTP port (default: PORT or 3333)
   --host <addr>        HTTP bind address (default 127.0.0.1; hosted mode defaults to 0.0.0.0)
+  --no-open            With ui: print the address instead of opening the browser
   --version            Print the version
 
 Hosted mode settings (environment):
@@ -42,7 +45,7 @@ Hosted mode settings (environment):
   TESTPILOT_GITHUB_API       GitHub API URL for GitHub Enterprise Server (default https://api.github.com)
 `;
 
-const { values } = parseArgs({
+const { values, positionals } = parseArgs({
     options: {
         root: { type: 'string' },
         http: { type: 'boolean', default: false },
@@ -52,10 +55,15 @@ const { values } = parseArgs({
         port: { type: 'string', default: process.env.PORT ?? '3333' },
         host: { type: 'string' },
         version: { type: 'boolean', default: false },
-        help: { type: 'boolean', default: false }
+        help: { type: 'boolean', default: false },
+        'no-open': { type: 'boolean', default: false }
     },
-    allowPositionals: false
+    allowPositionals: true
 });
+if (positionals.length > 1 || (positionals.length === 1 && positionals[0] !== 'ui')) {
+    console.error(`Unknown command "${positionals.join(' ')}". The only command is "ui".\n\n${HELP}`);
+    process.exit(1);
+}
 
 if (values.help) {
     console.error(HELP);
@@ -131,6 +139,20 @@ async function hostedOptions(host: string): Promise<HttpAppOptions> {
 
 async function main(): Promise<void> {
     const root = values.root ?? env.TESTPILOT_ROOT;
+    if (positionals[0] === 'ui') {
+        const explicitPort = process.argv.some(a => a === '--port' || a.startsWith('--port='));
+        const app = await startApp({ root, port: explicitPort ? Number(values.port) : 0, open: !values['no-open'] });
+        console.error(`[testpilot] TestPilot app ${VERSION} for ${app.root}`);
+        console.error(`[testpilot] Open this address in your browser: ${app.url}`);
+        console.error('[testpilot] Keep this window open while you use the app. Press Ctrl+C to stop it.');
+        const stop = async () => {
+            await app.close();
+            process.exit(0);
+        };
+        process.on('SIGINT', () => void stop());
+        process.on('SIGTERM', () => void stop());
+        return;
+    }
     if (!values.http && !values.remote) {
         const handle = serveStdio(() => createServer({ root, mode: 'local' }));
         console.error(`[testpilot] TestPilot MCP ${VERSION} ready on stdio${root ? ` (root ${root})` : ''}`);

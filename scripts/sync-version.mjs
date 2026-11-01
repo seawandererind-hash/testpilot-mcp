@@ -29,6 +29,7 @@ const files = [
     json('plugins/testpilot/.claude-plugin/plugin.json', p => ({ ...p, version })),
     links('README.md'),
     links('docs/install.md'),
+    links('docs/app.md'),
     links('plugins/testpilot/README.md')
 ];
 

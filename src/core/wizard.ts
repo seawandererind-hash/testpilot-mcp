@@ -415,6 +415,11 @@ function freezeSkips(state: State, ctx: WizardContext, uptoId: string): void {
     }
 }
 
+/** The steps that apply to this repository, in order (skipped ones left out). */
+export function activeStepIds(ctx: WizardContext): string[] {
+    return STEPS.filter(s => !isSkipped(s, ctx)).map(s => s.id);
+}
+
 /** First step that is neither completed nor skipped, or undefined when the wizard is done. */
 export function currentStepId(ctx: WizardContext): string | undefined {
     for (const step of STEPS) {
