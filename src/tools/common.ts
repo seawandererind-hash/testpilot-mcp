@@ -2,7 +2,7 @@ import { acceptedContent, type CallToolResult, inputRequired, type InputRequired
 import * as z from 'zod/v4';
 
 import { detectRepo, type RepoDetection } from '../core/detect.js';
-import { PathSandboxError, ProjectRootError, resolveProjectRoot } from '../core/paths.js';
+import { BlockedPathError, PathSandboxError, ProjectRootError, resolveProjectRoot } from '../core/paths.js';
 import { redact } from '../core/redact.js';
 import { ProjectStore } from '../core/store.js';
 import { WizardInputError } from '../core/wizard.js';
@@ -86,7 +86,7 @@ export function failure(message: string): CallToolResult {
     return { content: [{ type: 'text', text: message }], isError: true };
 }
 
-const USER_ERRORS = [ProjectRootError, PathSandboxError, WizardInputError];
+const USER_ERRORS = [ProjectRootError, PathSandboxError, WizardInputError, BlockedPathError];
 
 /** Wraps a handler: audits the call and turns expected errors into readable tool errors. */
 export function guarded<A extends Record<string, unknown>, R>(toolName: string, options: ServerOptions, handler: (args: A, ctx: unknown) => Promise<R>): (args: A, ctx: unknown) => Promise<R | CallToolResult> {

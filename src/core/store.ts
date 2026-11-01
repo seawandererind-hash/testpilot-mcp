@@ -2,7 +2,7 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renam
 import path from 'node:path';
 import YAML from 'yaml';
 
-import { safeJoin, STATE_DIR, toPosix } from './paths.js';
+import { BlockedPathError, blockedFolderMessage, safeJoin, STATE_DIR, toPosix } from './paths.js';
 import { redact } from './redact.js';
 import { type Config, ConfigSchema, CONFIG_SCHEMA_VERSION, type State, StateSchema, STATE_SCHEMA_VERSION, type TestCase, TestCaseSchema } from './schema.js';
 
@@ -41,7 +41,42 @@ export class ProjectStore {
 
     read(relative: string): string | undefined {
         const file = this.resolve(relative);
-        return existsSync(file) ? readFileSync(file, 'utf8') : undefined;
+        return existsSync(file) && !statSync(file).isDirectory() ? readFileSync(file, 'utf8') : undefined;
+    }
+
+    /**
+     * The nearest parent of `relative` that exists as a file rather than a
+     * folder (for example a file named `.cursor` when TestPilot wants to write
+     * `.cursor/rules/x.mdc`), or undefined when every parent is fine.
+     */
+    blockingFile(relative: string): string | undefined {
+        const parts = toPosix(relative).split('/').filter(Boolean);
+        for (let i = 1; i < parts.length; i++) {
+            const parent = parts.slice(0, i).join('/');
+            const abs = this.resolve(parent);
+            if (!existsSync(abs)) return undefined;
+            if (!statSync(abs).isDirectory()) return parent;
+        }
+        return undefined;
+    }
+
+    /** True when `relative` exists as a folder. */
+    isDirectory(relative: string): boolean {
+        const abs = this.resolve(relative);
+        return existsSync(abs) && statSync(abs).isDirectory();
+    }
+
+    /** Creates the parent folders of `file`, explaining in plain words when a file is in the way. */
+    private makeParents(relative: string): void {
+        const blocker = this.blockingFile(relative);
+        if (blocker) throw new BlockedPathError(blockedFolderMessage(blocker, toPosix(relative)), blocker);
+        if (this.isDirectory(relative)) {
+            throw new BlockedPathError(
+                `TestPilot wants to save the file "${toPosix(relative)}", but there is a folder with that exact name. Rename that folder (for example add ".old" to its name), then try again.`,
+                toPosix(relative)
+            );
+        }
+        mkdirSync(path.dirname(this.resolve(relative)), { recursive: true });
     }
 
     readBuffer(relative: string): Buffer {
@@ -51,7 +86,7 @@ export class ProjectStore {
     /** Writes atomically (temp file + rename) after creating parent folders. */
     write(relative: string, content: string | Buffer): void {
         const file = this.resolve(relative);
-        mkdirSync(path.dirname(file), { recursive: true });
+        this.makeParents(relative);
         const tmp = `${file}.${process.pid}.tmp`;
         writeFileSync(tmp, content);
         renameSync(tmp, file);
@@ -63,7 +98,7 @@ export class ProjectStore {
 
     append(relative: string, content: string): void {
         const file = this.resolve(relative);
-        mkdirSync(path.dirname(file), { recursive: true });
+        this.makeParents(relative);
         appendFileSync(file, content);
     }
 

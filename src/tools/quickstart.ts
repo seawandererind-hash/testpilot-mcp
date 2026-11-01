@@ -19,7 +19,7 @@ import { runImport } from '../testcases/import.js';
 import { approverArg, failure, guarded, openProject, projectRootArg, READ_ONLY, requireApproval, result, type ServerOptions, userApprovedArg } from './common.js';
 import { applyGeneration, buildGeneration, select } from './generate.js';
 import { recordRun } from './run.js';
-import { buildScaffoldPlan } from './scaffold.js';
+import { buildScaffoldPlan, moveBlockersAside } from './scaffold.js';
 import { reviewAndStore } from './testcases.js';
 
 /** Written once the install commands all succeeded, so a failed browser download is retried on the next start. */
@@ -367,6 +367,7 @@ export function registerQuickStartTools(server: McpServer, options: ServerOption
                             `Set up testing for ${url}?`,
                             `I will use the recommended setup: ${quickStartChoices(config)}. If you would rather choose the kind of app, the tool and the language yourself, say so and I will ask you step by step instead.`,
                             writes.length ? `I will add a small test project to ${store.root} (${writes.length} files; your own files are not changed).` : '',
+                            ...plan.blockers.map(b => `Your project has a file called "${b.file}" where a folder is needed, so I will rename that file to "${b.renameTo}" (nothing is deleted).`),
                             needsInstall ? 'I will download Playwright and its test browser (about 150 MB, a few minutes, once).' : '',
                             'Then I visit your app\'s pages like a visitor to look for problems. I only follow links: nothing is clicked, typed or changed in your app.',
                             production ? `Note: ${url} looks like your live site.` : ''
@@ -382,6 +383,12 @@ export function registerQuickStartTools(server: McpServer, options: ServerOption
                     }
                     if (production) store.recordDecision(`Allowed the quick start on ${url}, which looks like production`, 'Read-only health check', approval.by);
                     if (!scaffolded) {
+                        const moved = moveBlockersAside(store, plan);
+                        if ('error' in moved) {
+                            restore();
+                            return failure(moved.error);
+                        }
+                        for (const b of moved.renamed) store.recordDecision(`Renamed the file ${b.file} to ${b.renameTo}`, 'A folder with that name was needed for the test project', approval.by);
                         const { written } = writePlanned(store, plan.files);
                         store.updateState(s => {
                             s.approvals.push({ what: `scaffold (${written.length} files, quick start)`, by: approval.by, at: new Date().toISOString(), note: approval.via });

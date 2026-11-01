@@ -579,6 +579,9 @@ iframe.view { width: 100%; border: 1px solid var(--line); border-radius: 10px; m
         if (!o.ok || !o.data) return;
         var files = o.data.files || [];
         slot.appendChild(el('div', { class: 'filelist' }, files.map(function (f) { return el('div', { text: (f.status === 'new' ? '+ ' : f.status === 'conflict' ? '! ' : '  ') + f.path + (f.status && f.status !== 'new' ? '  (' + f.status + ')' : '') }); })));
+        (o.data.blockers || []).forEach(function (b) {
+          slot.appendChild(el('p', { class: 'note warn', text: 'Heads-up: your project has a file called “' + b.file + '” where TestPilot needs a folder. When you say yes, TestPilot renames that file to “' + b.renameTo + '” (nothing is deleted) and creates the folder.' }));
+        });
         if (o.data.installCommands && o.data.installCommands.length) {
           slot.appendChild(el('label', { class: 'row' }, [install, el('span', { text: 'Also install the tools now (' + o.data.installCommands.join(', ') + ' and the test browser). Takes a few minutes the first time; needs internet.' })]));
         }

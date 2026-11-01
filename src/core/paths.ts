@@ -14,6 +14,26 @@ export class PathSandboxError extends Error {
     }
 }
 
+/** A file sits where TestPilot needs a folder (or a folder where it needs a file). */
+export class BlockedPathError extends Error {
+    constructor(
+        message: string,
+        readonly blocker: string
+    ) {
+        super(message);
+        this.name = 'BlockedPathError';
+    }
+}
+
+/** The plain-English explanation shown when `blocker` (a file) stops TestPilot creating a folder. */
+export function blockedFolderMessage(blocker: string, wanted: string): string {
+    return (
+        `TestPilot needs a folder called "${blocker}" in your project (to save ${wanted}), but there is a file with that exact name instead, so the folder cannot be created. ` +
+        `Nothing was broken. To fix it: open your project folder, rename the file "${blocker}" (for example to "${blocker}.old") or delete it if you do not need it, then try again. ` +
+        `If your AI tool needs that file, ask it to move the file's content somewhere else first.`
+    );
+}
+
 export class ProjectRootError extends Error {
     constructor(message: string) {
         super(message);

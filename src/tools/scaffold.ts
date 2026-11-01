@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { renameSync } from 'node:fs';
 
 import type { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
@@ -19,7 +20,63 @@ export interface ScaffoldPlan {
     files: PlannedFile[];
     install: string[][];
     manual?: string;
+    /** Files sitting where a folder is needed; scaffold_project renames each to `<name>.old` first. */
+    blockers: Array<{ file: string; renameTo: string }>;
     token: string;
+}
+
+/** A free `<file>.old` name next to `file` (then `.old-2`, `.old-3`, ...). */
+function oldNameFor(store: ProjectStore, file: string): string {
+    let candidate = `${file}.old`;
+    for (let i = 2; store.exists(candidate); i++) candidate = `${file}.old-${i}`;
+    return candidate;
+}
+
+/**
+ * Finds files that sit where the framework needs a folder (for example a file
+ * called `.cursor` when TestPilot writes `.cursor/rules/testpilot.mdc`), and
+ * marks planned files whose own path is an existing folder as left alone.
+ */
+function findBlockers(store: ProjectStore, files: PlannedFile[]): ScaffoldPlan['blockers'] {
+    const found = new Map<string, string>();
+    for (const f of files) {
+        if (f.status === 'unchanged' || f.status === 'skip') continue;
+        const blocker = store.blockingFile(f.path);
+        if (blocker) {
+            if (!found.has(blocker)) found.set(blocker, oldNameFor(store, blocker));
+        } else if (store.isDirectory(f.path)) {
+            f.status = 'skip';
+            f.note = 'A folder with this name already exists, so TestPilot leaves it alone. Rename the folder and preview again if you want this file.';
+        }
+    }
+    return [...found].map(([file, renameTo]) => ({ file, renameTo }));
+}
+
+/** Renames each blocking file to its `.old` name so the folder can be created. Nothing is deleted. */
+export function moveBlockersAside(store: ProjectStore, plan: ScaffoldPlan): { renamed: ScaffoldPlan['blockers'] } | { error: string } {
+    const renamed: ScaffoldPlan['blockers'] = [];
+    for (const b of plan.blockers) {
+        try {
+            renameSync(store.resolve(b.file), store.resolve(b.renameTo));
+            renamed.push(b);
+        } catch (error) {
+            return {
+                error:
+                    `TestPilot needs a folder called "${b.file}", but there is a file with that name and TestPilot could not rename it (${(error as NodeJS.ErrnoException).code ?? 'error'}). ` +
+                    `Nothing else was written. Close any program that has "${b.file}" open, rename or delete that file yourself in your project folder, then try again.`
+            };
+        }
+    }
+    return { renamed };
+}
+
+export function describeBlockers(blockers: ScaffoldPlan['blockers']): string {
+    if (!blockers.length) return '';
+    return [
+        '',
+        'Heads-up: TestPilot needs a folder where your project has a file with the same name:',
+        ...blockers.map(b => `  - "${b.file}" is a file, but a folder is needed there. If you say yes, TestPilot renames the file to "${b.renameTo}" (nothing is deleted) and then creates the folder.`)
+    ].join('\n');
 }
 
 /** Everything scaffold_project would write, compared with the repository as it is now. */
@@ -44,8 +101,9 @@ export function buildScaffoldPlan(store: ProjectStore, config: Config): Scaffold
     }
     files.push(...planKnowledge(store, config, PACKAGE_NAME));
     files.push(planGitignore(store, GITIGNORE_LINES));
-    const fingerprint = files.map(f => [f.path, f.status, createHash('sha256').update(f.content).digest('hex').slice(0, 16)]);
-    return { packId, packTitle, files, install, manual, token: `scaffold-${digestOf(fingerprint).slice(0, 20)}` };
+    const blockers = findBlockers(store, files);
+    const fingerprint = [...files.map(f => [f.path, f.status, createHash('sha256').update(f.content).digest('hex').slice(0, 16)]), ...blockers.map(b => ['blocker', b.file, b.renameTo])];
+    return { packId, packTitle, files, install, manual, blockers, token: `scaffold-${digestOf(fingerprint).slice(0, 20)}` };
 }
 
 const STATUS_WORDS: Record<PlannedFile['status'], string> = {
@@ -88,6 +146,7 @@ export function registerScaffoldTools(server: McpServer, options: ServerOptions)
                 plan.packTitle ? `Template: ${plan.packTitle}, ${config.stack.pattern ?? 'pom'} pattern, in ${inTestRoot(config, '.') || '.'}` : config.existing?.mode === 'extend' ? 'Your existing framework stays as it is; TestPilot only adds its plan, AI instructions and skills.' : `No template for ${config.stack.framework} yet. ${plan.manual}`,
                 '',
                 changes.length ? describePlan(plan) : 'Everything is already in place.',
+                describeBlockers(plan.blockers),
                 installText,
                 plan.packTitle && plan.manual ? `\nThe user also needs to do these steps themselves (TestPilot cannot install SDKs or devices):\n${plan.manual}` : '',
                 '',
@@ -99,6 +158,7 @@ export function registerScaffoldTools(server: McpServer, options: ServerOptions)
                 manualSetup: plan.manual ?? null,
                 files: plan.files.map(f => ({ path: f.path, status: f.status, note: f.note })),
                 conflicts: plan.files.filter(f => f.status === 'conflict').map(f => f.path),
+                blockers: plan.blockers,
                 installCommands: plan.install.map(c => c.join(' '))
             });
         })
@@ -143,11 +203,16 @@ export function registerScaffoldTools(server: McpServer, options: ServerOptions)
                 });
                 if (!approval.approved) return approval.reply;
 
+                // Files sitting where a folder is needed were shown in the preview; move them aside, never delete.
+                const moved = moveBlockersAside(store, plan);
+                if ('error' in moved) return failure(moved.error);
+                const renamed = moved.renamed;
                 const { written, kept } = writePlanned(store, plan.files, args.overwrite);
                 const at = new Date().toISOString();
                 store.updateState(s => {
                     s.approvals.push({ what: `scaffold (${written.length} files)`, by: approval.by, at, note: approval.via });
                 });
+                for (const b of renamed) store.recordDecision(`Renamed the file ${b.file} to ${b.renameTo}`, `A folder called ${b.file} was needed for the framework; shown in the preview and approved`, approval.by);
                 store.recordDecision(`Created the project framework: ${written.length} file(s) written${args.overwrite.length ? `, replaced ${args.overwrite.join(', ')}` : ''}`, `Approved ${approval.via === 'form' ? 'in a form' : 'in chat'}`, approval.by);
                 completeActionStep(store, 'SCAFFOLD', `Scaffolded ${plan.packId ?? 'TestPilot files'}`);
 
@@ -165,13 +230,14 @@ export function registerScaffoldTools(server: McpServer, options: ServerOptions)
                 const next = options.mode === 'remote' && plan.install.length ? `After delivery (hosted_workspace), install the tools with ${plan.install.map(c => `\`${c.join(' ')}\``).join(' then ')}.` : !args.install && plan.install.length ? `Next: install the tools with ${plan.install.map(c => `\`${c.join(' ')}\``).join(' then ')} (or call scaffold_project again with install: true after a fresh preview).` : '';
                 const summary = [
                     `Wrote ${written.length} file(s).${kept.length ? ` Kept ${kept.length} existing file(s) unchanged.` : ''}`,
+                    ...renamed.map(b => `Renamed the file "${b.file}" to "${b.renameTo}" so the "${b.file}" folder could be created. Nothing was deleted.`),
                     plan.manual ? `Framework setup${plan.packTitle ? ' (steps for the user)' : ''}:${plan.manual.includes('\n') ? '\n' : ' '}${plan.manual}` : '',
                     failed ? `Install failed at \`${failed.command}\`:\n${failed.tail}\nRun check_prerequisites for fixes.` : installs.length ? 'Dependencies installed.' : next,
                     'Then continue the wizard (action "next").'
                 ]
                     .filter(Boolean)
                     .join('\n');
-                return result(summary, { written, kept, approvedBy: approval.by, installs });
+                return result(summary, { written, kept, renamed, approvedBy: approval.by, installs });
             }
         )
     );

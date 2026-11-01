@@ -77,5 +77,6 @@ In the terminal of your test folder (in Cursor: **Terminal → New Terminal**):
 - **"I could not open your address"**: check for typos, check that the test copy of the app is running, and connect to your company VPN if the app is internal.
 - **"Looks like the live site"**: TestPilot protects your live site. Use the test copy's address, or say clearly that you want to check the live site (the first check only reads pages).
 - **The install failed**: usually no internet or a company proxy. Say "check what's missing on my computer" and TestPilot lists what to install and how.
+- **"not a directory" or "a file with that exact name"** when creating the framework (for example about `.cursor`): your project has a plain file where TestPilot needs a folder. From version 0.1.11 the file list shows a heads-up and, when you say yes, TestPilot renames that file to `.cursor.old` (nothing is deleted) and carries on. On an older version, rename or delete the file yourself, then click "Show me the files" again.
 - **Your app is a phone or desktop app, not a website**: say "set up testing for my Android app" (or iPhone, Windows…). TestPilot asks a few questions; each one comes with a plain-words explanation, and "not sure" always picks the recommended answer.
 - **Not sure what happened?** Say "where are we?" and TestPilot sums up what is done and what comes next.
