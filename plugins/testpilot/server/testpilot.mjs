@@ -23972,6 +23972,9 @@ ${expires}`).digest("base64url");
 // src/core/paths.ts
 import { existsSync as existsSync2, realpathSync as realpathSync2, statSync as statSync2 } from "node:fs";
 import path2 from "node:path";
+function blockedFolderMessage(blocker, wanted) {
+  return `TestPilot needs a folder called "${blocker}" in your project (to save ${wanted}), but there is a file with that exact name instead, so the folder cannot be created. Nothing was broken. To fix it: open your project folder, rename the file "${blocker}" (for example to "${blocker}.old") or delete it if you do not need it, then try again. If your AI tool needs that file, ask it to move the file's content somewhere else first.`;
+}
 function looksLikeProject(dir) {
   return PROJECT_MARKERS.some((marker) => existsSync2(path2.join(dir, marker)));
 }
@@ -24015,7 +24018,7 @@ function assertInside(root2, target2, label4) {
 function toPosix(relative) {
   return relative.split(path2.sep).join("/");
 }
-var STATE_DIR, PROJECT_MARKERS, PathSandboxError, ProjectRootError;
+var STATE_DIR, PROJECT_MARKERS, PathSandboxError, BlockedPathError, ProjectRootError;
 var init_paths = __esm({
   "src/core/paths.ts"() {
     "use strict";
@@ -24026,6 +24029,14 @@ var init_paths = __esm({
         super(message);
         this.name = "PathSandboxError";
       }
+    };
+    BlockedPathError = class extends Error {
+      constructor(message, blocker) {
+        super(message);
+        this.blocker = blocker;
+        this.name = "BlockedPathError";
+      }
+      blocker;
     };
     ProjectRootError = class extends Error {
       constructor(message) {
@@ -39162,7 +39173,39 @@ var init_store = __esm({
       }
       read(relative) {
         const file = this.resolve(relative);
-        return existsSync7(file) ? readFileSync4(file, "utf8") : void 0;
+        return existsSync7(file) && !statSync5(file).isDirectory() ? readFileSync4(file, "utf8") : void 0;
+      }
+      /**
+       * The nearest parent of `relative` that exists as a file rather than a
+       * folder (for example a file named `.cursor` when TestPilot wants to write
+       * `.cursor/rules/x.mdc`), or undefined when every parent is fine.
+       */
+      blockingFile(relative) {
+        const parts = toPosix(relative).split("/").filter(Boolean);
+        for (let i = 1; i < parts.length; i++) {
+          const parent = parts.slice(0, i).join("/");
+          const abs = this.resolve(parent);
+          if (!existsSync7(abs)) return void 0;
+          if (!statSync5(abs).isDirectory()) return parent;
+        }
+        return void 0;
+      }
+      /** True when `relative` exists as a folder. */
+      isDirectory(relative) {
+        const abs = this.resolve(relative);
+        return existsSync7(abs) && statSync5(abs).isDirectory();
+      }
+      /** Creates the parent folders of `file`, explaining in plain words when a file is in the way. */
+      makeParents(relative) {
+        const blocker = this.blockingFile(relative);
+        if (blocker) throw new BlockedPathError(blockedFolderMessage(blocker, toPosix(relative)), blocker);
+        if (this.isDirectory(relative)) {
+          throw new BlockedPathError(
+            `TestPilot wants to save the file "${toPosix(relative)}", but there is a folder with that exact name. Rename that folder (for example add ".old" to its name), then try again.`,
+            toPosix(relative)
+          );
+        }
+        mkdirSync2(path7.dirname(this.resolve(relative)), { recursive: true });
       }
       readBuffer(relative) {
         return readFileSync4(this.resolve(relative));
@@ -39170,7 +39213,7 @@ var init_store = __esm({
       /** Writes atomically (temp file + rename) after creating parent folders. */
       write(relative, content) {
         const file = this.resolve(relative);
-        mkdirSync2(path7.dirname(file), { recursive: true });
+        this.makeParents(relative);
         const tmp = `${file}.${process.pid}.tmp`;
         writeFileSync2(tmp, content);
         renameSync(tmp, file);
@@ -39180,7 +39223,7 @@ var init_store = __esm({
       }
       append(relative, content) {
         const file = this.resolve(relative);
-        mkdirSync2(path7.dirname(file), { recursive: true });
+        this.makeParents(relative);
         appendFileSync(file, content);
       }
       list(relativeDir, filter2 = () => true) {
@@ -40125,7 +40168,7 @@ var init_common = __esm({
       check_prerequisites: "A hosted TestPilot cannot see your machine. Once the project is delivered, run a local TestPilot and call check_prerequisites there.",
       quality_scan: "A hosted TestPilot does not run compilers, browsers or tests. Run quality_scan (gate, accessibility, visual) in a local TestPilot against your checked-out project."
     };
-    USER_ERRORS = [ProjectRootError, PathSandboxError, WizardInputError];
+    USER_ERRORS = [ProjectRootError, PathSandboxError, WizardInputError, BlockedPathError];
     CLIENT_CAPABILITIES_KEY = "io.modelcontextprotocol/clientCapabilities";
     READ_ONLY = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
     WRITES_STATE = { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false };
@@ -153973,6 +154016,48 @@ var init_version2 = __esm({
 
 // src/tools/scaffold.ts
 import { createHash as createHash8 } from "node:crypto";
+import { renameSync as renameSync2 } from "node:fs";
+function oldNameFor(store, file) {
+  let candidate = `${file}.old`;
+  for (let i = 2; store.exists(candidate); i++) candidate = `${file}.old-${i}`;
+  return candidate;
+}
+function findBlockers(store, files) {
+  const found = /* @__PURE__ */ new Map();
+  for (const f of files) {
+    if (f.status === "unchanged" || f.status === "skip") continue;
+    const blocker = store.blockingFile(f.path);
+    if (blocker) {
+      if (!found.has(blocker)) found.set(blocker, oldNameFor(store, blocker));
+    } else if (store.isDirectory(f.path)) {
+      f.status = "skip";
+      f.note = "A folder with this name already exists, so TestPilot leaves it alone. Rename the folder and preview again if you want this file.";
+    }
+  }
+  return [...found].map(([file, renameTo]) => ({ file, renameTo }));
+}
+function moveBlockersAside(store, plan) {
+  const renamed = [];
+  for (const b of plan.blockers) {
+    try {
+      renameSync2(store.resolve(b.file), store.resolve(b.renameTo));
+      renamed.push(b);
+    } catch (error2) {
+      return {
+        error: `TestPilot needs a folder called "${b.file}", but there is a file with that name and TestPilot could not rename it (${error2.code ?? "error"}). Nothing else was written. Close any program that has "${b.file}" open, rename or delete that file yourself in your project folder, then try again.`
+      };
+    }
+  }
+  return { renamed };
+}
+function describeBlockers(blockers) {
+  if (!blockers.length) return "";
+  return [
+    "",
+    "Heads-up: TestPilot needs a folder where your project has a file with the same name:",
+    ...blockers.map((b) => `  - "${b.file}" is a file, but a folder is needed there. If you say yes, TestPilot renames the file to "${b.renameTo}" (nothing is deleted) and then creates the folder.`)
+  ].join("\n");
+}
 function buildScaffoldPlan(store, config2) {
   const files = [];
   let packId;
@@ -153994,8 +154079,9 @@ function buildScaffoldPlan(store, config2) {
   }
   files.push(...planKnowledge(store, config2, PACKAGE_NAME));
   files.push(planGitignore(store, GITIGNORE_LINES));
-  const fingerprint = files.map((f) => [f.path, f.status, createHash8("sha256").update(f.content).digest("hex").slice(0, 16)]);
-  return { packId, packTitle, files, install, manual, token: `scaffold-${digestOf(fingerprint).slice(0, 20)}` };
+  const blockers = findBlockers(store, files);
+  const fingerprint = [...files.map((f) => [f.path, f.status, createHash8("sha256").update(f.content).digest("hex").slice(0, 16)]), ...blockers.map((b) => ["blocker", b.file, b.renameTo])];
+  return { packId, packTitle, files, install, manual, blockers, token: `scaffold-${digestOf(fingerprint).slice(0, 20)}` };
 }
 function describePlan(plan) {
   const groups = ["new", "merge", "conflict", "skip"].map((status) => {
@@ -154029,6 +154115,7 @@ ${plan.install.map((c) => `  ${c.join(" ")}`).join("\n")}` : "";
         plan.packTitle ? `Template: ${plan.packTitle}, ${config2.stack.pattern ?? "pom"} pattern, in ${inTestRoot(config2, ".") || "."}` : config2.existing?.mode === "extend" ? "Your existing framework stays as it is; TestPilot only adds its plan, AI instructions and skills." : `No template for ${config2.stack.framework} yet. ${plan.manual}`,
         "",
         changes.length ? describePlan(plan) : "Everything is already in place.",
+        describeBlockers(plan.blockers),
         installText,
         plan.packTitle && plan.manual ? `
 The user also needs to do these steps themselves (TestPilot cannot install SDKs or devices):
@@ -154042,6 +154129,7 @@ ${plan.manual}` : "",
         manualSetup: plan.manual ?? null,
         files: plan.files.map((f) => ({ path: f.path, status: f.status, note: f.note })),
         conflicts: plan.files.filter((f) => f.status === "conflict").map((f) => f.path),
+        blockers: plan.blockers,
         installCommands: plan.install.map((c) => c.join(" "))
       });
     })
@@ -154083,11 +154171,15 @@ ${plan.manual}` : "",
           approver: args.approver
         });
         if (!approval.approved) return approval.reply;
+        const moved = moveBlockersAside(store, plan);
+        if ("error" in moved) return failure2(moved.error);
+        const renamed = moved.renamed;
         const { written, kept } = writePlanned(store, plan.files, args.overwrite);
         const at = (/* @__PURE__ */ new Date()).toISOString();
         store.updateState((s) => {
           s.approvals.push({ what: `scaffold (${written.length} files)`, by: approval.by, at, note: approval.via });
         });
+        for (const b of renamed) store.recordDecision(`Renamed the file ${b.file} to ${b.renameTo}`, `A folder called ${b.file} was needed for the framework; shown in the preview and approved`, approval.by);
         store.recordDecision(`Created the project framework: ${written.length} file(s) written${args.overwrite.length ? `, replaced ${args.overwrite.join(", ")}` : ""}`, `Approved ${approval.via === "form" ? "in a form" : "in chat"}`, approval.by);
         completeActionStep(store, "SCAFFOLD", `Scaffolded ${plan.packId ?? "TestPilot files"}`);
         const installs = [];
@@ -154103,13 +154195,14 @@ ${plan.manual}` : "",
         const next = options.mode === "remote" && plan.install.length ? `After delivery (hosted_workspace), install the tools with ${plan.install.map((c) => `\`${c.join(" ")}\``).join(" then ")}.` : !args.install && plan.install.length ? `Next: install the tools with ${plan.install.map((c) => `\`${c.join(" ")}\``).join(" then ")} (or call scaffold_project again with install: true after a fresh preview).` : "";
         const summary = [
           `Wrote ${written.length} file(s).${kept.length ? ` Kept ${kept.length} existing file(s) unchanged.` : ""}`,
+          ...renamed.map((b) => `Renamed the file "${b.file}" to "${b.renameTo}" so the "${b.file}" folder could be created. Nothing was deleted.`),
           plan.manual ? `Framework setup${plan.packTitle ? " (steps for the user)" : ""}:${plan.manual.includes("\n") ? "\n" : " "}${plan.manual}` : "",
           failed ? `Install failed at \`${failed.command}\`:
 ${failed.tail}
 Run check_prerequisites for fixes.` : installs.length ? "Dependencies installed." : next,
           'Then continue the wizard (action "next").'
         ].filter(Boolean).join("\n");
-        return result(summary, { written, kept, approvedBy: approval.by, installs });
+        return result(summary, { written, kept, renamed, approvedBy: approval.by, installs });
       }
     )
   );
@@ -154903,6 +154996,7 @@ Example: ${entry.example}`, { found: true, ...entry });
               `Set up testing for ${url2}?`,
               `I will use the recommended setup: ${quickStartChoices(config2)}. If you would rather choose the kind of app, the tool and the language yourself, say so and I will ask you step by step instead.`,
               writes.length ? `I will add a small test project to ${store.root} (${writes.length} files; your own files are not changed).` : "",
+              ...plan.blockers.map((b) => `Your project has a file called "${b.file}" where a folder is needed, so I will rename that file to "${b.renameTo}" (nothing is deleted).`),
               needsInstall ? "I will download Playwright and its test browser (about 150 MB, a few minutes, once)." : "",
               "Then I visit your app's pages like a visitor to look for problems. I only follow links: nothing is clicked, typed or changed in your app.",
               production ? `Note: ${url2} looks like your live site.` : ""
@@ -154916,6 +155010,12 @@ Example: ${entry.example}`, { found: true, ...entry });
           }
           if (production) store.recordDecision(`Allowed the quick start on ${url2}, which looks like production`, "Read-only health check", approval.by);
           if (!scaffolded) {
+            const moved = moveBlockersAside(store, plan);
+            if ("error" in moved) {
+              restore();
+              return failure2(moved.error);
+            }
+            for (const b of moved.renamed) store.recordDecision(`Renamed the file ${b.file} to ${b.renameTo}`, "A folder with that name was needed for the test project", approval.by);
             const { written } = writePlanned(store, plan.files);
             store.updateState((s) => {
               s.approvals.push({ what: `scaffold (${written.length} files, quick start)`, by: approval.by, at: (/* @__PURE__ */ new Date()).toISOString(), note: approval.via });
@@ -173075,6 +173175,9 @@ iframe.view { width: 100%; border: 1px solid var(--line); border-radius: 10px; m
         if (!o.ok || !o.data) return;
         var files = o.data.files || [];
         slot.appendChild(el('div', { class: 'filelist' }, files.map(function (f) { return el('div', { text: (f.status === 'new' ? '+ ' : f.status === 'conflict' ? '! ' : '  ') + f.path + (f.status && f.status !== 'new' ? '  (' + f.status + ')' : '') }); })));
+        (o.data.blockers || []).forEach(function (b) {
+          slot.appendChild(el('p', { class: 'note warn', text: 'Heads-up: your project has a file called “' + b.file + '” where TestPilot needs a folder. When you say yes, TestPilot renames that file to “' + b.renameTo + '” (nothing is deleted) and creates the folder.' }));
+        });
         if (o.data.installCommands && o.data.installCommands.length) {
           slot.appendChild(el('label', { class: 'row' }, [install, el('span', { text: 'Also install the tools now (' + o.data.installCommands.join(', ') + ' and the test browser). Takes a few minutes the first time; needs internet.' })]));
         }
