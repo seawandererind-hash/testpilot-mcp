@@ -243,6 +243,13 @@ function planClaudeMd(store: ProjectStore): PlannedFile {
     return { path: 'CLAUDE.md', status: 'merge', content: `${current.replace(/\s*$/, '\n')}\n@AGENTS.md\n`, note: 'Adds an import of AGENTS.md (Claude Code ignores AGENTS.md when CLAUDE.md exists).' };
 }
 
+/** Only the Cursor MCP file, so the Cursor CLI started by the TestPilot app's chat can use TestPilot before the framework exists. */
+export function planCursorMcpConfig(store: ProjectStore, packageName: string): PlannedFile {
+    const mcp = loadClientMap().mcpConfigs.find(m => m.file === '.cursor/mcp.json');
+    if (!mcp) throw new Error('The client map has no .cursor/mcp.json entry.');
+    return planMcpConfig(store, mcp, packageName);
+}
+
 function planMcpConfig(store: ProjectStore, mcp: ClientMap['mcpConfigs'][number], packageName: string, extra: NonNullable<ClientMap['extraServers']> = []): PlannedFile {
     const current = store.read(mcp.file);
     let json: Record<string, Record<string, unknown>> = {};

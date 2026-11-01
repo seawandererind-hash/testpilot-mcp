@@ -10,6 +10,7 @@ import { insightsViewHtml } from '../apps/view.js';
 import { resolveProjectRoot } from '../core/paths.js';
 import { VERSION } from '../version.js';
 import { ToolBridge } from './bridge.js';
+import { connectCursor, createCursorChat, detectEngines, type EngineId, type EngineInfo, type RunningChat, runChat } from './chat.js';
 import { appPageHtml } from './page.js';
 
 /**
@@ -112,6 +113,10 @@ export async function startApp(options: AppOptions = {}): Promise<RunningApp> {
     const keyBuf = Buffer.from(key);
     const bridge = new ToolBridge(root);
     let port = 0;
+    // Chat: one conversation per AI tool, one turn at a time.
+    let engines: EngineInfo[] | undefined;
+    const sessions: Partial<Record<EngineId, string>> = {};
+    let chatRunning: RunningChat | undefined;
 
     const allowedHost = (host?: string) => host === `127.0.0.1:${port}` || host === `localhost:${port}`;
     const hasKey = (req: IncomingMessage) => {
@@ -139,6 +144,59 @@ export async function startApp(options: AppOptions = {}): Promise<RunningApp> {
                 if (typeof body.name !== 'string' || !/^[a-z_]{1,64}$/.test(body.name)) return send(res, 400, { error: 'Unknown tool.' });
                 const args = body.arguments && typeof body.arguments === 'object' && !Array.isArray(body.arguments) ? (body.arguments as Record<string, unknown>) : {};
                 return send(res, 200, await bridge.call(body.name, args));
+            }
+            if (req.method === 'GET' && url.pathname === '/api/chat/engines') {
+                engines = await detectEngines(root);
+                return send(res, 200, { engines, sessions: { ...sessions } });
+            }
+            if (req.method === 'POST' && url.pathname === '/api/chat/connect-cursor') return send(res, 200, connectCursor(root));
+            if (req.method === 'POST' && url.pathname === '/api/chat/new') {
+                for (const k of Object.keys(sessions)) delete sessions[k as EngineId];
+                return send(res, 200, { ok: true });
+            }
+            if (req.method === 'POST' && url.pathname === '/api/chat/stop') {
+                chatRunning?.stop();
+                return send(res, 200, { ok: true });
+            }
+            if (req.method === 'POST' && url.pathname === '/api/chat') {
+                const body = JSON.parse((await readBody(req, MAX_JSON)).toString('utf8') || '{}') as { engine?: string; message?: unknown };
+                const message = typeof body.message === 'string' ? body.message.trim().slice(0, 8000) : '';
+                if (!message) return send(res, 400, { error: 'Type a message first.' });
+                engines ??= await detectEngines(root);
+                const engine = engines.find(e => e.id === body.engine && e.found);
+                if (!engine) return send(res, 400, { error: 'That AI tool was not found on this computer. See the chat page for how to install it.' });
+                if (chatRunning) return send(res, 409, { error: 'The AI is still answering the last message. Wait for it, or press Stop.' });
+                res.writeHead(200, { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' });
+                const write = (e: unknown) => res.write(JSON.stringify(e) + '\n');
+                let session = sessions[engine.id];
+                let firstTurn = !session;
+                if (!session && engine.id === 'cursor') {
+                    write({ type: 'status', text: 'Starting a new Cursor chat…' });
+                    session = await createCursorChat(engine, root);
+                    if (session) sessions.cursor = session;
+                    firstTurn = true;
+                }
+                await new Promise<void>(resolve => {
+                    chatRunning = runChat(
+                        engine,
+                        root,
+                        message,
+                        session,
+                        e => {
+                            if (e.type === 'done' && e.sessionId && !sessions[engine.id]) sessions[engine.id] = e.sessionId;
+                            write(e);
+                            if (e.type === 'done' || e.type === 'error') resolve();
+                        },
+                        firstTurn
+                    );
+                    res.on('close', () => {
+                        chatRunning?.stop();
+                        resolve();
+                    });
+                });
+                chatRunning = undefined;
+                res.end();
+                return;
             }
             if (req.method === 'POST' && url.pathname === '/api/upload') {
                 const name = safeUploadName(url.searchParams.get('name') ?? '');
@@ -173,6 +231,7 @@ export async function startApp(options: AppOptions = {}): Promise<RunningApp> {
         port,
         async close() {
             running.delete(root);
+            chatRunning?.stop();
             await bridge.close();
             await new Promise<void>(resolve => server.close(() => resolve()));
             server.closeAllConnections?.();

@@ -113,6 +113,18 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; fo
 .dialog { background: var(--panel); border-radius: 14px; padding: 22px; width: min(520px, 100%); box-shadow: 0 10px 40px rgba(0,0,0,.3); }
 .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin 1s linear infinite; margin: 0 auto 12px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.chat-log { display: flex; flex-direction: column; gap: 10px; min-height: 240px; max-height: 60vh; overflow-y: auto; padding: 4px 2px 10px; }
+.bubble { max-width: 85%; padding: 10px 14px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble.me { align-self: flex-end; background: var(--accent); color: var(--accent-text); border-bottom-right-radius: 4px; }
+.bubble.ai { align-self: flex-start; background: var(--panel-2); border-bottom-left-radius: 4px; }
+.bubble.err { align-self: flex-start; background: var(--bad-soft); color: var(--text); border-left: 4px solid var(--bad); }
+.bubble code { background: rgba(127,127,127,.18); padding: 1px 5px; border-radius: 4px; }
+.chip { display: inline-block; align-self: flex-start; font-size: 12px; color: var(--muted); background: var(--panel-2); border: 1px dashed var(--line); border-radius: 99px; padding: 2px 10px; }
+.engines { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-bottom: 12px; }
+.chat-input { display: flex; gap: 10px; align-items: flex-end; }
+.chat-input textarea { flex: 1; max-width: none; min-height: 52px; resize: vertical; }
+.suggest { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.suggest button { font-size: 13px; padding: 5px 10px; border-radius: 99px; }
 .toast { position: fixed; bottom: 18px; right: 18px; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; opacity: 0; transition: opacity .2s; z-index: 30; max-width: 360px; }
 .toast.show { opacity: 1; }
 iframe.view { width: 100%; border: 1px solid var(--line); border-radius: 10px; min-height: 300px; background: var(--panel); }
@@ -333,6 +345,7 @@ iframe.view { width: 100%; border: 1px solid var(--line); border-radius: 10px; m
   // ---------- navigation ----------
   var PAGES = [
     { id: 'home', icon: '⌂', label: 'Home' },
+    { id: 'chat', icon: '✉', label: 'Chat' },
     { id: 'setup', icon: '✎', label: 'Guided setup' },
     { id: 'cases', icon: '☰', label: 'Test cases' },
     { id: 'tests', icon: '▶', label: 'Plan, write & run' },
@@ -388,6 +401,7 @@ iframe.view { width: 100%; border: 1px solid var(--line); border-radius: 10px; m
         el('div', { class: 'row' }, [next ? button(d.initialised ? 'Continue setup' : 'Start the guided setup', function () { go('setup'); }, true) : button('Run tests', function () { go('tests'); }, true)])
       ]));
       var tiles = [
+        ['chat', 'Chat', 'Ask in your own words; Cursor or Claude answers using TestPilot.'],
         ['cases', 'Test cases', 'Import from Excel, Word, CSV, Jira and more, then get a review.'],
         ['tests', 'Plan, write & run', 'Approve a plan, let TestPilot write the tests, run them in a browser.'],
         ['results', 'Reports & coverage', 'See what is tested, what passes, and share a report.'],
@@ -418,6 +432,160 @@ iframe.view { width: 100%; border: 1px solid var(--line); border-radius: 10px; m
       })]),
       slot
     ]);
+  }
+
+  // ---------- Chat ----------
+  // The app has no AI: messages go to Cursor's or Claude Code's command-line tool, signed in with the
+  // person's own account, which uses TestPilot like the editor chat does. A small helper without AI is the fallback.
+  var CHAT = { engine: null, log: [], engines: null, busy: false };
+  try { CHAT.engine = localStorage.getItem('testpilot-chat-engine'); } catch (e) { /* ignore */ }
+
+  function inline(text) {
+    // **bold** and code in backquotes, everything else as plain text.
+    var frag = document.createDocumentFragment();
+    var CODE = new RegExp('^\x60[^\x60]+\x60$');
+    String(text).split(new RegExp('(\\*\\*[^*]+\\*\\*|\x60[^\x60\\n]+\x60)')).forEach(function (part) {
+      if (!part) return;
+      if (/^\*\*[^*]+\*\*$/.test(part)) frag.appendChild(el('b', { text: part.slice(2, -2) }));
+      else if (CODE.test(part)) frag.appendChild(el('code', { text: part.slice(1, -1) }));
+      else frag.appendChild(document.createTextNode(part));
+    });
+    return frag;
+  }
+  function chatItem(item) {
+    if (item.kind === 'me') return el('div', { class: 'bubble me', text: item.text });
+    if (item.kind === 'tool') return el('div', { class: 'chip', text: '⚙ ' + item.text });
+    if (item.kind === 'err') return el('div', { class: 'bubble err', text: item.text });
+    var b = el('div', { class: 'bubble ai' });
+    b.appendChild(inline(item.text));
+    if (item.actions) b.appendChild(el('div', { class: 'row' }, item.actions.map(function (a) { return button(a[0], a[1], a[2]); })));
+    return b;
+  }
+
+  function renderChat() {
+    page('Chat', 'Ask in your own words. The answers come from the AI you already use (Cursor or Claude), working with TestPilot in this project. You can also click the same steps on the other pages.');
+    var engineSlot = el('div');
+    var log = el('div', { class: 'chat-log', 'aria-live': 'polite' });
+    var input = el('textarea', { placeholder: 'e.g. Set up test automation for my website', 'aria-label': 'Your message' });
+    var send = button('Send', function () { submit(input.value); }, true);
+    var stop = button('Stop', function () { api('POST', '/api/chat/stop', {}); }, false, 'danger hidden');
+    input.onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(input.value); } };
+    var suggestions = ['Set up test automation for this project', 'Where are we?', 'Import my test cases from Excel', 'Run my tests', 'What is a flaky test?'];
+    main.appendChild(el('div', { class: 'card' }, [engineSlot]));
+    main.appendChild(el('div', { class: 'card' }, [
+      log,
+      el('div', { class: 'suggest' }, suggestions.map(function (t) { return el('button', { class: 'btn', type: 'button', text: t, onclick: function () { submit(t); } }); })),
+      el('div', { class: 'chat-input' }, [input, send, stop]),
+      el('div', { class: 'row' }, [button('New chat', function () { CHAT.log = []; api('POST', '/api/chat/new', {}); draw(); }), el('span', { class: 'muted', text: 'Enter sends, Shift+Enter makes a new line. Never type passwords here: they go in .env.' })])
+    ]));
+
+    function draw() {
+      clear(log);
+      if (!CHAT.log.length) log.appendChild(el('p', { class: 'muted', text: 'No messages yet. Try one of the suggestions below.' }));
+      CHAT.log.forEach(function (item) { log.appendChild(chatItem(item)); });
+      log.scrollTop = log.scrollHeight;
+    }
+    function setBusy(on) {
+      CHAT.busy = on; send.disabled = on; stop.classList.toggle('hidden', !on);
+    }
+    function add(item) { CHAT.log.push(item); draw(); return item; }
+
+    function drawEngines() {
+      clear(engineSlot).appendChild(el('h2', { text: 'Who answers' }));
+      var list = (CHAT.engines || []).slice();
+      list.push({ id: 'helper', name: 'Simple helper (no AI)', found: true });
+      if (!CHAT.engine || !list.some(function (e) { return e.id === CHAT.engine && e.found; })) {
+        var first = list.filter(function (e) { return e.found; })[0];
+        CHAT.engine = first ? first.id : 'helper';
+      }
+      engineSlot.appendChild(el('div', { class: 'engines' }, list.map(function (e) {
+        var desc = e.id === 'helper' ? 'Understands simple requests and opens the right page. Works without any AI.'
+          : e.found ? 'Found on this computer' + (e.version ? ' (' + e.version + ')' : '') + '.' : 'Not installed on this computer.';
+        return el('button', { class: 'option' + (CHAT.engine === e.id ? ' selected' : ''), type: 'button', disabled: !e.found || null, onclick: function () {
+          CHAT.engine = e.id; try { localStorage.setItem('testpilot-chat-engine', e.id); } catch (x) { /* ignore */ } drawEngines();
+        } }, [el('b', null, [e.name, e.found ? null : el('span', { class: 'badge warn', text: 'not installed' })]), el('span', { text: desc })]);
+      })));
+      var chosen = list.filter(function (e) { return e.id === CHAT.engine; })[0] || {};
+      if (chosen.id === 'cursor' && !chosen.testpilotConnected) {
+        engineSlot.appendChild(el('div', { class: 'note warn' }, [
+          el('div', { text: 'The Cursor chat does not see TestPilot in this project yet, so it cannot run the setup or your tests. TestPilot can add itself to this project’s .cursor/mcp.json (your other settings in that file are kept).' }),
+          el('div', { class: 'row' }, [button('Let the Cursor chat use TestPilot', function () {
+            if (!confirm('Add TestPilot to .cursor/mcp.json in this project?')) return;
+            api('POST', '/api/chat/connect-cursor', {}).then(function (r) { toast(r.status === 'skip' ? r.note : 'Done: ' + r.path); loadEngines(); }).catch(function (e) { toast(e.message); });
+          }, true)])
+        ]));
+      }
+      var missing = (CHAT.engines || []).filter(function (e) { return !e.found; });
+      if (missing.length) {
+        engineSlot.appendChild(el('details', null, [el('summary', { text: 'How to add ' + missing.map(function (e) { return e.id === 'cursor' ? 'the Cursor chat' : 'the Claude chat'; }).join(' or ') + ' (uses the plan you already pay for, no extra key)' }),
+          el('ol', null, missing.map(function (e) {
+            return el('li', null, [el('b', { text: e.name + ': ' }), e.install + ' Then sign in once with: ', el('code', { text: e.signIn }), '. Then press “Check again”.',
+              el('div', { class: 'row' }, [button('Copy the install command', function () { copy(e.install.replace(/^In (PowerShell|a terminal): /, '').split('   ')[0]); })])]);
+          })),
+          el('div', { class: 'row' }, [button('Check again', loadEngines)])
+        ]));
+      }
+    }
+    function loadEngines() {
+      clear(engineSlot).appendChild(el('p', { class: 'muted', text: 'Looking for Cursor and Claude on this computer…' }));
+      api('GET', '/api/chat/engines').then(function (r) { CHAT.engines = r.engines; drawEngines(); }).catch(function (e) { CHAT.engines = []; drawEngines(); toast(e.message); });
+    }
+
+    function submit(text) {
+      text = String(text || '').trim();
+      if (!text || CHAT.busy) return;
+      input.value = '';
+      add({ kind: 'me', text: text });
+      if (CHAT.engine === 'helper') { helper(text); return; }
+      setBusy(true);
+      var thinking = add({ kind: 'tool', text: 'Thinking… (the first answer can take a little while)' });
+      fetch('/api/chat', { method: 'POST', headers: { 'x-testpilot-key': KEY || '', 'content-type': 'application/json' }, body: JSON.stringify({ engine: CHAT.engine, message: text }) })
+        .then(function (r) {
+          if (!r.ok) return r.json().then(function (j) { throw new Error(j.error || ('Error ' + r.status)); });
+          var reader = r.body.getReader(), dec = new TextDecoder(), buf = '';
+          function onEvent(e) {
+            if (thinking) { CHAT.log.splice(CHAT.log.indexOf(thinking), 1); thinking = null; }
+            if (e.type === 'text') add({ kind: 'ai', text: e.text });
+            else if (e.type === 'tool') add({ kind: 'tool', text: e.name });
+            else if (e.type === 'status') add({ kind: 'tool', text: e.text });
+            else if (e.type === 'error') add({ kind: 'err', text: e.text });
+            else draw();
+          }
+          function pump() {
+            return reader.read().then(function (chunk) {
+              if (chunk.done) return;
+              buf += dec.decode(chunk.value, { stream: true });
+              var i;
+              while ((i = buf.indexOf('\n')) >= 0) { var line = buf.slice(0, i).trim(); buf = buf.slice(i + 1); if (line) { try { onEvent(JSON.parse(line)); } catch (x) { /* skip */ } } }
+              return pump();
+            });
+          }
+          return pump();
+        })
+        .catch(function (e) { add({ kind: 'err', text: e.message || String(e) }); })
+        .then(function () { if (thinking) { CHAT.log.splice(CHAT.log.indexOf(thinking), 1); } setBusy(false); draw(); });
+    }
+
+    // Without an AI: match a few everyday requests to the right page or tool.
+    function helper(text) {
+      var t = text.toLowerCase();
+      var reply = function (msg, actions) { add({ kind: 'ai', text: msg, actions: actions }); };
+      var m = /^(what(?:'s| is| are| does)|explain|meaning of)\s+(?:an? |the )?(.+?)\??$/.exec(t);
+      if (m) { call('explain_testing', { term: m[2].replace(/\s+mean$/, '') }, 'Looking it up…').then(function (o) { reply(o.text); }); return; }
+      if (/\b(where are we|status|progress|how far)\b/.test(t)) { call('testpilot_status', {}, 'Checking…').then(function (o) { reply(forPeople(o.text), [['Open the guided setup', function () { go('setup'); }, true]]); }); return; }
+      if (/\b(set ?up|start|begin|wizard|framework)\b/.test(t)) return reply('The guided setup asks one question at a time: first what kind of app it is, then the framework, then the language.', [['Open the guided setup', function () { go('setup'); }, true]]);
+      if (/\b(import|excel|csv|word|jira|xray|testrail|browserstack|test cases?)\b/.test(t)) return reply('You can import test cases from a file on this computer or from your test management tool, then get a review of each one.', [['Open Test cases', function () { go('cases'); }, true]]);
+      if (/\b(run|execute|start)\b.*\btests?\b|\btests?\b.*\brun\b/.test(t)) return reply('Tests run in a real browser on this computer. Open the run section and press “Run the tests”.', [['Open Plan, write & run', function () { go('tests'); }, true]]);
+      if (/\b(write|generate|create)\b.*\btests?\b|\bplan\b/.test(t)) return reply('First make and approve the plan, then TestPilot shows the files and writes the tests.', [['Open Plan, write & run', function () { go('tests'); }, true]]);
+      if (/\b(report|coverage|dashboard|results?)\b/.test(t)) return reply('Reports, the coverage map and the team dashboard are on one page.', [['Open Reports & coverage', function () { go('results'); }, true]]);
+      if (/\b(health|broken|accessib|website check|check my (site|website))\b/.test(t)) return reply('The quality checks look for broken pages, errors, slow pages and accessibility problems.', [['Open Quality checks', function () { go('quality'); }, true]]);
+      reply('I am the simple helper without AI, so I only understand short requests like “set up”, “import test cases”, “run my tests”, “show coverage” or “what is a locator?”. For a real conversation, pick Cursor or Claude above.');
+    }
+
+    draw();
+    if (CHAT.engines) drawEngines(); else loadEngines();
+    setBusy(CHAT.busy);
+    input.focus();
   }
 
   // ---------- Guided setup (the wizard) ----------
@@ -917,6 +1085,7 @@ iframe.view { width: 100%; border: 1px solid var(--line); border-radius: 10px; m
   function renderAi() {
     page('AI features', 'Some TestPilot features need an AI to look at your app. This page says which, and how to use them.');
     var rows = [
+      ['The Chat page', 'Cursor or Claude on this computer', 'warn', 'Uses the Cursor or Claude plan you already have (no extra key): the Chat page shows how to add it. Everything below that says “AI in the chat” also works there.'],
       ['Everything on the other pages', 'No AI needed', 'ok', 'Setup, imports, reviews, plans, writing tests from clear test cases, running tests, reports, coverage and the quality checks all work here on their own.'],
       ['Finishing TODO steps in written tests', 'AI in the chat', 'warn', 'In Cursor or Claude Code, say: “finish the TODO steps in the TestPilot tests”.'],
       ['Plain-English AI tests (websites)', 'AI in the chat, no key', 'warn', 'In Cursor or Claude Code, type /qa-ai or say “run my AI tests”. The chat’s AI does each step and TestPilot saves a normal test you can run here.'],
@@ -1004,7 +1173,7 @@ iframe.view { width: 100%; border: 1px solid var(--line); border-radius: 10px; m
     ask('');
   }
 
-  var RENDER = { home: renderHome, setup: renderSetup, cases: renderCases, tests: renderTests, results: renderResults, quality: renderQuality, ai: renderAi, tools: renderTools, help: renderHelp };
+  var RENDER = { home: renderHome, chat: renderChat, setup: renderSetup, cases: renderCases, tests: renderTests, results: renderResults, quality: renderQuality, ai: renderAi, tools: renderTools, help: renderHelp };
 
   // ---------- start ----------
   if (!KEY) {
