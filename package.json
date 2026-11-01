@@ -1,6 +1,6 @@
 {
   "name": "@yourorg/testpilot-mcp",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "TestPilot MCP: a guided test-automation assistant for Cursor, Claude, Antigravity, VS Code, ChatGPT and any MCP client.",
   "main": "dist/server.js",
   "scripts": {
@@ -64,6 +64,6 @@
     "url": "git+https://github.com/seawandererind-hash/testpilot-mcp.git"
   },
   "testpilot": {
-    "install": "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.11/testpilot-mcp-0.1.11.tgz"
+    "install": "https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.12/testpilot-mcp-0.1.12.tgz"
   }
 }
