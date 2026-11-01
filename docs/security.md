@@ -29,6 +29,10 @@ Every path goes through `safeJoin` (`src/core/paths.ts`), which rejects absolute
 **Generated tests stay honest.**
 The generators (`src/generate/`) use role, label and test-id locators, wait for conditions instead of fixed sleeps, take credentials from `.env` or test data at run time, mark unfinished steps as `fixme`/pending instead of passing silently, and never relax an assertion. Run triage advises fixing causes, not assertions.
 
+## The TestPilot app (local web page)
+
+`testpilot-mcp ui` (or `testpilot_status` with `openApp: true`) starts a small web server for the point-and-click app ([app.md](app.md)). It binds to 127.0.0.1 only and picks a free port; every `/api/` call needs the 32-character random key from the address it opened with (compared in constant time); requests with any Host other than `127.0.0.1:<port>` or `localhost:<port>` are refused, which blocks DNS-rebinding; the custom key header means other sites' pages cannot call it without a CORS preflight, which it never answers. The page is fully inline under a strict Content-Security-Policy and shows tool output as text only. It calls the same MCP tools through an in-process client, so every approval gate, production check and path sandbox applies unchanged; approvals come back as "Approval needed" and the person answers in the app. Uploads are limited to 20 MB and to test-case file types, and are written only into `test-cases/` with a new name instead of overwriting. The app has no AI and never reads `.env` values.
+
 ## Hosted mode specifics
 
 - **Authentication**: OAuth 2.0 resource server. Tokens are JWTs from the configured issuer, verified locally (RS256/384/512, PS256/384/512, ES256/384/512, EdDSA) against the provider's JWKS with checks on issuer, audience, expiry and not-before, plus optional required scopes. Protected Resource Metadata (RFC 9728) is published so clients discover the provider. A shared bearer token is supported for small teams; it is compared in constant time and must be at least 24 characters.

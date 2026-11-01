@@ -8,6 +8,8 @@ You do not need to know anything about testing to use TestPilot. If you can open
 - The **address of your app**: the link you open in the browser, for example `https://staging.yourcompany.com` or `http://localhost:3000`. A test copy ("staging", "test", "dev") is best. Do not use the live site your customers use.
 - An **empty folder** for the tests, opened in your AI tool. (A folder with your app's code works too.)
 
+Prefer buttons to typing? Say **"open the TestPilot app"** in the chat: the same steps open as a page in your browser ([app.md](app.md)).
+
 ## Three sentences is all it takes
 
 This quick path is for websites, and TestPilot picks the setup for you (Playwright with TypeScript). To choose the kind of app, the framework and the language yourself, or for a phone or desktop app, say **"Set up test automation"** (or use `/qa-setup`) instead: TestPilot asks those questions first, one at a time.

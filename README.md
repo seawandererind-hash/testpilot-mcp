@@ -102,7 +102,7 @@ claude plugin install testpilot@testpilot-mcp
 
 ChatGPT and claude.ai only reach servers on the internet, so they use a hosted TestPilot that your platform team runs once for everyone: see [docs/hosting.md](docs/hosting.md).
 
-Then say **"Set up test automation for this repo"**, or use the `/qa-setup` prompt.
+Then say **"Set up test automation for this repo"**, or use the `/qa-setup` prompt. Prefer clicking? Say **"open the TestPilot app"** and the same steps open as buttons in your browser ([docs/app.md](docs/app.md)).
 
 > `npx` downloads the released package from GitHub the first time and reuses it after that; nothing else needs installing. Newer versions are on the [Releases page](https://github.com/seawandererind-hash/testpilot-mcp/releases).
 
@@ -142,12 +142,13 @@ More in [docs/security.md](docs/security.md).
 | `demo_project` | A practice shop with the wizard filled in, for demos and first tries |
 | `hosted_workspace` | Hosted mode only: add shared files, download a zip, open a pull request |
 
-Prompts: `/qa-setup`, `/qa-start`, `/qa-import`, `/qa-plan`, `/qa-generate`, `/qa-run`, `/qa-status`, `/qa-demo`, `/qa-ai`. Resources: `testpilot://state`, `testpilot://config`, `testpilot://plan`, `testpilot://reports/latest`.
+Prompts: `/qa-setup`, `/qa-start`, `/qa-import`, `/qa-plan`, `/qa-generate`, `/qa-run`, `/qa-status`, `/qa-demo`, `/qa-ai`, `/qa-app`. Resources: `testpilot://state`, `testpilot://config`, `testpilot://plan`, `testpilot://reports/latest`.
 
 TestPilot speaks both MCP protocol generations (2025-era clients such as Cursor, and 2026-07-28 clients) from one server.
 
 ## Documentation
 
+- [docs/app.md](docs/app.md): the TestPilot app, a point-and-click page in your browser for the setup, test cases, runs and reports (say "open the TestPilot app" in the chat)
 - [docs/user-guide.md](docs/user-guide.md): a first session from start to finish, for people new to test automation
 - [docs/ai-steps.md](docs/ai-steps.md): plain-English AI tests with Midscene, step by step, and which AI models to use
 - [docs/install.md](docs/install.md): setup for every AI tool, Windows included
