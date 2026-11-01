@@ -17,7 +17,7 @@ The app keeps working while Cursor is open. Closing Cursor closes the app too; j
 On Windows, open **PowerShell** in your project folder (in File Explorer, click the address bar, type `powershell` and press Enter), then run:
 
 ```powershell
-npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.9/testpilot-mcp-0.1.9.tgz ui
+npx -y https://github.com/seawandererind-hash/testpilot-mcp/releases/download/v0.1.10/testpilot-mcp-0.1.10.tgz ui
 ```
 
 It prints the address and opens your browser. Leave the PowerShell window open while you use the app, and press **Ctrl+C** in it to stop. Add `--root "C:\path\to\project"` to open another folder, or `--no-open` to only print the address.
